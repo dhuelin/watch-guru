@@ -1,1 +1,21 @@
-services: { }
+services:
+  postgres:
+    image: 'postgres:17-alpine'
+    environment:
+      - 'POSTGRES_DB=watchguru'
+      - 'POSTGRES_USER=watchguru'
+      - 'POSTGRES_PASSWORD=watchguru'
+    ports:
+      # No fixed host port: Spring Boot's Docker Compose support reads the
+      # mapped port and configures the datasource accordingly.
+      - '5432'
+    volumes:
+      - 'watchguru-pgdata:/var/lib/postgresql/data'
+    healthcheck:
+      test: [ 'CMD-SHELL', 'pg_isready -U watchguru -d watchguru' ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  watchguru-pgdata:

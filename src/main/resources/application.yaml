@@ -1,3 +1,61 @@
 spring:
   application:
     name: watch-guru
+
+  docker:
+    compose:
+      lifecycle-management: start_and_stop
+
+  datasource:
+    hikari:
+      maximum-pool-size: 10
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Flyway owns the schema; Hibernate only checks the mappings agree with it.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+        query.in_clause_parameter_padding: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  threads:
+    virtual:
+      enabled: true
+
+  jackson:
+    default-property-inclusion: non_null
+
+watch-guru:
+  tmdb:
+    base-url: https://api.themoviedb.org/3
+    image-base-url: https://image.tmdb.org/t/p
+    # TMDB "API Read Access Token" (v4 auth), sent as a Bearer token.
+    api-token: ${TMDB_API_TOKEN:}
+    default-language: en-US
+    default-region: US
+    connect-timeout: 5s
+    read-timeout: 10s
+  catalog:
+    # How long a cached title detail record is considered fresh.
+    detail-ttl: 7d
+    # How long cached streaming availability is considered fresh.
+    availability-ttl: 1d
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,flyway
+  endpoint:
+    health:
+      show-details: when-authorized
+
+logging:
+  level:
+    com.dhuelin.dev.watchguru: DEBUG
