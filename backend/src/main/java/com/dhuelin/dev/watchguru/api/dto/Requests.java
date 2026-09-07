@@ -4,7 +4,6 @@ import com.dhuelin.dev.watchguru.catalog.domain.TitleType;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchStatus;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -19,9 +18,16 @@ public final class Requests {
     private Requests() {
     }
 
-    public record CreateUser(
-            @NotBlank @Email @Size(max = 320) String email,
-            @NotBlank @Size(max = 128) String displayName,
+    /**
+     * Partial profile update; any null field is left unchanged.
+     *
+     * <p>Replaces the old {@code CreateUser}. Accounts are no longer created by
+     * a request: the first valid token provisions one, so email is not settable
+     * here -- it is asserted by the identity provider and changing it locally
+     * would decouple the account from the identity that owns it.
+     */
+    public record UpdateProfile(
+            @Size(max = 128) String displayName,
             @Size(min = 2, max = 2) String region,
             @Size(max = 16) String language,
             @Size(max = 64) String timeZone

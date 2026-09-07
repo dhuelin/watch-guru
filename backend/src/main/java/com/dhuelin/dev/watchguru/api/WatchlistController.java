@@ -1,6 +1,7 @@
 package com.dhuelin.dev.watchguru.api;
 
 import com.dhuelin.dev.watchguru.api.dto.ApiMapper;
+import com.dhuelin.dev.watchguru.security.CurrentUserService;
 import com.dhuelin.dev.watchguru.api.dto.Requests;
 import com.dhuelin.dev.watchguru.api.dto.Responses;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchStatus;
@@ -25,26 +26,36 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** A user's watchlist and their progress through it. */
+/**
+ * The signed-in user's watchlist and their progress through it.
+ *
+ * <p>Every method scopes to the token's user. {@code itemId} and {@code titleId}
+ * still appear in paths, and {@link WatchlistService} checks that each belongs
+ * to the caller -- an id in a URL is a reference, not a claim of ownership.
+ */
 @RestController
-@RequestMapping("/api/users/{userId}/watchlist")
+@RequestMapping("/api/v1/me/watchlist")
 public class WatchlistController {
 
     private static final int MAX_PAGE_SIZE = 100;
 
     private final WatchlistService watchlist;
+    private final CurrentUserService currentUser;
     private final ApiMapper mapper;
 
-    public WatchlistController(WatchlistService watchlist, ApiMapper mapper) {
+    public WatchlistController(WatchlistService watchlist,
+                               CurrentUserService currentUser,
+                               ApiMapper mapper) {
         this.watchlist = watchlist;
+        this.currentUser = currentUser;
         this.mapper = mapper;
     }
 
     @GetMapping
-    public List<Responses.WatchlistItemResponse> list(@PathVariable Long userId,
-                                                      @RequestParam(required = false) WatchStatus status,
+    public List<Responses.WatchlistItemResponse> list(@RequestParam(required = false) WatchStatus status,
                                                       @RequestParam(defaultValue = "0") int page,
                                                       @RequestParam(defaultValue = "20") int size) {
+        Long userId = currentUser.require().getId();
         PageRequest pageable = PageRequest.of(
                 Math.max(page, 0),
                 Math.clamp(size, 1, MAX_PAGE_SIZE),
@@ -60,17 +71,17 @@ public class WatchlistController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Responses.WatchlistItemResponse add(@PathVariable Long userId,
-                                               @Valid @RequestBody Requests.AddToWatchlist request) {
+    public Responses.WatchlistItemResponse add(@Valid @RequestBody Requests.AddToWatchlist request) {
+        Long userId = currentUser.require().getId();
         WatchlistItem item = watchlist.add(
                 userId, request.titleType(), request.providerId(), request.statusOrDefault());
         return mapper.toWatchlistItem(item, List.of());
     }
 
     @PatchMapping("/{itemId}")
-    public Responses.WatchlistItemResponse update(@PathVariable Long userId,
-                                                  @PathVariable Long itemId,
+    public Responses.WatchlistItemResponse update(@PathVariable Long itemId,
                                                   @Valid @RequestBody Requests.UpdateWatchlistItem request) {
+        Long userId = currentUser.require().getId();
         // An empty body is a no-op that returns current state.
         WatchlistItem item = watchlist.get(userId, itemId);
         if (request.status() != null) {
@@ -87,13 +98,13 @@ public class WatchlistController {
 
     @DeleteMapping("/{itemId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void remove(@PathVariable Long userId, @PathVariable Long itemId) {
-        watchlist.remove(userId, itemId);
+    public void remove(@PathVariable Long itemId) {
+        watchlist.remove(currentUser.require().getId(), itemId);
     }
 
     /** Aired-episode progress and the next episode to watch. */
     @GetMapping("/titles/{titleId}/progress")
-    public TitleProgress progress(@PathVariable Long userId, @PathVariable Long titleId) {
-        return watchlist.progress(userId, titleId);
+    public TitleProgress progress(@PathVariable Long titleId) {
+        return watchlist.progress(currentUser.require().getId(), titleId);
     }
 }

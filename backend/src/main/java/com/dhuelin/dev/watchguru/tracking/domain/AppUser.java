@@ -27,9 +27,31 @@ public class AppUser {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** OIDC subject, once real authentication is wired up. */
+    /**
+     * OIDC subject, namespaced as {@code <issuer>|<sub>}.
+     *
+     * <p>Provider subjects are opaque strings that are only unique within the
+     * issuer that minted them, so the issuer is part of the key. Null only for
+     * rows created before authentication existed.
+     */
     @Column(name = "auth_subject")
     private String authSubject;
+
+    /** Issuer that vouched for {@link #authSubject}. */
+    @Column(name = "auth_issuer")
+    private String authIssuer;
+
+    /**
+     * Whether the issuer asserted this address is verified.
+     *
+     * <p>Read before allowing a sign-in from a second provider to adopt this
+     * account; an unverified address must never reach an existing one.
+     */
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified;
+
+    @Column(name = "last_login_at")
+    private Instant lastLoginAt;
 
     @Column(name = "email", nullable = false, length = 320)
     private String email;

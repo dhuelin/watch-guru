@@ -32,6 +32,25 @@ spring:
     default-property-inclusion: non_null
 
 watch-guru:
+  auth:
+    # Trusted identity providers. A token signed by anyone else is rejected
+    # before its claims are read.
+    issuers:
+      - name: apple
+        uri: https://appleid.apple.com
+        # Apple verifies the addresses it asserts, including private relay
+        # addresses, so a verified address from Apple may adopt an existing
+        # account. See AuthProperties.Issuer#trustEmailVerification for why
+        # this is off by default for anyone else.
+        trust-email-verification: true
+      - name: google
+        uri: https://accounts.google.com
+        trust-email-verification: true
+    # Expected 'aud' claims: the OAuth client ids of the two apps. Without
+    # these, a token minted for an unrelated application that also uses Google
+    # sign-in would validate here. Empty means no audience check, which is only
+    # ever acceptable in a test.
+    audiences: ${WATCH_GURU_AUTH_AUDIENCES:}
   tmdb:
     base-url: https://api.themoviedb.org/3
     image-base-url: https://image.tmdb.org/t/p

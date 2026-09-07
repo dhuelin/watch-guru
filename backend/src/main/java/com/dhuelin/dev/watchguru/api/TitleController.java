@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** Catalog search and title detail. */
 @RestController
-@RequestMapping("/api/titles")
+@RequestMapping("/api/v1/titles")
 public class TitleController {
 
     private final CatalogService catalog;

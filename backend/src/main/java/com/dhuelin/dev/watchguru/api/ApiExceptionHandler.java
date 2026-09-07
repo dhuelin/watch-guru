@@ -3,6 +3,7 @@ package com.dhuelin.dev.watchguru.api;
 import com.dhuelin.dev.watchguru.common.NotFoundException;
 import com.dhuelin.dev.watchguru.provider.MetadataProviderException;
 import com.dhuelin.dev.watchguru.provider.MetadataProviderNotConfiguredException;
+import com.dhuelin.dev.watchguru.security.AccountConflictException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,18 @@ public class ApiExceptionHandler {
     @ExceptionHandler(NotFoundException.class)
     ProblemDetail onNotFound(NotFoundException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    /**
+     * A sign-in whose email address already belongs to a different account.
+     *
+     * <p>409 rather than quietly creating a second account: to the user, a
+     * duplicate account is indistinguishable from having lost everything they
+     * ever tracked.
+     */
+    @ExceptionHandler(AccountConflictException.class)
+    ProblemDetail onAccountConflict(AccountConflictException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
