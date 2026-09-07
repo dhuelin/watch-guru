@@ -28,13 +28,44 @@ class WatchGuruApplicationTests {
 
     @Test
     void contextLoadsAndSchemaMatchesEntities() {
-        Integer tables = jdbcTemplate.queryForObject("""
-                select count(*) from information_schema.tables
+        var tables = jdbcTemplate.queryForList("""
+                select table_name from information_schema.tables
                 where table_schema = 'public' and table_type = 'BASE TABLE'
-                """, Integer.class);
+                order by table_name
+                """, String.class);
 
-        // 13 domain tables plus flyway_schema_history.
-        assertThat(tables).isEqualTo(14);
+        // Named rather than counted: when a migration lands, a failure that
+        // says which table appeared is worth considerably more than one saying
+        // 15 is not 14.
+        assertThat(tables).containsExactly(
+                "app_user",
+                "episode",
+                "episode_watch",
+                "flyway_schema_history",
+                "genre",
+                "imdb_import_run",
+                "linked_streaming_account",
+                "season",
+                "streaming_service",
+                "sync_run",
+                "title",
+                "title_availability",
+                "title_genre",
+                "watch_event",
+                "watchlist_item");
+    }
+
+    @Test
+    void authColumnsFromV3Exist() {
+        var columns = jdbcTemplate.queryForList("""
+                select column_name from information_schema.columns
+                where table_schema = 'public' and table_name = 'app_user'
+                  and column_name in ('auth_subject', 'auth_issuer', 'email_verified', 'last_login_at')
+                order by column_name
+                """, String.class);
+
+        assertThat(columns).containsExactly(
+                "auth_issuer", "auth_subject", "email_verified", "last_login_at");
     }
 
     @Test

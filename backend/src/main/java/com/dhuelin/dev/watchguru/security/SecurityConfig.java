@@ -90,12 +90,11 @@ public class SecurityConfig {
     /**
      * Decoder for one issuer, with audience validation on top of the defaults.
      *
-     * <p>{@code withIssuerLocation} resolves the provider's OIDC discovery
-     * document lazily, on first use. The eager alternative
-     * ({@code JwtDecoders.fromIssuerLocation}) would make application startup
-     * depend on Apple and Google being reachable -- which means tests doing
-     * network I/O, and a deployment that cannot boot during someone else's
-     * outage.
+     * <p>Wrapped in a {@link LazyJwtDecoder}. Both {@code withIssuerLocation}
+     * and {@code JwtDecoders.fromIssuerLocation} fetch the provider's discovery
+     * document while <em>building</em> the decoder, so without this the
+     * application cannot start unless Apple and Google are both reachable --
+     * verified the hard way: startup fails outright behind restricted egress.
      *
      * <p>The default validators cover signature, expiry and issuer. Audience is
      * the one that stops a correctly signed token minted for a <em>different</em>
@@ -104,16 +103,18 @@ public class SecurityConfig {
      * was for.
      */
     private JwtDecoder decoderFor(AuthProperties.Issuer issuer, List<String> audiences) {
-        NimbusJwtDecoder decoder = NimbusJwtDecoder.withIssuerLocation(issuer.uri()).build();
+        return new LazyJwtDecoder(() -> {
+            NimbusJwtDecoder decoder = NimbusJwtDecoder.withIssuerLocation(issuer.uri()).build();
 
-        OAuth2TokenValidator<Jwt> validator = audiences.isEmpty()
-                ? JwtValidators.createDefaultWithIssuer(issuer.uri())
-                : new DelegatingOAuth2TokenValidator<>(
-                        JwtValidators.createDefaultWithIssuer(issuer.uri()),
-                        new AudienceValidator(audiences));
+            OAuth2TokenValidator<Jwt> validator = audiences.isEmpty()
+                    ? JwtValidators.createDefaultWithIssuer(issuer.uri())
+                    : new DelegatingOAuth2TokenValidator<>(
+                            JwtValidators.createDefaultWithIssuer(issuer.uri()),
+                            new AudienceValidator(audiences));
 
-        decoder.setJwtValidator(validator);
-        return decoder;
+            decoder.setJwtValidator(validator);
+            return decoder;
+        });
     }
 
     @Bean
