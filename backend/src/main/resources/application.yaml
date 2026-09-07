@@ -82,6 +82,17 @@ watch-guru:
       cache-max-size: 1000
       # Queries shorter than this never reach TMDB.
       min-query-length: 2
+  imdb:
+    # Off by default, and that default is a licensing position rather than a
+    # convenience: IMDb's public datasets are licensed for personal and
+    # non-commercial use only. Fine for a free app; a blocker for a paid or
+    # ad-supported one. See docs/ROADMAP.md and issue #24.
+    enabled: ${WATCH_GURU_IMDB_ENABLED:false}
+    ratings-url: https://datasets.imdbws.com/title.ratings.tsv.gz
+    # 03:30 daily. IMDb refreshes the datasets once a day.
+    cron: "0 30 3 * * *"
+    batch-size: 5000
+    read-timeout: 10m
   catalog:
     # How long a cached title detail record is considered fresh.
     detail-ttl: 7d
