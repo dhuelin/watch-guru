@@ -26,10 +26,17 @@ here is user-visible; all of it is expensive to change afterwards.
 
 **Done.** A signed-in client can be generated from the committed spec, CI runs
 build and tests on every PR, and the backend serves stale local data rather
-than failing when TMDB is unreachable. **98 tests passing**, including the
+than failing when TMDB is unreachable. **105 tests passing**, including the
 full integration suite against a real PostgreSQL: all four migrations apply,
 Hibernate's `validate` confirms every entity matches them, and episode
-progress, rewatch handling and stats aggregation are exercised end to end.
+progress, rewatch handling, stats aggregation and the IMDb batch UPDATE are
+exercised end to end.
+
+The running service was also driven directly: every `/api/v1` route returns
+401 without a token; a token signed by a controlled test issuer provisions an
+account and returns it; and tokens that are expired, signed with the wrong
+key, or carry a **different application's audience** are all rejected. That
+last one is the bug described below, confirmed fixed rather than assumed.
 
 One thing remains unverified:
 
@@ -40,8 +47,12 @@ One thing remains unverified:
   want one real run before being trusted. The job is off by default, so this
   costs nothing until somebody turns it on.
 
-Verifying the rest turned up a genuine bug worth recording, since the same
-mistake is easy to repeat: `NimbusJwtDecoder.withIssuerLocation(...).build()`
+Verifying this turned up two bugs worth recording, both of the kind that look
+fine in development. The audience validator was silently inert: 
+`JwtIssuerAuthenticationManagerResolver.fromTrustedIssuers` builds its own
+decoders internally and discards a configured validator, so any token from
+Apple or Google would have been accepted, including one minted for an
+unrelated application. And: `NimbusJwtDecoder.withIssuerLocation(...).build()`
 fetches the provider's discovery document *while building the decoder*, so the
 application could not start unless Apple and Google were both reachable. That
 looks fine on a laptop and fails in a restricted network or during a provider
