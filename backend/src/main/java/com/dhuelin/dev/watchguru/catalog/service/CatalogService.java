@@ -9,8 +9,11 @@ import com.dhuelin.dev.watchguru.catalog.repository.EpisodeRepository;
 import com.dhuelin.dev.watchguru.catalog.repository.GenreRepository;
 import com.dhuelin.dev.watchguru.catalog.repository.SeasonRepository;
 import com.dhuelin.dev.watchguru.catalog.repository.TitleRepository;
+import com.dhuelin.dev.watchguru.config.CacheConfig;
 import com.dhuelin.dev.watchguru.config.CatalogProperties;
+import com.dhuelin.dev.watchguru.config.TmdbProperties;
 import com.dhuelin.dev.watchguru.provider.MetadataProvider;
+import com.dhuelin.dev.watchguru.provider.MetadataProviderException;
 import com.dhuelin.dev.watchguru.provider.model.ProviderEpisode;
 import com.dhuelin.dev.watchguru.provider.model.ProviderSearchPage;
 import com.dhuelin.dev.watchguru.provider.model.ProviderSeasonDetail;
@@ -19,6 +22,7 @@ import com.dhuelin.dev.watchguru.provider.model.ProviderTitleDetail;
 import com.dhuelin.dev.watchguru.provider.model.ProviderTitleSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,24 +48,47 @@ public class CatalogService {
     private final EpisodeRepository episodes;
     private final MetadataProvider provider;
     private final CatalogProperties catalogProperties;
+    private final TmdbProperties tmdbProperties;
 
     public CatalogService(TitleRepository titles,
                           GenreRepository genres,
                           SeasonRepository seasons,
                           EpisodeRepository episodes,
                           MetadataProvider provider,
-                          CatalogProperties catalogProperties) {
+                          CatalogProperties catalogProperties,
+                          TmdbProperties tmdbProperties) {
         this.titles = titles;
         this.genres = genres;
         this.seasons = seasons;
         this.episodes = episodes;
         this.provider = provider;
         this.catalogProperties = catalogProperties;
+        this.tmdbProperties = tmdbProperties;
     }
 
-    /** Live provider search. Results are not persisted until a title is imported. */
+    /**
+     * Provider search, cached briefly. Results are not persisted until a title
+     * is imported.
+     *
+     * <p>Two protections sit in front of the provider here. Queries shorter than
+     * the configured minimum never leave the building: search-as-you-type sends
+     * "b", "br", "bre" on the way to "breaking bad", and the first of those
+     * matches most of the catalog while telling the user nothing. And identical
+     * queries within the cache TTL are answered locally, which is what collapses
+     * the burst a debounced search box still produces.
+     *
+     * <p>The key is normalised so "Breaking Bad" and "breaking bad " share an
+     * entry rather than each costing a call.
+     */
+    @Cacheable(cacheNames = CacheConfig.SEARCH_CACHE,
+            key = "T(java.util.Objects).toString(#query).trim().toLowerCase() + '|' + #page + '|' "
+                    + "+ T(java.util.Objects).toString(#language)")
     public ProviderSearchPage search(String query, int page, String language) {
-        return provider.search(query, page, language);
+        String trimmed = query == null ? "" : query.trim();
+        if (trimmed.length() < tmdbProperties.search().minQueryLength()) {
+            return new ProviderSearchPage(List.of(), Math.max(page, 1), 0, 0);
+        }
+        return provider.search(trimmed, page, language);
     }
 
     /**
@@ -76,7 +103,22 @@ public class CatalogService {
             return title;
         }
 
-        ProviderTitleDetail detail = provider.fetchDetail(titleType, providerId, language);
+        ProviderTitleDetail detail;
+        try {
+            detail = provider.fetchDetail(titleType, providerId, language);
+        } catch (MetadataProviderException e) {
+            if (title != null) {
+                // A stale title is worth far more than an error page. The
+                // user's own watchlist, progress and history are local and
+                // entirely unaffected by TMDB being down; failing here would
+                // take all of that offline to avoid showing a runtime that
+                // might be a week out of date.
+                log.warn("Serving stale metadata for {} {} after provider failure: {}",
+                        titleType, providerId, e.getMessage());
+                return title;
+            }
+            throw e;
+        }
         if (title == null) {
             title = new Title(providerId, titleType, detail.summary().title());
         }

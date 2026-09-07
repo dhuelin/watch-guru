@@ -60,6 +60,28 @@ watch-guru:
     default-region: US
     connect-timeout: 5s
     read-timeout: 10s
+    retry:
+      # Total attempts including the first. Applies to rate limiting, 5xx and
+      # transport failures only -- a 404 or a bad token is a real answer and
+      # retrying it just spends the rate-limit budget.
+      max-attempts: 3
+      initial-backoff: 250ms
+      max-backoff: 4s
+      # TMDB's Retry-After is honoured, but clamped: a provider asking for a
+      # ten-minute wait must not pin a request thread for ten minutes.
+      max-retry-after: 10s
+    circuit-breaker:
+      # Consecutive failures before calls are rejected outright. An exhausted
+      # retry sequence counts once, not once per attempt.
+      failure-threshold: 5
+      open-duration: 30s
+    search:
+      # Short on purpose: this collapses the burst a debounced search box still
+      # produces, rather than holding results.
+      cache-ttl: 60s
+      cache-max-size: 1000
+      # Queries shorter than this never reach TMDB.
+      min-query-length: 2
   catalog:
     # How long a cached title detail record is considered fresh.
     detail-ttl: 7d
@@ -70,7 +92,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,flyway
+        include: health,info,metrics,flyway,caches
   endpoint:
     health:
       show-details: when-authorized

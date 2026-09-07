@@ -94,7 +94,11 @@ class OpenApiSpecTest {
                     "en-US",
                     "US",
                     Duration.ofSeconds(5),
-                    Duration.ofSeconds(10));
+                    Duration.ofSeconds(10),
+                    new TmdbProperties.Retry(3, Duration.ofMillis(250), Duration.ofSeconds(4),
+                            Duration.ofSeconds(10)),
+                    new TmdbProperties.CircuitBreaker(5, Duration.ofSeconds(30)),
+                    new TmdbProperties.Search(Duration.ofSeconds(60), 1000, 2));
         }
     }
 

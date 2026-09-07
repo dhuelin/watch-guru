@@ -5,6 +5,7 @@ import com.dhuelin.dev.watchguru.config.TmdbProperties;
 import com.dhuelin.dev.watchguru.provider.MetadataProvider;
 import com.dhuelin.dev.watchguru.provider.MetadataProviderException;
 import com.dhuelin.dev.watchguru.provider.MetadataProviderNotConfiguredException;
+import com.dhuelin.dev.watchguru.provider.resilience.ResilientCaller;
 import com.dhuelin.dev.watchguru.provider.model.ProviderEpisode;
 import com.dhuelin.dev.watchguru.provider.model.ProviderGenre;
 import com.dhuelin.dev.watchguru.provider.model.ProviderOffer;
@@ -19,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -36,10 +36,14 @@ public class TmdbMetadataProvider implements MetadataProvider {
 
     private final RestClient client;
     private final TmdbProperties properties;
+    private final ResilientCaller caller;
 
-    public TmdbMetadataProvider(RestClient tmdbRestClient, TmdbProperties properties) {
+    public TmdbMetadataProvider(RestClient tmdbRestClient,
+                                TmdbProperties properties,
+                                ResilientCaller tmdbResilientCaller) {
         this.client = tmdbRestClient;
         this.properties = properties;
+        this.caller = tmdbResilientCaller;
     }
 
     @Override
@@ -327,14 +331,16 @@ public class TmdbMetadataProvider implements MetadataProvider {
 
     // ---------- plumbing ----------
 
+    /**
+     * Every TMDB call goes through here, which is why the retry policy and
+     * circuit breaker are applied at this point rather than per method: a new
+     * endpoint added later gets the same protection without anyone remembering
+     * to ask for it.
+     */
     private <T> T get(java.util.function.Function<org.springframework.web.util.UriBuilder, java.net.URI> uriFunction,
                       Class<T> responseType,
                       String operation) {
-        try {
-            return client.get().uri(uriFunction).retrieve().body(responseType);
-        } catch (RestClientException e) {
-            throw new MetadataProviderException("TMDB " + operation + " request failed", e);
-        }
+        return caller.call(operation, () -> client.get().uri(uriFunction).retrieve().body(responseType));
     }
 
     private void requireToken() {
