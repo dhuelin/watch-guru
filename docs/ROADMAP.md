@@ -10,9 +10,9 @@ then changes, and (b) shipping an app whose authentication was retrofitted.
 
 ---
 
-## Phase 0 — Foundations
+## Phase 0 — Foundations ✅ complete
 
-Backend work that has to settle before either app is worth writing. Nothing
+Backend work that had to settle before either app was worth writing. Nothing
 here is user-visible; all of it is expensive to change afterwards.
 
 | # | Issue | Why it is in Phase 0 |
@@ -24,8 +24,22 @@ here is user-visible; all of it is expensive to change afterwards.
 | [#5](https://github.com/dhuelin/watch-guru/issues/5) | CI and a pinned JDK toolchain | Nothing currently proves the build works anywhere but one machine. |
 | [#6](https://github.com/dhuelin/watch-guru/issues/6) | TMDB rate limiting, retries, failure isolation | Two apps with search boxes will hit TMDB's rate limits on day one. |
 
-**Done when:** a signed-in client can be generated from a committed spec, CI is
-green, and the backend degrades gracefully when TMDB is down.
+**Done.** A signed-in client can be generated from the committed spec, CI runs
+build and tests on every PR, and the backend serves stale local data rather
+than failing when TMDB is unreachable. 86 tests passing.
+
+Two caveats carried forward from the environment this was built in:
+
+- **The Testcontainers integration tests have not been run** against these
+  commits. The build environment's proxy blocks Docker Hub's blob CDN, so no
+  Postgres image could be pulled. They call the service layer directly and are
+  unaffected by the API changes, but the first CI run is where they actually
+  get verified — along with the four Flyway migrations, which likewise have
+  never been executed.
+- **The IMDb download path is unverified.** `datasets.imdbws.com` is also
+  blocked from that environment. Parsing and batching are covered against
+  fixtures; the HTTP fetch and conditional-request handling are written to the
+  documented format and want one real run before being trusted.
 
 ---
 
@@ -49,6 +63,14 @@ Both platforms, feature-equivalent, each looking correct on its own platform.
 
 **Done when:** a user can sign in, find a series, track it episode by episode,
 see where they left off, and do all of that on a train with no signal.
+
+### Start here
+
+[#7](https://github.com/dhuelin/watch-guru/issues/7) and
+[#8](https://github.com/dhuelin/watch-guru/issues/8), the two scaffolds, then
+[#16](https://github.com/dhuelin/watch-guru/issues/16) early — the design
+system constrains every screen after it, and retrofitting it is worse than
+starting with it. The API they build against is already published and stable.
 
 ### The one screen that has to be perfect
 
@@ -77,17 +99,20 @@ library rots.
 
 ## Known constraints, carried forward
 
-**No authentication yet.** Every endpoint takes a caller-supplied `userId`.
-Prototype-only, blocks any release. [#1](https://github.com/dhuelin/watch-guru/issues/1)
-
-**JDK 26.** `pom.xml` targets Java 26 with Spring Boot 4.1.1, so older JDKs
-cannot compile the project at all. Pin the toolchain or lower the target.
-[#5](https://github.com/dhuelin/watch-guru/issues/5)
+**Set `WATCH_GURU_AUTH_AUDIENCES` before exposing the API.** Without it, any
+token from Apple or Google validates, including one minted for a completely
+different application. The server logs a warning at startup when it is unset.
 
 **IMDb datasets are non-commercial.** Fine for a free app, a blocker for a paid
-one, and a one-flag change if caught early. [#24](https://github.com/dhuelin/watch-guru/issues/24)
+one. The import is behind a flag specifically so this stays a configuration
+change. [#24](https://github.com/dhuelin/watch-guru/issues/24)
 
-**TMDB attribution is required in-app** by TMDB's terms of use.
+**TMDB attribution is required in-app** by TMDB's terms of use. It is already in
+the OpenAPI description; it still has to appear in both apps.
+
+**The search cache is per-instance.** Behind several replicas the hit rate falls
+but nothing breaks. A shared cache can be introduced later without changing any
+calling code.
 
 ## Explicitly not planned
 
