@@ -26,20 +26,27 @@ here is user-visible; all of it is expensive to change afterwards.
 
 **Done.** A signed-in client can be generated from the committed spec, CI runs
 build and tests on every PR, and the backend serves stale local data rather
-than failing when TMDB is unreachable. 86 tests passing.
+than failing when TMDB is unreachable. **98 tests passing**, including the
+full integration suite against a real PostgreSQL: all four migrations apply,
+Hibernate's `validate` confirms every entity matches them, and episode
+progress, rewatch handling and stats aggregation are exercised end to end.
 
-Two caveats carried forward from the environment this was built in:
+One thing remains unverified:
 
-- **The Testcontainers integration tests have not been run** against these
-  commits. The build environment's proxy blocks Docker Hub's blob CDN, so no
-  Postgres image could be pulled. They call the service layer directly and are
-  unaffected by the API changes, but the first CI run is where they actually
-  get verified — along with the four Flyway migrations, which likewise have
-  never been executed.
-- **The IMDb download path is unverified.** `datasets.imdbws.com` is also
-  blocked from that environment. Parsing and batching are covered against
-  fixtures; the HTTP fetch and conditional-request handling are written to the
-  documented format and want one real run before being trusted.
+- **The IMDb download path.** `datasets.imdbws.com` is blocked from the
+  environment this was built in. Parsing and batching are covered against
+  fixtures, and the batch UPDATE runs against real Postgres, but the HTTP fetch
+  and the `If-Modified-Since` handling are written to the documented format and
+  want one real run before being trusted. The job is off by default, so this
+  costs nothing until somebody turns it on.
+
+Verifying the rest turned up a genuine bug worth recording, since the same
+mistake is easy to repeat: `NimbusJwtDecoder.withIssuerLocation(...).build()`
+fetches the provider's discovery document *while building the decoder*, so the
+application could not start unless Apple and Google were both reachable. That
+looks fine on a laptop and fails in a restricted network or during a provider
+outage. Decoder construction is now deferred to the first token that needs
+verifying.
 
 ---
 

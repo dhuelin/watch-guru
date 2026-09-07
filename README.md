@@ -181,6 +181,13 @@ things worth knowing before changing any of it:
 - **There is no bypass profile.** An empty issuer list fails startup rather
   than quietly serving unauthenticated traffic.
 
+One trap worth knowing about, because the obvious spelling is wrong in a way
+that only shows up in production: `NimbusJwtDecoder.withIssuerLocation(...)
+.build()` and `JwtDecoders.fromIssuerLocation` both fetch the provider's
+discovery document *while building the decoder*. Used directly, the service
+cannot start unless Apple and Google are reachable. `LazyJwtDecoder` defers
+that to the first token needing verification; don't remove it.
+
 ## Local development
 
 Requirements: **JDK 25**, Docker, and a TMDB API read access token.
@@ -207,6 +214,18 @@ the schema is owned by the migrations in
 
 ```bash
 cd backend && ./mvnw test   # unit tests + Testcontainers integration tests (needs Docker)
+```
+
+Without Docker, point the integration tests at an existing throwaway database
+instead — the suite migrates and writes to it:
+
+```bash
+export WATCH_GURU_TEST_USE_TESTCONTAINERS=false
+export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/watchguru
+export SPRING_DATASOURCE_USERNAME=watchguru
+export SPRING_DATASOURCE_PASSWORD=watchguru
+export SPRING_DOCKER_COMPOSE_ENABLED=false
+cd backend && ./mvnw test
 ```
 
 Actuator health, info, metrics, flyway and caches endpoints are exposed under
