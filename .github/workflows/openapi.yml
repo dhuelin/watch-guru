@@ -1,0 +1,57 @@
+name: OpenAPI contract
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/openapi.yml'
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/openapi.yml'
+
+concurrency:
+  group: openapi-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  spec-drift:
+    name: Committed spec matches the code
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+
+      # Regenerates the spec from the running application and compares it to
+      # the copy in the repo. Both mobile clients are generated from that copy,
+      # so an un-regenerated spec means the apps are built against an API that
+      # no longer exists. Failing here is much cheaper than finding out from a
+      # 400 on a device.
+      - name: Regenerate the OpenAPI spec
+        run: ./mvnw -B --no-transfer-progress -Pgenerate-openapi verify -DskipTests
+
+      - name: Fail if the committed spec is stale
+        run: |
+          if ! git diff --quiet -- src/main/resources/openapi/openapi.json; then
+            echo "::error::The committed OpenAPI spec is out of date."
+            echo "Regenerate it with:"
+            echo "  cd backend && ./mvnw -Pgenerate-openapi verify -DskipTests"
+            echo ""
+            echo "Difference:"
+            git --no-pager diff -- src/main/resources/openapi/openapi.json
+            exit 1
+          fi
+          echo "Committed spec matches the code."
