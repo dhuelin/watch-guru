@@ -46,6 +46,10 @@ jobs:
       - name: Verify Docker is available
         run: docker info > /dev/null
 
+      # OpenApiSpecTest runs as part of this suite and fails the build if the
+      # committed openapi.json no longer matches the controllers. Both mobile
+      # clients are generated from that file, so drift means the apps are built
+      # against an API that no longer exists.
       - name: Build and test
         run: ./mvnw -B --no-transfer-progress verify
 

@@ -75,6 +75,18 @@ management:
     health:
       show-details: when-authorized
 
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    # Alphabetical rather than declaration order, so the rendered document is
+    # stable across refactors and the committed snapshot does not churn when a
+    # method moves within a controller.
+    operations-sorter: alpha
+    tags-sorter: alpha
+  writer-with-order-by-keys: true
+
 logging:
   level:
     com.dhuelin.dev.watchguru: DEBUG

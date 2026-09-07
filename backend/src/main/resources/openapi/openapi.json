@@ -1,0 +1,1139 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "description" : "Tracking what you have watched and where you left off, for films and TV series.\n\nEvery endpoint under /api/v1 requires an OIDC bearer token from a trusted issuer (Sign in with Apple or Google). The account is created on the first valid token, so there is no registration call. Endpoints act on the user the token identifies -- there is no way to name a different one.\n\nCatalog metadata comes from TMDB. This product uses the TMDB API but is not endorsed or certified by TMDB.",
+    "license" : {
+      "name" : "Proprietary"
+    },
+    "title" : "Watch Guru API",
+    "version" : "v1"
+  },
+  "servers" : [ {
+    "url" : "http://localhost",
+    "description" : "Generated server url"
+  } ],
+  "security" : [ {
+    "bearerAuth" : [ ]
+  } ],
+  "paths" : {
+    "/api/v1/me" : {
+      "delete" : {
+        "operationId" : "deleteAccount",
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [ "me-controller" ]
+      },
+      "get" : {
+        "operationId" : "me",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "me-controller" ]
+      },
+      "patch" : {
+        "operationId" : "update",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateProfile"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "me-controller" ]
+      }
+    },
+    "/api/v1/me/history" : {
+      "get" : {
+        "operationId" : "history",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/WatchEventResponse"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "watch-history-controller" ]
+      }
+    },
+    "/api/v1/me/stats" : {
+      "get" : {
+        "operationId" : "stats",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "months",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 12
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WatchStats"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "watch-history-controller" ]
+      }
+    },
+    "/api/v1/me/streaming-accounts" : {
+      "get" : {
+        "operationId" : "linked",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/LinkedAccountResponse"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "streaming-controller" ]
+      }
+    },
+    "/api/v1/me/watch-events/episode" : {
+      "post" : {
+        "operationId" : "logEpisode",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LogEpisodeWatched"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WatchEventResponse"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "tags" : [ "watch-history-controller" ]
+      }
+    },
+    "/api/v1/me/watch-events/movie" : {
+      "post" : {
+        "operationId" : "logMovie",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LogMovieWatched"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WatchEventResponse"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "tags" : [ "watch-history-controller" ]
+      }
+    },
+    "/api/v1/me/watchlist" : {
+      "get" : {
+        "operationId" : "list",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "WATCHLIST", "WATCHING", "COMPLETED", "ON_HOLD", "DROPPED" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/WatchlistItemResponse"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "watchlist-controller" ]
+      },
+      "post" : {
+        "operationId" : "add",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AddToWatchlist"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WatchlistItemResponse"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "tags" : [ "watchlist-controller" ]
+      }
+    },
+    "/api/v1/me/watchlist/titles/{titleId}/progress" : {
+      "get" : {
+        "operationId" : "progress",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "titleId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TitleProgress"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "watchlist-controller" ]
+      }
+    },
+    "/api/v1/me/watchlist/{itemId}" : {
+      "delete" : {
+        "operationId" : "remove",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "itemId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [ "watchlist-controller" ]
+      },
+      "patch" : {
+        "operationId" : "update_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "itemId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateWatchlistItem"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WatchlistItemResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "watchlist-controller" ]
+      }
+    },
+    "/api/v1/streaming-services" : {
+      "get" : {
+        "operationId" : "list_1",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/StreamingServiceResponse"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "streaming-controller" ]
+      }
+    },
+    "/api/v1/streaming-services/reconcile" : {
+      "post" : {
+        "operationId" : "reconcile",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "region",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object",
+                  "additionalProperties" : { }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "streaming-controller" ]
+      }
+    },
+    "/api/v1/titles/import" : {
+      "post" : {
+        "operationId" : "importTitle",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "titleType",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "MOVIE", "TV_SERIES" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "providerId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "language",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TitleResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "title-controller" ]
+      }
+    },
+    "/api/v1/titles/search" : {
+      "get" : {
+        "operationId" : "search",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "minLength" : 1
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 1
+          }
+        }, {
+          "in" : "query",
+          "name" : "language",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SearchResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "title-controller" ]
+      }
+    },
+    "/api/v1/titles/{titleId}" : {
+      "get" : {
+        "operationId" : "get",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "titleId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "region",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TitleResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "title-controller" ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "AddToWatchlist" : {
+        "type" : "object",
+        "properties" : {
+          "providerId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "exclusiveMinimum" : 0
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "WATCHLIST", "WATCHING", "COMPLETED", "ON_HOLD", "DROPPED" ]
+          },
+          "titleType" : {
+            "type" : "string",
+            "enum" : [ "MOVIE", "TV_SERIES" ]
+          }
+        },
+        "required" : [ "providerId", "titleType" ]
+      },
+      "AvailabilityResponse" : {
+        "type" : "object",
+        "properties" : {
+          "fetchedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "link" : {
+            "type" : "string"
+          },
+          "logoUrl" : {
+            "type" : "string"
+          },
+          "offerType" : {
+            "type" : "string",
+            "enum" : [ "FLATRATE", "RENT", "BUY", "ADS", "FREE" ]
+          },
+          "serviceId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "serviceName" : {
+            "type" : "string"
+          }
+        }
+      },
+      "Bucket" : {
+        "type" : "object",
+        "properties" : {
+          "label" : {
+            "type" : "string"
+          },
+          "minutes" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "viewings" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "GenreResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        }
+      },
+      "LinkedAccountResponse" : {
+        "type" : "object",
+        "properties" : {
+          "accountLabel" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lastSyncAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "lastSyncError" : {
+            "type" : "string"
+          },
+          "service" : {
+            "$ref" : "#/components/schemas/StreamingServiceResponse"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "CONNECTED", "ERROR", "REVOKED", "DISCONNECTED" ]
+          },
+          "syncEnabled" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "LogEpisodeWatched" : {
+        "type" : "object",
+        "properties" : {
+          "episodeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "streamingServiceId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "watchedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [ "episodeId" ]
+      },
+      "LogMovieWatched" : {
+        "type" : "object",
+        "properties" : {
+          "streamingServiceId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "titleId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "watchedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [ "titleId" ]
+      },
+      "MonthBucket" : {
+        "type" : "object",
+        "properties" : {
+          "minutes" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "month" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "viewings" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "year" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "SearchHit" : {
+        "type" : "object",
+        "properties" : {
+          "originalTitle" : {
+            "type" : "string"
+          },
+          "overview" : {
+            "type" : "string"
+          },
+          "posterUrl" : {
+            "type" : "string"
+          },
+          "providerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "providerRating" : {
+            "type" : "number"
+          },
+          "providerVoteCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "releaseDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "titleType" : {
+            "type" : "string",
+            "enum" : [ "MOVIE", "TV_SERIES" ]
+          }
+        }
+      },
+      "SearchResponse" : {
+        "type" : "object",
+        "properties" : {
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "results" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SearchHit"
+            }
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "totalResults" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "StreamingServiceResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "logoUrl" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "slug" : {
+            "type" : "string"
+          },
+          "supportsSync" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "TitleProgress" : {
+        "type" : "object",
+        "properties" : {
+          "airedEpisodes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "nextEpisodeCode" : {
+            "type" : "string"
+          },
+          "nextEpisodeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nextEpisodeName" : {
+            "type" : "string"
+          },
+          "percentComplete" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "primaryTitle" : {
+            "type" : "string"
+          },
+          "remainingMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "titleId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "watchedEpisodes" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "TitleResponse" : {
+        "type" : "object",
+        "properties" : {
+          "availability" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AvailabilityResponse"
+            }
+          },
+          "backdropUrl" : {
+            "type" : "string"
+          },
+          "genres" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/GenreResponse"
+            }
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "imdbId" : {
+            "type" : "string"
+          },
+          "imdbRating" : {
+            "type" : "number"
+          },
+          "imdbUrl" : {
+            "type" : "string"
+          },
+          "lastAirDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "numberOfEpisodes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "numberOfSeasons" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "originalTitle" : {
+            "type" : "string"
+          },
+          "overview" : {
+            "type" : "string"
+          },
+          "posterUrl" : {
+            "type" : "string"
+          },
+          "primaryTitle" : {
+            "type" : "string"
+          },
+          "productionStatus" : {
+            "type" : "string"
+          },
+          "providerId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "providerRating" : {
+            "type" : "number"
+          },
+          "providerVoteCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "releaseDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "runtimeMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "tagline" : {
+            "type" : "string"
+          },
+          "titleType" : {
+            "type" : "string",
+            "enum" : [ "MOVIE", "TV_SERIES" ]
+          }
+        }
+      },
+      "UpdateProfile" : {
+        "type" : "object",
+        "properties" : {
+          "displayName" : {
+            "type" : "string",
+            "maxLength" : 128,
+            "minLength" : 0
+          },
+          "language" : {
+            "type" : "string",
+            "maxLength" : 16,
+            "minLength" : 0
+          },
+          "region" : {
+            "type" : "string",
+            "maxLength" : 2,
+            "minLength" : 2
+          },
+          "timeZone" : {
+            "type" : "string",
+            "maxLength" : 64,
+            "minLength" : 0
+          }
+        }
+      },
+      "UpdateWatchlistItem" : {
+        "type" : "object",
+        "properties" : {
+          "notes" : {
+            "type" : "string"
+          },
+          "rating" : {
+            "type" : "number",
+            "maximum" : 10.0,
+            "minimum" : 0.0
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "WATCHLIST", "WATCHING", "COMPLETED", "ON_HOLD", "DROPPED" ]
+          }
+        }
+      },
+      "UserResponse" : {
+        "type" : "object",
+        "properties" : {
+          "displayName" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "language" : {
+            "type" : "string"
+          },
+          "region" : {
+            "type" : "string"
+          },
+          "timeZone" : {
+            "type" : "string"
+          }
+        }
+      },
+      "WatchEventResponse" : {
+        "type" : "object",
+        "properties" : {
+          "episodeCode" : {
+            "type" : "string"
+          },
+          "episodeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "episodeName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "minutesWatched" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "primaryTitle" : {
+            "type" : "string"
+          },
+          "rewatch" : {
+            "type" : "boolean"
+          },
+          "streamingServiceName" : {
+            "type" : "string"
+          },
+          "titleId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "watchedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
+      "WatchStats" : {
+        "type" : "object",
+        "properties" : {
+          "byGenre" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Bucket"
+            }
+          },
+          "byMonth" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MonthBucket"
+            }
+          },
+          "byService" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Bucket"
+            }
+          },
+          "byStatus" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "currentStreakDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "distinctTitles" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "firstWatchedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "lastWatchedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "longestStreakDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "minutesLast30Days" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "minutesLast365Days" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "topTitles" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Bucket"
+            }
+          },
+          "totalEpisodeViewings" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalMinutes" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalMovieViewings" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "WatchlistItemResponse" : {
+        "type" : "object",
+        "properties" : {
+          "addedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "completedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "favorite" : {
+            "type" : "boolean"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "notes" : {
+            "type" : "string"
+          },
+          "priority" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "startedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "WATCHLIST", "WATCHING", "COMPLETED", "ON_HOLD", "DROPPED" ]
+          },
+          "title" : {
+            "$ref" : "#/components/schemas/TitleResponse"
+          },
+          "userRating" : {
+            "type" : "number"
+          }
+        }
+      }
+    },
+    "securitySchemes" : {
+      "bearerAuth" : {
+        "bearerFormat" : "JWT",
+        "description" : "OIDC ID token from Sign in with Apple or Google.",
+        "scheme" : "bearer",
+        "type" : "http"
+      }
+    }
+  }
+}

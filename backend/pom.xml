@@ -34,7 +34,7 @@
         <java.version>25</java.version>
         <maven.compiler.release>${java.version}</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <springdoc.version>2.8.14</springdoc.version>
+        <springdoc.version>3.1.1</springdoc.version>
     </properties>
     <dependencies>
         <dependency>
@@ -65,6 +65,14 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
+
+        <!-- springdoc 3.x is the Spring Boot 4 / Spring Framework 7 line;
+             the 2.x releases target Boot 3 and do not start here. -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
         </dependency>
 
         <!-- Boot 4 ships each integration as its own module; spring-boot-flyway
