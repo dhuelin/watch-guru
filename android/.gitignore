@@ -31,3 +31,6 @@ lint/tmp/
 *.keystore
 keystore.properties
 google-services.json
+
+### Gradle wrapper: the jar is intentionally committed so a fresh clone can build.
+!gradle/wrapper/gradle-wrapper.jar
