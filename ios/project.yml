@@ -1,0 +1,76 @@
+# XcodeGen project definition.
+#
+# The Xcode project is generated rather than committed. A .pbxproj is a large
+# machine-managed file that merges badly and cannot be reviewed; this is the
+# same information in a form a human can read in a pull request.
+#
+#   brew install xcodegen
+#   cd ios && xcodegen generate && open WatchGuru.xcodeproj
+#
+name: WatchGuru
+options:
+  bundleIdPrefix: dev.dhuelin
+  deploymentTarget:
+    # iOS 17 is the floor: @Observable, the modern Tab API, ContentUnavailableView
+    # and typed throws are all used throughout, and back-porting them would mean
+    # writing the app twice.
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+packages:
+  WatchGuruAPI:
+    path: WatchGuruAPI
+
+targets:
+  WatchGuru:
+    type: application
+    platform: iOS
+    sources:
+      - path: WatchGuru/Sources
+      - path: WatchGuru/Resources
+        optional: true
+    dependencies:
+      - package: WatchGuruAPI
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.dhuelin.watchguru
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "6.0"
+        # Complete checking, not minimal: the app is written for it, and
+        # relaxing it later is far easier than adopting it later.
+        SWIFT_STRICT_CONCURRENCY: complete
+        ENABLE_USER_SCRIPT_SANDBOXING: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: >-
+          UIInterfaceOrientationPortrait
+          UIInterfaceOrientationLandscapeLeft
+          UIInterfaceOrientationLandscapeRight
+      configs:
+        debug:
+          # The simulator reaches a backend on the developer's machine at
+          # localhost. Cleartext is allowed for that alone; App Transport
+          # Security stays on everywhere else, and the release build has no
+          # exception at all.
+          INFOPLIST_KEY_NSAppTransportSecurity: ""
+
+  WatchGuruTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - WatchGuru/Tests
+    dependencies:
+      - target: WatchGuru
+    settings:
+      base:
+        SWIFT_VERSION: "6.0"
+
+schemes:
+  WatchGuru:
+    build:
+      targets:
+        WatchGuru: all
+        WatchGuruTests: [test]
+    test:
+      targets:
+        - WatchGuruTests
