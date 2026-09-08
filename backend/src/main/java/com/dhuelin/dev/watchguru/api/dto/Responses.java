@@ -4,28 +4,44 @@ import com.dhuelin.dev.watchguru.catalog.domain.TitleType;
 import com.dhuelin.dev.watchguru.streaming.domain.LinkStatus;
 import com.dhuelin.dev.watchguru.streaming.domain.OfferType;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
-/** Response bodies. Records are kept flat so the JSON is easy to consume. */
+/**
+ * Response bodies. Records are kept flat so the JSON is easy to consume.
+ *
+ * <p>Fields the server always populates carry {@link Schema} {@code REQUIRED}.
+ * This is not decoration: both mobile clients are generated from the resulting
+ * document, and an unmarked field becomes optional in Swift and Kotlin. Left
+ * unmarked, every screen would null-check an id or a title that cannot actually
+ * be null, and the fields that genuinely are optional -- a tagline, an IMDb
+ * rating, the next episode of a finished series -- would be indistinguishable
+ * from the ones that are not.
+ */
 public final class Responses {
 
     private Responses() {
     }
 
     public record UserResponse(
-            Long id, String email, String displayName, String region, String language, String timeZone
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long id,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String email,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String displayName,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String region,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String language,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String timeZone
     ) {
     }
 
     /** A provider search hit, not yet in the local catalog. */
     public record SearchHit(
-            Long providerId,
-            TitleType titleType,
-            String title,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long providerId,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) TitleType titleType,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String title,
             String originalTitle,
             LocalDate releaseDate,
             String overview,
@@ -35,23 +51,34 @@ public final class Responses {
     ) {
     }
 
-    public record SearchResponse(List<SearchHit> results, int page, int totalPages, long totalResults) {
+    public record SearchResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<SearchHit> results,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int page,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int totalPages,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) long totalResults) {
     }
 
-    public record GenreResponse(Long id, String name) {
+    public record GenreResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long id,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String name) {
     }
 
     public record AvailabilityResponse(
-            Long serviceId, String serviceName, String logoUrl, OfferType offerType, String link, Instant fetchedAt
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long serviceId,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String serviceName,
+            String logoUrl,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) OfferType offerType,
+            String link,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Instant fetchedAt
     ) {
     }
 
     public record TitleResponse(
-            Long id,
-            Long providerId,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long id,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long providerId,
             String imdbId,
-            TitleType titleType,
-            String primaryTitle,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) TitleType titleType,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String primaryTitle,
             String originalTitle,
             String tagline,
             String overview,
@@ -67,51 +94,55 @@ public final class Responses {
             Integer providerVoteCount,
             BigDecimal imdbRating,
             String imdbUrl,
-            List<GenreResponse> genres,
-            List<AvailabilityResponse> availability
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<GenreResponse> genres,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<AvailabilityResponse> availability
     ) {
     }
 
     public record WatchlistItemResponse(
-            Long id,
-            WatchStatus status,
-            boolean favorite,
-            int priority,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long id,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) WatchStatus status,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean favorite,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int priority,
             BigDecimal userRating,
             String notes,
-            Instant addedAt,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Instant addedAt,
             Instant startedAt,
             Instant completedAt,
-            TitleResponse title
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) TitleResponse title
     ) {
     }
 
     public record WatchEventResponse(
-            Long id,
-            Long titleId,
-            String primaryTitle,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long id,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long titleId,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String primaryTitle,
             Long episodeId,
             String episodeCode,
             String episodeName,
-            Instant watchedAt,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Instant watchedAt,
             Integer minutesWatched,
-            boolean rewatch,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean rewatch,
             String streamingServiceName
     ) {
     }
 
     public record StreamingServiceResponse(
-            Long id, String slug, String name, String logoUrl, boolean supportsSync
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long id,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String slug,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String name,
+            String logoUrl,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean supportsSync
     ) {
     }
 
     /** Surface for the planned Netflix/Disney+ integrations. */
     public record LinkedAccountResponse(
-            Long id,
-            StreamingServiceResponse service,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long id,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) StreamingServiceResponse service,
             String accountLabel,
-            LinkStatus status,
-            boolean syncEnabled,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) LinkStatus status,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean syncEnabled,
             Instant lastSyncAt,
             String lastSyncError
     ) {

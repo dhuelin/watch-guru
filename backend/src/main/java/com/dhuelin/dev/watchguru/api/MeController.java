@@ -6,6 +6,7 @@ import com.dhuelin.dev.watchguru.api.dto.Responses;
 import com.dhuelin.dev.watchguru.security.CurrentUserService;
 import com.dhuelin.dev.watchguru.tracking.domain.AppUser;
 import com.dhuelin.dev.watchguru.tracking.repository.AppUserRepository;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -40,6 +41,7 @@ public class MeController {
     }
 
     @GetMapping
+    @Operation(operationId = "getProfile")
     public Responses.UserResponse me() {
         return mapper.toUser(currentUser.require());
     }
@@ -56,6 +58,7 @@ public class MeController {
      * one it captured at sign-in.
      */
     @PatchMapping
+    @Operation(operationId = "updateProfile")
     public Responses.UserResponse update(@Valid @RequestBody Requests.UpdateProfile request) {
         AppUser user = currentUser.require();
         if (request.displayName() != null) {
@@ -82,6 +85,7 @@ public class MeController {
      */
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(operationId = "deleteAccount")
     public void deleteAccount() {
         currentUser.deleteCurrentUser();
     }

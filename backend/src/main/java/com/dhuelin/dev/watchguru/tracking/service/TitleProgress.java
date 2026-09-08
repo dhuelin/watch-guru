@@ -1,5 +1,7 @@
 package com.dhuelin.dev.watchguru.tracking.service;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * How far a user is through a series.
  *
@@ -10,14 +12,17 @@ package com.dhuelin.dev.watchguru.tracking.service;
  * @param remainingMinutes estimated time left to finish what has aired
  */
 public record TitleProgress(
-        Long titleId,
-        String primaryTitle,
-        int airedEpisodes,
-        int watchedEpisodes,
-        int percentComplete,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long titleId,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String primaryTitle,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int airedEpisodes,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int watchedEpisodes,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int percentComplete,
+        // The next-episode triple is genuinely absent once a user is caught up,
+        // which is what the clients need to distinguish "no next episode" from
+        // "field we forgot to mark".
         Long nextEpisodeId,
         String nextEpisodeCode,
         String nextEpisodeName,
-        int remainingMinutes
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int remainingMinutes
 ) {
 }

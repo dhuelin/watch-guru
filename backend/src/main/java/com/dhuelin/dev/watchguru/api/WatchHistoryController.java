@@ -8,6 +8,7 @@ import com.dhuelin.dev.watchguru.tracking.repository.WatchEventRepository;
 import com.dhuelin.dev.watchguru.tracking.service.WatchStats;
 import com.dhuelin.dev.watchguru.tracking.service.StatsService;
 import com.dhuelin.dev.watchguru.tracking.service.WatchlistService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -49,6 +50,7 @@ public class WatchHistoryController {
 
     @PostMapping("/watch-events/movie")
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(operationId = "logMovieWatched")
     public Responses.WatchEventResponse logMovie(@Valid @RequestBody Requests.LogMovieWatched request) {
         return mapper.toWatchEvent(watchlist.logMovieWatched(
                 currentUser.require().getId(),
@@ -57,6 +59,7 @@ public class WatchHistoryController {
 
     @PostMapping("/watch-events/episode")
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(operationId = "logEpisodeWatched")
     public Responses.WatchEventResponse logEpisode(@Valid @RequestBody Requests.LogEpisodeWatched request) {
         return mapper.toWatchEvent(watchlist.logEpisodeWatched(
                 currentUser.require().getId(),
@@ -65,6 +68,7 @@ public class WatchHistoryController {
 
     /** Full viewing history, newest first. */
     @GetMapping("/history")
+    @Operation(operationId = "getHistory")
     public List<Responses.WatchEventResponse> history(@RequestParam(defaultValue = "0") int page,
                                                       @RequestParam(defaultValue = "50") int size) {
         return events.findByUserIdOrderByWatchedAtDesc(
@@ -80,6 +84,7 @@ public class WatchHistoryController {
      * @param months how far back the monthly time series should reach
      */
     @GetMapping("/stats")
+    @Operation(operationId = "getStats")
     public WatchStats stats(@RequestParam(defaultValue = "12") int months) {
         return stats.forUser(currentUser.require().getId(), months);
     }

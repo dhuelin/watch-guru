@@ -3,7 +3,6 @@ package com.dhuelin.dev.watchguru.config;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
@@ -22,6 +21,10 @@ public class OpenApiConfig {
 
     private static final String BEARER_SCHEME = "bearerAuth";
 
+    // No license object. OpenAPI 3.1 wants a License to carry an SPDX
+    // identifier or a URL, and this project has neither -- "Proprietary" is not
+    // an SPDX id. Declaring a name alone fails openapi-generator's validation
+    // outright, which would block the very thing this document exists for.
     @Bean
     OpenAPI watchGuruOpenApi() {
         return new OpenAPI()
@@ -39,8 +42,7 @@ public class OpenApiConfig {
                                 no way to name a different one.
 
                                 Catalog metadata comes from TMDB. This product uses the TMDB API \
-                                but is not endorsed or certified by TMDB.""")
-                        .license(new License().name("Proprietary")))
+                                but is not endorsed or certified by TMDB."""))
                 .components(new Components().addSecuritySchemes(BEARER_SCHEME, new SecurityScheme()
                         .type(SecurityScheme.Type.HTTP)
                         .scheme("bearer")

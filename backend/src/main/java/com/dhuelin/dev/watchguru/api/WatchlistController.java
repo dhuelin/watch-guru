@@ -8,6 +8,7 @@ import com.dhuelin.dev.watchguru.tracking.domain.WatchStatus;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchlistItem;
 import com.dhuelin.dev.watchguru.tracking.service.TitleProgress;
 import com.dhuelin.dev.watchguru.tracking.service.WatchlistService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -52,6 +53,7 @@ public class WatchlistController {
     }
 
     @GetMapping
+    @Operation(operationId = "listWatchlist")
     public List<Responses.WatchlistItemResponse> list(@RequestParam(required = false) WatchStatus status,
                                                       @RequestParam(defaultValue = "0") int page,
                                                       @RequestParam(defaultValue = "20") int size) {
@@ -71,6 +73,7 @@ public class WatchlistController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(operationId = "addToWatchlist")
     public Responses.WatchlistItemResponse add(@Valid @RequestBody Requests.AddToWatchlist request) {
         Long userId = currentUser.require().getId();
         WatchlistItem item = watchlist.add(
@@ -79,6 +82,7 @@ public class WatchlistController {
     }
 
     @PatchMapping("/{itemId}")
+    @Operation(operationId = "updateWatchlistItem")
     public Responses.WatchlistItemResponse update(@PathVariable Long itemId,
                                                   @Valid @RequestBody Requests.UpdateWatchlistItem request) {
         Long userId = currentUser.require().getId();
@@ -98,12 +102,14 @@ public class WatchlistController {
 
     @DeleteMapping("/{itemId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(operationId = "removeFromWatchlist")
     public void remove(@PathVariable Long itemId) {
         watchlist.remove(currentUser.require().getId(), itemId);
     }
 
     /** Aired-episode progress and the next episode to watch. */
     @GetMapping("/titles/{titleId}/progress")
+    @Operation(operationId = "getTitleProgress")
     public TitleProgress progress(@PathVariable Long titleId) {
         return watchlist.progress(currentUser.require().getId(), titleId);
     }

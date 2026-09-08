@@ -10,6 +10,7 @@ import com.dhuelin.dev.watchguru.common.NotFoundException;
 import com.dhuelin.dev.watchguru.config.TmdbProperties;
 import com.dhuelin.dev.watchguru.streaming.service.AvailabilityService;
 import jakarta.validation.constraints.NotBlank;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -42,6 +43,7 @@ public class TitleController {
 
     /** Live search against the metadata provider; nothing is persisted. */
     @GetMapping("/search")
+    @Operation(operationId = "searchTitles")
     public Responses.SearchResponse search(@RequestParam @NotBlank String query,
                                            @RequestParam(defaultValue = "1") int page,
                                            @RequestParam(required = false) String language) {
@@ -50,6 +52,7 @@ public class TitleController {
 
     /** Imports a provider title into the local catalog and returns it. */
     @PostMapping("/import")
+    @Operation(operationId = "importTitle")
     public Responses.TitleResponse importTitle(@RequestParam TitleType titleType,
                                                @RequestParam long providerId,
                                                @RequestParam(required = false) String language) {
@@ -58,6 +61,7 @@ public class TitleController {
     }
 
     @GetMapping("/{titleId}")
+    @Operation(operationId = "getTitle")
     public Responses.TitleResponse get(@PathVariable Long titleId,
                                        @RequestParam(required = false) String region) {
         Title title = titles.findById(titleId)
