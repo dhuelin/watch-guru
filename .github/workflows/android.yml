@@ -1,0 +1,57 @@
+name: Android
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - '.github/workflows/android.yml'
+  pull_request:
+    paths:
+      - 'android/**'
+      - '.github/workflows/android.yml'
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: android
+
+jobs:
+  build:
+    name: Assemble and unit test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # AGP requires 17; the app targets it too.
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # This is the first Gradle build these sources will ever have had. They
+      # were written in an environment that could not reach Google's Maven, so
+      # the plugin versions and everything under ui/ are unproven. The data
+      # layer beneath them was compiled and tested separately.
+      - name: Assemble debug
+        run: ./gradlew :app:assembleDebug
+
+      - name: Unit tests
+        run: ./gradlew :app:testDebugUnitTest
+
+      - name: Upload test report on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: android-test-report
+          path: android/app/build/reports/tests/
+          retention-days: 7

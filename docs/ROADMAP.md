@@ -68,19 +68,52 @@ Both platforms, feature-equivalent, each looking correct on its own platform.
 
 | # | Issue | Notes |
 |---|---|---|
-| [#7](https://github.com/dhuelin/watch-guru/issues/7) | iOS scaffold (SwiftUI) | Tab shell, networking, previews |
-| [#8](https://github.com/dhuelin/watch-guru/issues/8) | Android scaffold (Compose) | Bottom nav, networking, DI |
-| [#16](https://github.com/dhuelin/watch-guru/issues/16) | Design system | Shared semantics, two native expressions. Start early — it constrains every screen. |
-| [#15](https://github.com/dhuelin/watch-guru/issues/15) | Sign-in and account management | Client half of #1 |
-| [#9](https://github.com/dhuelin/watch-guru/issues/9) | Search and discovery | How anything enters the library |
-| [#10](https://github.com/dhuelin/watch-guru/issues/10) | Title detail screen | The hub |
-| [#11](https://github.com/dhuelin/watch-guru/issues/11) | Library screen | The screen users open most |
-| [#12](https://github.com/dhuelin/watch-guru/issues/12) | **Episode progress tracking** | The reason the app exists |
-| [#13](https://github.com/dhuelin/watch-guru/issues/13) | Home: Up Next | Answers "what do I put on now" |
-| [#14](https://github.com/dhuelin/watch-guru/issues/14) | Offline cache and sync | An app that loses a watch record has failed at its job |
+| # | Issue | State |
+|---|---|---|
+| [#16](https://github.com/dhuelin/watch-guru/issues/16) | Design system | ✅ `docs/DESIGN.md` |
+| [#8](https://github.com/dhuelin/watch-guru/issues/8) | Android scaffold (Compose) | ✅ Shell, DI, data layer, screens |
+| [#7](https://github.com/dhuelin/watch-guru/issues/7) | iOS scaffold (SwiftUI) | ✅ Shell, client, screens |
+| [#9](https://github.com/dhuelin/watch-guru/issues/9) | Search and discovery | ✅ Both platforms, debounced, add from a row |
+| [#10](https://github.com/dhuelin/watch-guru/issues/10) | Title detail screen | ✅ Both platforms |
+| [#11](https://github.com/dhuelin/watch-guru/issues/11) | Library screen | ✅ Status filter, optimistic removal. No progress bars — see below |
+| [#12](https://github.com/dhuelin/watch-guru/issues/12) | **Episode progress tracking** | 🟡 Next-episode marking works; the season/episode list and *mark all up to here* are not built |
+| [#15](https://github.com/dhuelin/watch-guru/issues/15) | Sign-in and account management | ⬜ **Next.** Until this lands both apps 401 on every call |
+| [#13](https://github.com/dhuelin/watch-guru/issues/13) | Home: Up Next | ⬜ Placeholder; blocked on a backend endpoint |
+| [#14](https://github.com/dhuelin/watch-guru/issues/14) | Offline cache and sync | ⬜ |
 
 **Done when:** a user can sign in, find a series, track it episode by episode,
 see where they left off, and do all of that on a train with no signal.
+
+### What the mobile work could not verify
+
+The apps were built in an environment that could reach neither Google's Maven
+nor a Swift toolchain, so **no Gradle build and no Xcode build has ever run**.
+What was verified, and what was not:
+
+| | Verified |
+|---|---|
+| Generated Kotlin client | ✅ Compiles — 108 classes |
+| Android `data/` layer | ✅ Compiles, 9 unit tests passing on a plain JVM |
+| Android `ui/` | ❌ Compose needs the Android SDK |
+| Android Gradle setup | ❌ AGP will not resolve |
+| Everything iOS | ❌ No macOS, no Xcode, no Swift compiler |
+
+The Android data layer is on firm ground because it deliberately contains no
+Android imports. Everything else should be expected to need fixes on first
+build, and each app's README says so.
+
+### A backend gap that surfaced twice
+
+Both library screens show an episode count where a progress bar belongs, and
+both Home screens are placeholders, for the same reason: `GET /api/v1/me/watchlist`
+returns no per-title progress, and there is no `up-next` endpoint. The client-side
+alternative is one `/progress` call per row on the two screens people open most.
+
+The fix belongs on the server — fold `watchedEpisodes`/`airedEpisodes` into the
+watchlist response, and add `GET /api/v1/me/up-next`. Doing it there also keeps
+the rule for what counts as "next" in one place instead of implemented twice.
+This is the highest-value backend work remaining, and it blocks
+[#13](https://github.com/dhuelin/watch-guru/issues/13).
 
 ### Start here
 
