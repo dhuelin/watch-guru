@@ -24,6 +24,7 @@ enum class TopLevelDestination(
 /** Screens reached from within a tab rather than from the bar. */
 object Routes {
     const val TITLE_DETAIL = "title/{titleId}"
+    const val HISTORY = "history"
 
     fun titleDetail(titleId: Long) = "title/$titleId"
 

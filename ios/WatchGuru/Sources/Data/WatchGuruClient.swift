@@ -139,6 +139,12 @@ actor WatchGuruClient {
         try await run { try await WatchHistoryControllerAPI.getUpNext(limit: limit, apiConfiguration: $0) }
     }
 
+    func history(page: Int = 0, size: Int = 50) async throws(APIFailure) -> [WatchEventResponse] {
+        try await run {
+            try await WatchHistoryControllerAPI.getHistory(page: page, size: size, apiConfiguration: $0)
+        }
+    }
+
     func stats(months: Int = 12) async throws(APIFailure) -> WatchStats {
         try await run { try await WatchHistoryControllerAPI.getStats(months: months, apiConfiguration: $0) }
     }

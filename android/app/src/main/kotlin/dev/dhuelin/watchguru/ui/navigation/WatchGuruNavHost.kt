@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import dev.dhuelin.watchguru.ui.detail.TitleDetailScreen
+import dev.dhuelin.watchguru.ui.history.HistoryScreen
 import dev.dhuelin.watchguru.ui.home.HomeScreen
 import dev.dhuelin.watchguru.ui.library.LibraryScreen
 import dev.dhuelin.watchguru.ui.profile.ProfileScreen
@@ -33,7 +34,10 @@ fun WatchGuruNavHost(
             LibraryScreen(onOpenTitle = { navController.navigate(Routes.titleDetail(it)) })
         }
         composable(TopLevelDestination.PROFILE.route) {
-            ProfileScreen()
+            ProfileScreen(onOpenHistory = { navController.navigate(Routes.HISTORY) })
+        }
+        composable(Routes.HISTORY) {
+            HistoryScreen(onBack = { navController.popBackStack() })
         }
         composable(
             route = Routes.TITLE_DETAIL,

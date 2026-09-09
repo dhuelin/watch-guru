@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -25,7 +26,10 @@ import dev.dhuelin.watchguru.ui.components.UiState
  * appear, and language is passed through to TMDB.
  */
 @Composable
-fun ProfileScreen(viewModel: ProfileViewModel = hiltViewModel()) {
+fun ProfileScreen(
+    onOpenHistory: () -> Unit,
+    viewModel: ProfileViewModel = hiltViewModel(),
+) {
     val profile by viewModel.profile.collectAsStateWithLifecycle()
 
     when (val state = profile) {
@@ -38,6 +42,13 @@ fun ProfileScreen(viewModel: ProfileViewModel = hiltViewModel()) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp),
             )
+            TextButton(
+                onClick = onOpenHistory,
+                modifier = Modifier.padding(top = 16.dp),
+            ) {
+                Text(stringResource(R.string.action_view_history))
+            }
+
             Text(
                 text = stringResource(R.string.tmdb_attribution),
                 style = MaterialTheme.typography.labelSmall,

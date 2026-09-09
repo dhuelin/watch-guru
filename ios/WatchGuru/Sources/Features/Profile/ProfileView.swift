@@ -29,6 +29,11 @@ struct ProfileView: View {
                         LabeledContent("Time zone", value: user.timeZone)
                     }
                     Section {
+                        NavigationLink("Viewing history") {
+                            HistoryView()
+                        }
+                    }
+                    Section {
                         Text("This product uses the TMDB API but is not endorsed or certified by TMDB.")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
