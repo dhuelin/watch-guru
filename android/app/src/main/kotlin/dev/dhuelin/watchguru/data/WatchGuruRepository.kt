@@ -101,6 +101,18 @@ class WatchGuruRepository(
     suspend fun markWatchedUpTo(episodeId: Long): ApiResult<BulkMarkResponse> =
         call { history.markWatchedUpTo(MarkWatchedUpTo(episodeId = episodeId)) }
 
+    /**
+     * Removes an episode from the watched history entirely.
+     *
+     * Idempotent server-side, so a retry after a dropped response is safe.
+     */
+    suspend fun unmarkEpisode(episodeId: Long): ApiResult<Unit> =
+        call { history.unmarkEpisode(episodeId) }
+
+    /** Deletes one history entry, leaving other rewatches of it intact. */
+    suspend fun deleteWatchEvent(eventId: Long): ApiResult<Unit> =
+        call { history.deleteWatchEvent(eventId) }
+
     /** The next unwatched episode of every series in progress. */
     suspend fun upNext(limit: Int = 20): ApiResult<List<UpNextResponse>> =
         call { history.getUpNext(limit) }

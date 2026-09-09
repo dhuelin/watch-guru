@@ -68,16 +68,14 @@ class TitleDetailViewModel @Inject constructor(
         if (_marking.value) return
         viewModelScope.launch {
             _marking.value = true
-            // Unmarking has no endpoint yet, so only the mark direction acts.
-            // Showing a control that silently does nothing would be worse than
-            // the gap; the screen disables it instead.
-            if (!currentlyWatched) {
-                if (repository.markEpisodeWatched(LogEpisodeWatched(episodeId = episodeId))
-                    is ApiResult.Success
-                ) {
-                    refreshProgress()
-                    refreshSeasons()
-                }
+            val result = if (currentlyWatched) {
+                repository.unmarkEpisode(episodeId)
+            } else {
+                repository.markEpisodeWatched(LogEpisodeWatched(episodeId = episodeId))
+            }
+            if (result is ApiResult.Success) {
+                refreshProgress()
+                refreshSeasons()
             }
             _marking.value = false
         }

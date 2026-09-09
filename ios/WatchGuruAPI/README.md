@@ -40,12 +40,14 @@ Class | Method | HTTP request | Description
 *TitleControllerAPI* | [**getTitle**](docs/TitleControllerAPI.md#gettitle) | **GET** /api/v1/titles/{titleId} | 
 *TitleControllerAPI* | [**importTitle**](docs/TitleControllerAPI.md#importtitle) | **POST** /api/v1/titles/import | 
 *TitleControllerAPI* | [**searchTitles**](docs/TitleControllerAPI.md#searchtitles) | **GET** /api/v1/titles/search | 
+*WatchHistoryControllerAPI* | [**deleteWatchEvent**](docs/WatchHistoryControllerAPI.md#deletewatchevent) | **DELETE** /api/v1/me/watch-events/{eventId} | 
 *WatchHistoryControllerAPI* | [**getHistory**](docs/WatchHistoryControllerAPI.md#gethistory) | **GET** /api/v1/me/history | 
 *WatchHistoryControllerAPI* | [**getStats**](docs/WatchHistoryControllerAPI.md#getstats) | **GET** /api/v1/me/stats | 
 *WatchHistoryControllerAPI* | [**getUpNext**](docs/WatchHistoryControllerAPI.md#getupnext) | **GET** /api/v1/me/up-next | 
 *WatchHistoryControllerAPI* | [**logEpisodeWatched**](docs/WatchHistoryControllerAPI.md#logepisodewatched) | **POST** /api/v1/me/watch-events/episode | 
 *WatchHistoryControllerAPI* | [**logMovieWatched**](docs/WatchHistoryControllerAPI.md#logmoviewatched) | **POST** /api/v1/me/watch-events/movie | 
 *WatchHistoryControllerAPI* | [**markWatchedUpTo**](docs/WatchHistoryControllerAPI.md#markwatchedupto) | **POST** /api/v1/me/watch-events/episodes/up-to | 
+*WatchHistoryControllerAPI* | [**unmarkEpisode**](docs/WatchHistoryControllerAPI.md#unmarkepisode) | **DELETE** /api/v1/me/watch-events/episodes/{episodeId} | 
 *WatchlistControllerAPI* | [**addToWatchlist**](docs/WatchlistControllerAPI.md#addtowatchlist) | **POST** /api/v1/me/watchlist | 
 *WatchlistControllerAPI* | [**getTitleProgress**](docs/WatchlistControllerAPI.md#gettitleprogress) | **GET** /api/v1/me/watchlist/titles/{titleId}/progress | 
 *WatchlistControllerAPI* | [**listWatchlist**](docs/WatchlistControllerAPI.md#listwatchlist) | **GET** /api/v1/me/watchlist | 

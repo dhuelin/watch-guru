@@ -33,17 +33,24 @@ final class TitleDetailModel {
         await refreshSeasons()
     }
 
-    /// Marks one episode watched.
+    /// Toggles one episode's watched state.
     ///
-    /// Unmarking has no endpoint yet, so only this direction acts; the view
-    /// disables the control rather than showing one that silently does nothing.
-    func markEpisodeWatched(_ episode: EpisodeResponse) async {
-        guard episode.aired, !episode.watched, !isMarking else { return }
+    /// Unmarking matters more than it sounds: ticking the row below the one you
+    /// meant is the most common mistake in a list of near-identical episodes.
+    func toggleEpisode(_ episode: EpisodeResponse) async {
+        guard episode.aired, !isMarking else { return }
 
         isMarking = true
         defer { isMarking = false }
 
-        if (try? await client.markEpisodeWatched(episodeId: episode.id)) != nil {
+        let succeeded: Bool
+        if episode.watched {
+            succeeded = (try? await client.unmarkEpisode(episodeId: episode.id)) != nil
+        } else {
+            succeeded = (try? await client.markEpisodeWatched(episodeId: episode.id)) != nil
+        }
+
+        if succeeded {
             await refreshProgress()
             await refreshSeasons()
         }

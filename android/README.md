@@ -64,9 +64,6 @@ logic regardless.
 - **Sign-in (#15).** The app expects a token to already be in the token store,
   so every call returns 401 until Sign in with Google and Apple land. This is
   the next thing to do.
-- **Unmarking an episode.** There is no endpoint for it, so the control is
-  disabled in that direction rather than shown as something that silently does
-  nothing.
 - **Offline cache (#14), stats (#17), notifications (#19), widgets (#20).**
 
 ## Regenerating the API client

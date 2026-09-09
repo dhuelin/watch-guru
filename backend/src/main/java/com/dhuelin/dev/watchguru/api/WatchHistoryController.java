@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -99,6 +100,34 @@ public class WatchHistoryController {
                 .stream()
                 .map(mapper::toUpNext)
                 .toList();
+    }
+
+    /**
+     * Removes an episode from the watched history entirely.
+     *
+     * <p>Idempotent: unmarking something already unwatched returns 204 rather
+     * than an error, so a client retrying after a dropped response does not see
+     * a failure for work already done.
+     */
+    @DeleteMapping("/watch-events/episodes/{episodeId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(operationId = "unmarkEpisode")
+    public void unmarkEpisode(@PathVariable Long episodeId) {
+        watchlist.unmarkEpisode(currentUser.require().getId(), episodeId);
+    }
+
+    /**
+     * Deletes one history entry.
+     *
+     * <p>Not the same as unmarking: removing one of three rewatches leaves the
+     * episode watched with a lower count. Only losing the last event for an
+     * episode makes it unwatched.
+     */
+    @DeleteMapping("/watch-events/{eventId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(operationId = "deleteWatchEvent")
+    public void deleteWatchEvent(@PathVariable Long eventId) {
+        watchlist.deleteWatchEvent(currentUser.require().getId(), eventId);
     }
 
     /** Full viewing history, newest first. */

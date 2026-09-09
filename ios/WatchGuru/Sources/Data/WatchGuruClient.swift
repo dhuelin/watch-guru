@@ -118,6 +118,22 @@ actor WatchGuruClient {
         }
     }
 
+    /// Removes an episode from the watched history entirely.
+    ///
+    /// Idempotent server-side, so a retry after a dropped response is safe.
+    func unmarkEpisode(episodeId: Int64) async throws(APIFailure) {
+        try await runVoid {
+            try await WatchHistoryControllerAPI.unmarkEpisode(episodeId: episodeId, apiConfiguration: $0)
+        }
+    }
+
+    /// Deletes one history entry, leaving other rewatches of it intact.
+    func deleteWatchEvent(eventId: Int64) async throws(APIFailure) {
+        try await runVoid {
+            try await WatchHistoryControllerAPI.deleteWatchEvent(eventId: eventId, apiConfiguration: $0)
+        }
+    }
+
     /// The next unwatched episode of every series in progress.
     func upNext(limit: Int = 20) async throws(APIFailure) -> [UpNextResponse] {
         try await run { try await WatchHistoryControllerAPI.getUpNext(limit: limit, apiConfiguration: $0) }

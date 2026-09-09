@@ -121,13 +121,15 @@ private fun EpisodeRow(
         IconButton(
             onClick = onToggle,
             // An unaired episode cannot be watched, so the control is disabled
-            // rather than offering something that would be rejected.
-            enabled = episode.aired && !marking && !episode.watched,
+            // rather than offering something that would be rejected. A watched
+            // one is now un-markable, which is the common correction: people
+            // tick the row below the one they meant.
+            enabled = episode.aired && !marking,
             modifier = Modifier
                 .size(48.dp)
                 .semantics {
                     contentDescription = if (episode.watched) {
-                        "${episode.code} watched"
+                        "Mark ${episode.code} unwatched"
                     } else {
                         "Mark ${episode.code} watched"
                     }

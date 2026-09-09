@@ -28,6 +28,16 @@ public interface WatchEventRepository extends JpaRepository<WatchEvent, Long> {
 
     boolean existsByUserIdAndTitleIdAndEpisodeIsNull(Long userId, Long titleId);
 
+    /**
+     * Every history entry for one episode.
+     *
+     * <p>Unmarking removes these along with the current-state row. The history
+     * is what the derived tables are rebuilt from, so leaving events behind for
+     * an episode the user says they never watched would make the two disagree
+     * the moment anything recomputed.
+     */
+    List<WatchEvent> findByUserIdAndEpisodeId(Long userId, Long episodeId);
+
     @Query("select coalesce(sum(e.minutesWatched), 0) from WatchEvent e where e.user.id = :userId")
     long totalMinutesWatched(@Param("userId") Long userId);
 

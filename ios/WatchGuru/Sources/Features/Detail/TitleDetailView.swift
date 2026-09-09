@@ -94,7 +94,7 @@ struct TitleDetailView: View {
                                     model.expandedSeason == season.seasonNumber ? nil : season.seasonNumber
                             },
                             markWatched: { episode in
-                                Task { await model.markEpisodeWatched(episode) }
+                                Task { await model.toggleEpisode(episode) }
                             },
                             markUpTo: { episode in
                                 Task { await model.markUpTo(episode) }

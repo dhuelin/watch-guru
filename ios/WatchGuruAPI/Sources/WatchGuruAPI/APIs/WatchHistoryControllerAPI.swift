@@ -11,6 +11,46 @@ open class WatchHistoryControllerAPI {
 
     /**
 
+     - parameter eventId: (path)  
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: Void
+     */
+    open class func deleteWatchEvent(eventId: Int64, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) async throws(ErrorResponse) {
+        return try await deleteWatchEventWithRequestBuilder(eventId: eventId, apiConfiguration: apiConfiguration).execute().body
+    }
+
+    /**
+     - DELETE /api/v1/me/watch-events/{eventId}
+     - Bearer Token:
+       - type: http
+       - name: bearerAuth
+     - parameter eventId: (path)  
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: RequestBuilder<Void> 
+     */
+    open class func deleteWatchEventWithRequestBuilder(eventId: Int64, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) -> RequestBuilder<Void> {
+        var localVariablePath = "/api/v1/me/watch-events/{eventId}"
+        let eventIdPreEscape = "\(APIHelper.mapValueToPathItem(eventId))"
+        let eventIdPostEscape = eventIdPreEscape.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+        localVariablePath = localVariablePath.replacingOccurrences(of: "{eventId}", with: eventIdPostEscape, options: .literal, range: nil)
+        let localVariableURLString = apiConfiguration.basePath + localVariablePath
+        let localVariableParameters: [String: any Sendable]? = nil
+
+        let localVariableUrlComponents = URLComponents(string: localVariableURLString)
+
+        let localVariableNillableHeaders: [String: (any Sendable)?] = [
+            :
+        ]
+
+        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
+
+        let localVariableRequestBuilder: RequestBuilder<Void>.Type = apiConfiguration.requestBuilderFactory.getNonDecodableBuilder()
+
+        return localVariableRequestBuilder.init(method: "DELETE", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
+    }
+
+    /**
+
      - parameter page: (query)  (optional, default to 0)
      - parameter size: (query)  (optional, default to 50)
      - parameter apiConfiguration: The configuration for the http request.
@@ -241,5 +281,45 @@ open class WatchHistoryControllerAPI {
         let localVariableRequestBuilder: RequestBuilder<BulkMarkResponse>.Type = apiConfiguration.requestBuilderFactory.getBuilder()
 
         return localVariableRequestBuilder.init(method: "POST", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
+    }
+
+    /**
+
+     - parameter episodeId: (path)  
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: Void
+     */
+    open class func unmarkEpisode(episodeId: Int64, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) async throws(ErrorResponse) {
+        return try await unmarkEpisodeWithRequestBuilder(episodeId: episodeId, apiConfiguration: apiConfiguration).execute().body
+    }
+
+    /**
+     - DELETE /api/v1/me/watch-events/episodes/{episodeId}
+     - Bearer Token:
+       - type: http
+       - name: bearerAuth
+     - parameter episodeId: (path)  
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: RequestBuilder<Void> 
+     */
+    open class func unmarkEpisodeWithRequestBuilder(episodeId: Int64, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) -> RequestBuilder<Void> {
+        var localVariablePath = "/api/v1/me/watch-events/episodes/{episodeId}"
+        let episodeIdPreEscape = "\(APIHelper.mapValueToPathItem(episodeId))"
+        let episodeIdPostEscape = episodeIdPreEscape.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+        localVariablePath = localVariablePath.replacingOccurrences(of: "{episodeId}", with: episodeIdPostEscape, options: .literal, range: nil)
+        let localVariableURLString = apiConfiguration.basePath + localVariablePath
+        let localVariableParameters: [String: any Sendable]? = nil
+
+        let localVariableUrlComponents = URLComponents(string: localVariableURLString)
+
+        let localVariableNillableHeaders: [String: (any Sendable)?] = [
+            :
+        ]
+
+        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
+
+        let localVariableRequestBuilder: RequestBuilder<Void>.Type = apiConfiguration.requestBuilderFactory.getNonDecodableBuilder()
+
+        return localVariableRequestBuilder.init(method: "DELETE", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
     }
 }

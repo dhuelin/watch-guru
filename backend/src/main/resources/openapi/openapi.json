@@ -242,6 +242,26 @@
         "tags" : [ "watch-history-controller" ]
       }
     },
+    "/api/v1/me/watch-events/episodes/{episodeId}" : {
+      "delete" : {
+        "operationId" : "unmarkEpisode",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "episodeId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [ "watch-history-controller" ]
+      }
+    },
     "/api/v1/me/watch-events/movie" : {
       "post" : {
         "operationId" : "logMovieWatched",
@@ -265,6 +285,26 @@
               }
             },
             "description" : "Created"
+          }
+        },
+        "tags" : [ "watch-history-controller" ]
+      }
+    },
+    "/api/v1/me/watch-events/{eventId}" : {
+      "delete" : {
+        "operationId" : "deleteWatchEvent",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "eventId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
           }
         },
         "tags" : [ "watch-history-controller" ]

@@ -77,6 +77,8 @@ class WatchGuruRepositoryTest {
                 logMovieWatched: dev.dhuelin.watchguru.api.models.LogMovieWatched,
             ) = fail()
             override suspend fun getUpNext(limit: Int?) = fail()
+            override suspend fun unmarkEpisode(episodeId: Long) = fail()
+            override suspend fun deleteWatchEvent(eventId: Long) = fail()
             override suspend fun markWatchedUpTo(
                 markWatchedUpTo: dev.dhuelin.watchguru.api.models.MarkWatchedUpTo,
             ) = fail()

@@ -79,8 +79,6 @@ Where they differ, they differ on purpose:
 - **Sign in with Apple and Google (#15).** The app expects a token to already
   be in the Keychain, so every call returns 401 until this lands. It is the
   next thing to do.
-- **Unmarking an episode.** No endpoint exists, so that direction is disabled
-  rather than shown as a control that does nothing.
 - **Offline cache (#14), stats (#17), notifications (#19), widgets (#20).**
 
 ## Regenerating the API client

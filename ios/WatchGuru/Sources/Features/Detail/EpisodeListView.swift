@@ -80,10 +80,13 @@ private struct EpisodeRow: View {
             }
             .buttonStyle(.plain)
             // An unaired episode cannot be watched, so the control is disabled
-            // rather than offering an action the server would reject.
-            .disabled(!episode.aired || episode.watched || isMarking)
+            // rather than offering an action the server would reject. A watched
+            // one now toggles back, which is the common correction.
+            .disabled(!episode.aired || isMarking)
             .accessibilityLabel(
-                episode.watched ? "\(episode.code) watched" : "Mark \(episode.code) watched"
+                episode.watched
+                    ? "Mark \(episode.code) unwatched"
+                    : "Mark \(episode.code) watched"
             )
 
             VStack(alignment: .leading, spacing: 2) {

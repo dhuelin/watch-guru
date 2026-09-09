@@ -242,6 +242,122 @@ public class WatchlistService {
             Long titleId, int newlyMarked, int alreadyWatched, int watchedEpisodes, int airedEpisodes) {
     }
 
+    /**
+     * Removes an episode from the user's watched history entirely.
+     *
+     * <p>People mark the wrong episode constantly -- one row down in a list of
+     * near-identical titles -- so this is a routine correction rather than an
+     * edge case.
+     *
+     * <p>Deletes the history events as well as the current-state row. The
+     * append-only {@code watch_event} log is what {@code episode_watch} and
+     * {@code watchlist_item} are derived from; keeping events for an episode the
+     * user says they never watched would mean any recomputation silently
+     * restored it.
+     *
+     * @return whether anything was actually watched to begin with
+     */
+    @Transactional
+    public boolean unmarkEpisode(Long userId, Long episodeId) {
+        requireUser(userId);
+        Episode episode = episodes.findById(episodeId)
+                .orElseThrow(() -> NotFoundException.of("Episode", episodeId));
+
+        EpisodeWatch watch = episodeWatches.findByUserIdAndEpisodeId(userId, episodeId).orElse(null);
+        List<WatchEvent> events = watchEvents.findByUserIdAndEpisodeId(userId, episodeId);
+
+        if (watch == null && events.isEmpty()) {
+            // Idempotent: unmarking something already unwatched is a no-op, not
+            // an error. A client retrying after a dropped response must not see
+            // a failure for work that is already done.
+            return false;
+        }
+
+        if (watch != null) {
+            episodeWatches.delete(watch);
+        }
+        watchEvents.deleteAll(events);
+
+        recomputeSeriesStatus(userId, episode.getTitle());
+        return true;
+    }
+
+    /**
+     * Deletes one history entry, leaving the rest of the episode's history
+     * intact.
+     *
+     * <p>Distinct from {@link #unmarkEpisode}: removing one of three rewatches
+     * should leave the episode watched, with a lower watch count. Only when the
+     * last event for an episode goes does the episode stop being watched.
+     */
+    @Transactional
+    public void deleteWatchEvent(Long userId, Long eventId) {
+        WatchEvent event = watchEvents.findById(eventId)
+                .orElseThrow(() -> NotFoundException.of("Watch event", eventId));
+
+        // 404 rather than 403 for somebody else's event: a 403 would confirm it
+        // exists, and event ids are sequential.
+        if (!event.getUser().getId().equals(userId)) {
+            throw NotFoundException.of("Watch event", eventId);
+        }
+
+        Episode episode = event.getEpisode();
+        Title title = event.getTitle();
+        watchEvents.delete(event);
+
+        if (episode != null) {
+            List<WatchEvent> remaining = watchEvents.findByUserIdAndEpisodeId(userId, episode.getId());
+            episodeWatches.findByUserIdAndEpisodeId(userId, episode.getId()).ifPresent(watch -> {
+                if (remaining.isEmpty()) {
+                    episodeWatches.delete(watch);
+                } else {
+                    // The count follows the history rather than being
+                    // decremented blindly, so the two cannot drift.
+                    watch.setWatchCount(remaining.size());
+                    watch.setWatchedAt(remaining.stream()
+                            .map(WatchEvent::getWatchedAt)
+                            .max(java.util.Comparator.naturalOrder())
+                            .orElse(watch.getWatchedAt()));
+                    episodeWatches.save(watch);
+                }
+            });
+        }
+
+        recomputeSeriesStatus(userId, title);
+    }
+
+    /**
+     * Recomputes a series' status after history was removed.
+     *
+     * <p>Unlike {@link #advanceSeriesStatus} this moves in both directions: a
+     * series can fall out of COMPLETED, and back to WATCHLIST when nothing is
+     * watched any more.
+     *
+     * <p>ON_HOLD and DROPPED are left alone. Those are statements the user made
+     * about their intent, and unmarking an episode is not a reason to overrule
+     * them.
+     */
+    private void recomputeSeriesStatus(Long userId, Title title) {
+        items.findByUserIdAndTitleId(userId, title.getId()).ifPresent(item -> {
+            if (item.getStatus() == WatchStatus.ON_HOLD || item.getStatus() == WatchStatus.DROPPED) {
+                return;
+            }
+            long aired = episodes.countAiredByTitleId(title.getId());
+            long watched = episodeWatches.countByUserIdAndTitleId(userId, title.getId());
+
+            WatchStatus next;
+            if (watched == 0) {
+                next = WatchStatus.WATCHLIST;
+            } else if (aired > 0 && watched >= aired) {
+                next = WatchStatus.COMPLETED;
+            } else {
+                next = WatchStatus.WATCHING;
+            }
+            item.transitionTo(next);
+            items.save(item);
+        });
+    }
+
     /** Progress through the aired episodes of a series, plus what to watch next. */
     @Transactional(readOnly = true)
     public TitleProgress progress(Long userId, Long titleId) {

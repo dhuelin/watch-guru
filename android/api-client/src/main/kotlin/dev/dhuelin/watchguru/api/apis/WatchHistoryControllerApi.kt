@@ -17,6 +17,19 @@ import dev.dhuelin.watchguru.api.models.WatchStats
 
 interface WatchHistoryControllerApi {
     /**
+     * DELETE api/v1/me/watch-events/{eventId}
+     * 
+     * 
+     * Responses:
+     *  - 204: No Content
+     *
+     * @param eventId 
+     * @return [Unit]
+     */
+    @DELETE("api/v1/me/watch-events/{eventId}")
+    suspend fun deleteWatchEvent(@Path("eventId") eventId: kotlin.Long): Response<Unit>
+
+    /**
      * GET api/v1/me/history
      * 
      * 
@@ -94,5 +107,18 @@ interface WatchHistoryControllerApi {
      */
     @POST("api/v1/me/watch-events/episodes/up-to")
     suspend fun markWatchedUpTo(@Body markWatchedUpTo: MarkWatchedUpTo): Response<BulkMarkResponse>
+
+    /**
+     * DELETE api/v1/me/watch-events/episodes/{episodeId}
+     * 
+     * 
+     * Responses:
+     *  - 204: No Content
+     *
+     * @param episodeId 
+     * @return [Unit]
+     */
+    @DELETE("api/v1/me/watch-events/episodes/{episodeId}")
+    suspend fun unmarkEpisode(@Path("episodeId") episodeId: kotlin.Long): Response<Unit>
 
 }
