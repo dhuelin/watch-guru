@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.dhuelin.watchguru.api.models.LogEpisodeWatched
+import dev.dhuelin.watchguru.api.models.SeasonsResponse
 import dev.dhuelin.watchguru.api.models.TitleProgress
 import dev.dhuelin.watchguru.api.models.TitleResponse
 import dev.dhuelin.watchguru.data.ApiResult
@@ -35,6 +36,14 @@ class TitleDetailViewModel @Inject constructor(
     private val _marking = MutableStateFlow(false)
     val marking: StateFlow<Boolean> = _marking.asStateFlow()
 
+    /** Null for films, which have no seasons. */
+    private val _seasons = MutableStateFlow<SeasonsResponse?>(null)
+    val seasons: StateFlow<SeasonsResponse?> = _seasons.asStateFlow()
+
+    /** Which season is expanded. Defaults to the one holding the next episode. */
+    private val _expandedSeason = MutableStateFlow<Int?>(null)
+    val expandedSeason: StateFlow<Int?> = _expandedSeason.asStateFlow()
+
     init {
         load()
     }
@@ -46,6 +55,67 @@ class TitleDetailViewModel @Inject constructor(
                 is ApiResult.Failure -> UiState.Error(result)
             }
             refreshProgress()
+            refreshSeasons()
+        }
+    }
+
+    fun toggleSeason(seasonNumber: Int) {
+        _expandedSeason.value = if (_expandedSeason.value == seasonNumber) null else seasonNumber
+    }
+
+    /** Marks or unmarks one episode. */
+    fun toggleEpisode(episodeId: Long, currentlyWatched: Boolean) {
+        if (_marking.value) return
+        viewModelScope.launch {
+            _marking.value = true
+            // Unmarking has no endpoint yet, so only the mark direction acts.
+            // Showing a control that silently does nothing would be worse than
+            // the gap; the screen disables it instead.
+            if (!currentlyWatched) {
+                if (repository.markEpisodeWatched(LogEpisodeWatched(episodeId = episodeId))
+                    is ApiResult.Success
+                ) {
+                    refreshProgress()
+                    refreshSeasons()
+                }
+            }
+            _marking.value = false
+        }
+    }
+
+    /**
+     * Marks everything up to and including one episode.
+     *
+     * The action people reach for when logging a series they finished years
+     * ago. One request, and idempotent on the server, so a mis-tap costs
+     * nothing.
+     */
+    fun markUpTo(episodeId: Long) {
+        if (_marking.value) return
+        viewModelScope.launch {
+            _marking.value = true
+            if (repository.markWatchedUpTo(episodeId) is ApiResult.Success) {
+                refreshProgress()
+                refreshSeasons()
+            }
+            _marking.value = false
+        }
+    }
+
+    private suspend fun refreshSeasons() {
+        _seasons.value = when (val result = repository.seasons(titleId)) {
+            is ApiResult.Success -> result.value.also { response ->
+                if (_expandedSeason.value == null) {
+                    // Open the season holding the next episode, so the thing
+                    // the user came to do is already on screen.
+                    val next = _progress.value?.nextEpisodeId
+                    _expandedSeason.value = response.seasons
+                        .firstOrNull { season -> season.episodes.any { it.id == next } }
+                        ?.seasonNumber
+                        ?: response.seasons.firstOrNull { it.seasonNumber > 0 }?.seasonNumber
+                }
+            }
+            is ApiResult.Failure -> null
         }
     }
 

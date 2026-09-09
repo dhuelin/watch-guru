@@ -24,6 +24,7 @@
     <string name="action_add_to_library">Add to library</string>
     <string name="action_retry">Retry</string>
 
+    <string name="empty_up_next">Nothing on the go. Start a series and it will show up here.</string>
     <string name="empty_library">Nothing tracked yet. Search for a film or series to get started.</string>
     <string name="empty_search">No results for \"%1$s\".</string>
     <string name="search_hint">Search films and series</string>

@@ -5,7 +5,11 @@ import dev.dhuelin.watchguru.api.apis.TitleControllerApi
 import dev.dhuelin.watchguru.api.apis.WatchHistoryControllerApi
 import dev.dhuelin.watchguru.api.apis.WatchlistControllerApi
 import dev.dhuelin.watchguru.api.models.AddToWatchlist
+import dev.dhuelin.watchguru.api.models.BulkMarkResponse
 import dev.dhuelin.watchguru.api.models.LogEpisodeWatched
+import dev.dhuelin.watchguru.api.models.MarkWatchedUpTo
+import dev.dhuelin.watchguru.api.models.SeasonsResponse
+import dev.dhuelin.watchguru.api.models.UpNextResponse
 import dev.dhuelin.watchguru.api.models.SearchResponse
 import dev.dhuelin.watchguru.api.models.TitleProgress
 import dev.dhuelin.watchguru.api.models.TitleResponse
@@ -83,6 +87,23 @@ class WatchGuruRepository(
 
     suspend fun markEpisodeWatched(request: LogEpisodeWatched): ApiResult<WatchEventResponse> =
         call { history.logEpisodeWatched(request) }
+
+    /** Every season of a series with the caller's watched state already folded in. */
+    suspend fun seasons(titleId: Long): ApiResult<SeasonsResponse> =
+        call { titles.getSeasons(titleId) }
+
+    /**
+     * Marks everything up to and including one episode.
+     *
+     * One request rather than one per episode, and idempotent on the server:
+     * a double tap cannot turn a season into rewatches.
+     */
+    suspend fun markWatchedUpTo(episodeId: Long): ApiResult<BulkMarkResponse> =
+        call { history.markWatchedUpTo(MarkWatchedUpTo(episodeId = episodeId)) }
+
+    /** The next unwatched episode of every series in progress. */
+    suspend fun upNext(limit: Int = 20): ApiResult<List<UpNextResponse>> =
+        call { history.getUpNext(limit) }
 
     suspend fun stats(months: Int = 12): ApiResult<WatchStats> = call { history.getStats(months) }
 

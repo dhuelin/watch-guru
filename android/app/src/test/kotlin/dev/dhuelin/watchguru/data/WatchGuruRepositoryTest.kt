@@ -37,6 +37,7 @@ class WatchGuruRepositoryTest {
             providerId: Long,
             language: String?,
         ) = notUsed()
+        override suspend fun getSeasons(titleId: Long) = notUsed()
         private fun notUsed(): Nothing = throw UnsupportedOperationException("not used in this test")
     }
 
@@ -74,6 +75,10 @@ class WatchGuruRepositoryTest {
             ) = fail()
             override suspend fun logMovieWatched(
                 logMovieWatched: dev.dhuelin.watchguru.api.models.LogMovieWatched,
+            ) = fail()
+            override suspend fun getUpNext(limit: Int?) = fail()
+            override suspend fun markWatchedUpTo(
+                markWatchedUpTo: dev.dhuelin.watchguru.api.models.MarkWatchedUpTo,
             ) = fail()
             private fun fail(): Nothing = throw UnsupportedOperationException()
         },

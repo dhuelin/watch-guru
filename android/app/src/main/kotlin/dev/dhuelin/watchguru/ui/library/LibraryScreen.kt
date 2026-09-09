@@ -17,6 +17,7 @@ import androidx.compose.material.icons.outlined.VideoLibrary
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +25,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -133,21 +136,26 @@ private fun LibraryRow(item: WatchlistItemResponse, onOpen: () -> Unit) {
                 )
             }
 
-            // No progress bar here yet, deliberately. GET /api/v1/me/watchlist
-            // does not return per-title progress, and the only way to get it
-            // today is one /progress call per row -- an N+1 against the backend
-            // for a screen that scrolls. Showing a bar hardcoded to zero would
-            // be worse than showing none: it reads as "you have watched nothing"
-            // for a series the user is halfway through.
-            //
-            // The fix belongs on the server: fold watchedEpisodes/airedEpisodes
-            // into the watchlist response. Tracked with the same gap that issue
-            // #13 (Up Next) describes.
-            val episodes = item.title.numberOfEpisodes
-            if (episodes != null && episodes > 0) {
+            // Progress now arrives with the list itself, gathered for the
+            // whole page in one query, so this costs no extra request. It is
+            // null for films, which have no episode progress -- a bar there
+            // would be meaningless rather than merely empty.
+            item.progress?.let { progress ->
+                LinearProgressIndicator(
+                    progress = { progress.watchedEpisodes.toFloat() / progress.airedEpisodes.coerceAtLeast(1) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 6.dp)
+                        .semantics {
+                            // Read as a sentence rather than a percentage a
+                            // screen reader has to interpret.
+                            contentDescription = "${progress.watchedEpisodes} of " +
+                                    "${progress.airedEpisodes} episodes watched"
+                        },
+                )
                 Text(
-                    text = "$episodes episodes",
-                    style = MaterialTheme.typography.bodySmall,
+                    text = "${progress.watchedEpisodes} / ${progress.airedEpisodes}",
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 2.dp),
                 )

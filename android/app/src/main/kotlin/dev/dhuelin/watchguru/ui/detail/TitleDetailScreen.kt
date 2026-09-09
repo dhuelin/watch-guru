@@ -33,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.dhuelin.watchguru.R
+import dev.dhuelin.watchguru.api.models.EpisodeResponse
+import dev.dhuelin.watchguru.api.models.SeasonsResponse
 import dev.dhuelin.watchguru.api.models.TitleProgress
 import dev.dhuelin.watchguru.api.models.TitleResponse
 import dev.dhuelin.watchguru.ui.components.ErrorView
@@ -48,6 +50,8 @@ fun TitleDetailScreen(
     val title by viewModel.title.collectAsStateWithLifecycle()
     val progress by viewModel.progress.collectAsStateWithLifecycle()
     val marking by viewModel.marking.collectAsStateWithLifecycle()
+    val seasons by viewModel.seasons.collectAsStateWithLifecycle()
+    val expandedSeason by viewModel.expandedSeason.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -78,7 +82,14 @@ fun TitleDetailScreen(
                 title = state.value,
                 progress = progress,
                 marking = marking,
+                seasons = seasons,
+                expandedSeason = expandedSeason,
                 onMarkNext = viewModel::markNextEpisodeWatched,
+                onToggleSeason = viewModel::toggleSeason,
+                onToggleEpisode = { episode ->
+                    viewModel.toggleEpisode(episode.id, episode.watched)
+                },
+                onMarkUpTo = { episode -> viewModel.markUpTo(episode.id) },
                 modifier = Modifier.padding(padding),
             )
 
@@ -92,7 +103,12 @@ private fun TitleDetailContent(
     title: TitleResponse,
     progress: TitleProgress?,
     marking: Boolean,
+    seasons: SeasonsResponse?,
+    expandedSeason: Int?,
     onMarkNext: () -> Unit,
+    onToggleSeason: (Int) -> Unit,
+    onToggleEpisode: (EpisodeResponse) -> Unit,
+    onMarkUpTo: (EpisodeResponse) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -144,6 +160,26 @@ private fun TitleDetailContent(
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(top = 24.dp),
             )
+        }
+
+        // The episode list. This is the screen's real content for a series --
+        // everything above it is context.
+        seasons?.seasons?.takeIf { it.isNotEmpty() }?.let { list ->
+            Text(
+                text = "Episodes",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 24.dp, bottom = 4.dp),
+            )
+            list.forEach { season ->
+                SeasonSection(
+                    season = season,
+                    expanded = expandedSeason == season.seasonNumber,
+                    marking = marking,
+                    onToggle = { onToggleSeason(season.seasonNumber) },
+                    onToggleEpisode = onToggleEpisode,
+                    onMarkUpTo = onMarkUpTo,
+                )
+            }
         }
 
         // Required by TMDB's terms of use wherever their data is shown.
