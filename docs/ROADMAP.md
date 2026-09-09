@@ -76,9 +76,10 @@ Both platforms, feature-equivalent, each looking correct on its own platform.
 | [#9](https://github.com/dhuelin/watch-guru/issues/9) | Search and discovery | ✅ Both platforms, debounced, add from a row |
 | [#10](https://github.com/dhuelin/watch-guru/issues/10) | Title detail screen | ✅ Both platforms |
 | [#11](https://github.com/dhuelin/watch-guru/issues/11) | Library screen | ✅ Status filter, optimistic removal. No progress bars — see below |
-| [#12](https://github.com/dhuelin/watch-guru/issues/12) | **Episode progress tracking** | 🟡 Next-episode marking works; the season/episode list and *mark all up to here* are not built |
+| [#12](https://github.com/dhuelin/watch-guru/issues/12) | **Episode progress tracking** | ✅ Season/episode list, per-episode marking and unmarking, *mark all up to here* |
+| [#13](https://github.com/dhuelin/watch-guru/issues/13) | Home: Up Next | ✅ Both platforms, over `GET /me/up-next` |
+| [#25](https://github.com/dhuelin/watch-guru/issues/25) | Backend: episodes, progress, up-next | ✅ Closed the gap that blocked #12 and #13 |
 | [#15](https://github.com/dhuelin/watch-guru/issues/15) | Sign-in and account management | ⬜ **Next.** Until this lands both apps 401 on every call |
-| [#13](https://github.com/dhuelin/watch-guru/issues/13) | Home: Up Next | ⬜ Placeholder; blocked on a backend endpoint |
 | [#14](https://github.com/dhuelin/watch-guru/issues/14) | Offline cache and sync | ⬜ |
 
 **Done when:** a user can sign in, find a series, track it episode by episode,
@@ -102,18 +103,28 @@ The Android data layer is on firm ground because it deliberately contains no
 Android imports. Everything else should be expected to need fixes on first
 build, and each app's README says so.
 
-### A backend gap that surfaced twice
+### A backend gap that building the apps exposed — since closed
 
-Both library screens show an episode count where a progress bar belongs, and
-both Home screens are placeholders, for the same reason: `GET /api/v1/me/watchlist`
-returns no per-title progress, and there is no `up-next` endpoint. The client-side
-alternative is one `/progress` call per row on the two screens people open most.
+Writing the screens turned up something bigger than expected: **the API exposed
+no seasons or episodes at all.** The tables were populated and
+`POST /watch-events/episode` took an `episodeId`, but nothing told a client
+which ids existed. The apps could mark "the next episode" only because the
+progress endpoint happened to leak one id — so #12, the feature the product is
+judged on, was unbuildable.
 
-The fix belongs on the server — fold `watchedEpisodes`/`airedEpisodes` into the
-watchlist response, and add `GET /api/v1/me/up-next`. Doing it there also keeps
-the rule for what counts as "next" in one place instead of implemented twice.
-This is the highest-value backend work remaining, and it blocks
-[#13](https://github.com/dhuelin/watch-guru/issues/13).
+Five endpoints closed it, all server-side because they are query shape or
+product logic rather than presentation:
+
+| Endpoint | Why it belongs on the server |
+|---|---|
+| `GET /titles/{id}/seasons` | Episodes with watched state, four queries whatever the series length |
+| `POST /me/watch-events/episodes/up-to` | "Mark all up to here", idempotent, so a double tap cannot create rewatches |
+| `DELETE /me/watch-events/episodes/{id}` | Unmarking, deleting the history too so derived state cannot drift |
+| `DELETE /me/watch-events/{id}` | Removing one entry of several rewatches |
+| `GET /me/up-next` | "Next" is product logic — implemented twice, the apps would disagree |
+
+Progress also moved into the watchlist response, gathered per page in one
+grouped query, which is what let the library progress bars exist at all.
 
 ### Start here
 
