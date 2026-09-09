@@ -23,6 +23,7 @@
 
 package dev.dhuelin.watchguru.api.models
 
+import dev.dhuelin.watchguru.api.models.SeriesProgress
 import dev.dhuelin.watchguru.api.models.TitleResponse
 
 import kotlinx.serialization.Serializable
@@ -40,6 +41,7 @@ import kotlinx.serialization.Contextual
  * @param title 
  * @param completedAt 
  * @param notes 
+ * @param progress 
  * @param startedAt 
  * @param userRating 
  */
@@ -70,6 +72,9 @@ data class WatchlistItemResponse (
 
     @SerialName(value = "notes")
     val notes: kotlin.String? = null,
+
+    @SerialName(value = "progress")
+    val progress: SeriesProgress? = null,
 
     @Contextual @SerialName(value = "startedAt")
     val startedAt: java.time.OffsetDateTime? = null,

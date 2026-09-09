@@ -50,11 +50,21 @@ generate Swift \
     -o "$ROOT/ios/WatchGuruAPI" \
     --additional-properties=projectName=WatchGuruAPI,responseAs=AsyncAwait,useSPMFileStructure=true,swiftPackagePath=.
 
+# The generator emits APIs/, Infrastructure/ and Models/ at the package root
+# even with useSPMFileStructure. SwiftPM expects them under Sources/<target>/,
+# so move them -- without this a regeneration silently relocates every source
+# file and the package stops building.
+mkdir -p "$ROOT/ios/WatchGuruAPI/Sources/WatchGuruAPI"
+for dir in APIs Infrastructure Models; do
+    rm -rf "$ROOT/ios/WatchGuruAPI/Sources/WatchGuruAPI/$dir"
+    mv "$ROOT/ios/WatchGuruAPI/$dir" "$ROOT/ios/WatchGuruAPI/Sources/WatchGuruAPI/$dir"
+done
+
 # Prune scaffolding neither app uses: CocoaPods/Carthage manifests, an
 # XcodeGen project, generated placeholder tests that assert nothing, and a
 # Gradle wrapper for a module that is built by the app's own wrapper.
 rm -rf "$ROOT/ios/WatchGuruAPI"/{Cartfile,WatchGuruAPI.podspec,git_push.sh,project.yml,docs}
-rm -rf "$ROOT/ios/WatchGuruAPI"/{.openapi-generator-ignore,.gitignore,.swiftformat}
+rm -rf "$ROOT/ios/WatchGuruAPI"/{.openapi-generator-ignore,.gitignore,.swiftformat,.openapi-generator}
 rm -rf "$ROOT/android/api-client"/{gradlew,gradlew.bat,gradle,settings.gradle,build.gradle,docs}
 rm -rf "$ROOT/android/api-client"/{.openapi-generator-ignore,.gitignore,proguard-rules.pro,README.md}
 rm -rf "$ROOT/android/api-client/src/test"

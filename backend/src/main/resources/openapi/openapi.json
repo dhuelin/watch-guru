@@ -155,6 +155,37 @@
         "tags" : [ "streaming-controller" ]
       }
     },
+    "/api/v1/me/up-next" : {
+      "get" : {
+        "operationId" : "getUpNext",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "limit",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/UpNextResponse"
+                  }
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "watch-history-controller" ]
+      }
+    },
     "/api/v1/me/watch-events/episode" : {
       "post" : {
         "operationId" : "logEpisodeWatched",
@@ -178,6 +209,34 @@
               }
             },
             "description" : "Created"
+          }
+        },
+        "tags" : [ "watch-history-controller" ]
+      }
+    },
+    "/api/v1/me/watch-events/episodes/up-to" : {
+      "post" : {
+        "operationId" : "markWatchedUpTo",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MarkWatchedUpTo"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BulkMarkResponse"
+                }
+              }
+            },
+            "description" : "OK"
           }
         },
         "tags" : [ "watch-history-controller" ]
@@ -533,6 +592,33 @@
         },
         "tags" : [ "title-controller" ]
       }
+    },
+    "/api/v1/titles/{titleId}/seasons" : {
+      "get" : {
+        "operationId" : "getSeasons",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "titleId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SeasonsResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "title-controller" ]
+      }
     }
   },
   "components" : {
@@ -599,6 +685,80 @@
           }
         },
         "required" : [ "label", "minutes", "viewings" ]
+      },
+      "BulkMarkResponse" : {
+        "type" : "object",
+        "properties" : {
+          "airedEpisodes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "alreadyWatched" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "newlyMarked" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "titleId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "watchedEpisodes" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "airedEpisodes", "alreadyWatched", "newlyMarked", "titleId", "watchedEpisodes" ]
+      },
+      "EpisodeResponse" : {
+        "type" : "object",
+        "properties" : {
+          "airDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "aired" : {
+            "type" : "boolean"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "episodeNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "overview" : {
+            "type" : "string"
+          },
+          "runtimeMinutes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "seasonNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "stillUrl" : {
+            "type" : "string"
+          },
+          "watchCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "watched" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "aired", "code", "episodeNumber", "id", "seasonNumber", "watchCount", "watched" ]
       },
       "GenreResponse" : {
         "type" : "object",
@@ -678,6 +838,20 @@
           }
         },
         "required" : [ "titleId" ]
+      },
+      "MarkWatchedUpTo" : {
+        "type" : "object",
+        "properties" : {
+          "episodeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "watchedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [ "episodeId" ]
       },
       "MonthBucket" : {
         "type" : "object",
@@ -761,6 +935,84 @@
           }
         },
         "required" : [ "page", "results", "totalPages", "totalResults" ]
+      },
+      "SeasonResponse" : {
+        "type" : "object",
+        "properties" : {
+          "airDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "airedEpisodes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "episodes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/EpisodeResponse"
+            }
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "overview" : {
+            "type" : "string"
+          },
+          "posterUrl" : {
+            "type" : "string"
+          },
+          "seasonNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "watchedEpisodes" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "airedEpisodes", "episodes", "id", "seasonNumber", "watchedEpisodes" ]
+      },
+      "SeasonsResponse" : {
+        "type" : "object",
+        "properties" : {
+          "primaryTitle" : {
+            "type" : "string"
+          },
+          "seasons" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SeasonResponse"
+            }
+          },
+          "titleId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "primaryTitle", "seasons", "titleId" ]
+      },
+      "SeriesProgress" : {
+        "type" : "object",
+        "properties" : {
+          "airedEpisodes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "percentComplete" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "watchedEpisodes" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "airedEpisodes", "percentComplete", "watchedEpisodes" ]
       },
       "StreamingServiceResponse" : {
         "type" : "object",
@@ -909,6 +1161,47 @@
           }
         },
         "required" : [ "availability", "genres", "id", "primaryTitle", "providerId", "titleType" ]
+      },
+      "UpNextResponse" : {
+        "type" : "object",
+        "properties" : {
+          "airedEpisodes" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "lastWatchedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "nextEpisodeCode" : {
+            "type" : "string"
+          },
+          "nextEpisodeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nextEpisodeName" : {
+            "type" : "string"
+          },
+          "nextEpisodeStillUrl" : {
+            "type" : "string"
+          },
+          "posterUrl" : {
+            "type" : "string"
+          },
+          "primaryTitle" : {
+            "type" : "string"
+          },
+          "titleId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "watchedEpisodes" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "airedEpisodes", "nextEpisodeCode", "nextEpisodeId", "primaryTitle", "titleId", "watchedEpisodes" ]
       },
       "UpdateProfile" : {
         "type" : "object",
@@ -1119,6 +1412,9 @@
           "priority" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "progress" : {
+            "$ref" : "#/components/schemas/SeriesProgress"
           },
           "startedAt" : {
             "type" : "string",

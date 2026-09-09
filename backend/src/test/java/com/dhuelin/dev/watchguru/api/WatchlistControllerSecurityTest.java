@@ -1,6 +1,7 @@
 package com.dhuelin.dev.watchguru.api;
 
 import com.dhuelin.dev.watchguru.api.dto.ApiMapper;
+import com.dhuelin.dev.watchguru.catalog.repository.EpisodeRepository;
 import com.dhuelin.dev.watchguru.config.AuthProperties;
 import com.dhuelin.dev.watchguru.security.CurrentUserService;
 import com.dhuelin.dev.watchguru.security.SecurityConfig;
@@ -58,6 +59,8 @@ class WatchlistControllerSecurityTest {
 
     @MockitoBean
     private WatchlistService watchlist;
+    @MockitoBean
+    private EpisodeRepository episodes;
     @MockitoBean
     private CurrentUserService currentUser;
     @MockitoBean

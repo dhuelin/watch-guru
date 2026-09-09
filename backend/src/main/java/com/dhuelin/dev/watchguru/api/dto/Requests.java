@@ -53,6 +53,19 @@ public final class Requests {
     ) {
     }
 
+    /**
+     * Marks everything up to and including one episode.
+     *
+     * @param watchedAt when it was watched; defaults to now. A single timestamp
+     *                  for the whole run is deliberate -- the alternative is
+     *                  inventing dates for episodes watched at unknown times.
+     */
+    public record MarkWatchedUpTo(
+            @NotNull Long episodeId,
+            Instant watchedAt
+    ) {
+    }
+
     public record LogMovieWatched(
             @NotNull Long titleId,
             Instant watchedAt,

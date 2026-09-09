@@ -7,6 +7,7 @@ import com.dhuelin.dev.watchguru.api.dto.Responses;
 import com.dhuelin.dev.watchguru.tracking.repository.WatchEventRepository;
 import com.dhuelin.dev.watchguru.tracking.service.WatchStats;
 import com.dhuelin.dev.watchguru.tracking.service.StatsService;
+import com.dhuelin.dev.watchguru.tracking.service.UpNextService;
 import com.dhuelin.dev.watchguru.tracking.service.WatchlistService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -32,17 +33,20 @@ public class WatchHistoryController {
 
     private final WatchlistService watchlist;
     private final StatsService stats;
+    private final UpNextService upNextService;
     private final WatchEventRepository events;
     private final CurrentUserService currentUser;
     private final ApiMapper mapper;
 
     public WatchHistoryController(WatchlistService watchlist,
                                   StatsService stats,
+                                  UpNextService upNextService,
                                   WatchEventRepository events,
                                   CurrentUserService currentUser,
                                   ApiMapper mapper) {
         this.watchlist = watchlist;
         this.stats = stats;
+        this.upNextService = upNextService;
         this.events = events;
         this.currentUser = currentUser;
         this.mapper = mapper;
@@ -64,6 +68,37 @@ public class WatchHistoryController {
         return mapper.toWatchEvent(watchlist.logEpisodeWatched(
                 currentUser.require().getId(),
                 request.episodeId(), request.watchedAt(), request.streamingServiceId()));
+    }
+
+    /**
+     * Marks every aired episode up to and including the given one.
+     *
+     * <p>One request, not one per episode: someone catching up on a series they
+     * finished years ago should not make forty calls, and doing it here keeps
+     * the operation idempotent -- episodes already watched are left alone
+     * rather than turned into rewatches.
+     */
+    @PostMapping("/watch-events/episodes/up-to")
+    @Operation(operationId = "markWatchedUpTo")
+    public Responses.BulkMarkResponse markUpTo(@Valid @RequestBody Requests.MarkWatchedUpTo request) {
+        return mapper.toBulkMark(watchlist.markWatchedUpTo(
+                currentUser.require().getId(), request.episodeId(), request.watchedAt()));
+    }
+
+    /**
+     * The next unwatched episode of every series in progress.
+     *
+     * <p>What the Home screen opens to. Server-side because the alternative is
+     * one progress call per series, and because "what counts as next" is
+     * product logic that must not be implemented twice.
+     */
+    @GetMapping("/up-next")
+    @Operation(operationId = "getUpNext")
+    public List<Responses.UpNextResponse> upNext(@RequestParam(defaultValue = "20") int limit) {
+        return upNextService.forUser(currentUser.require().getId(), Math.clamp(limit, 1, 50))
+                .stream()
+                .map(mapper::toUpNext)
+                .toList();
     }
 
     /** Full viewing history, newest first. */

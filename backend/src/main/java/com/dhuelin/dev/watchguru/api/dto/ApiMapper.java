@@ -1,5 +1,11 @@
 package com.dhuelin.dev.watchguru.api.dto;
 
+import com.dhuelin.dev.watchguru.catalog.domain.Episode;
+import com.dhuelin.dev.watchguru.catalog.domain.Season;
+import com.dhuelin.dev.watchguru.tracking.service.EpisodeListService;
+import com.dhuelin.dev.watchguru.tracking.service.SeriesProgressCounts;
+import com.dhuelin.dev.watchguru.tracking.service.UpNextService;
+import com.dhuelin.dev.watchguru.tracking.service.WatchlistService;
 import com.dhuelin.dev.watchguru.catalog.domain.Title;
 import com.dhuelin.dev.watchguru.provider.model.ProviderSearchPage;
 import com.dhuelin.dev.watchguru.streaming.domain.LinkedStreamingAccount;
@@ -81,6 +87,16 @@ public class ApiMapper {
     }
 
     public Responses.WatchlistItemResponse toWatchlistItem(WatchlistItem item, List<TitleAvailability> availability) {
+        return toWatchlistItem(item, availability, null);
+    }
+
+    /**
+     * @param progress counts for a series, or null for a film or when the
+     *                 caller has not gathered them
+     */
+    public Responses.WatchlistItemResponse toWatchlistItem(WatchlistItem item,
+                                                           List<TitleAvailability> availability,
+                                                           Responses.SeriesProgress progress) {
         return new Responses.WatchlistItemResponse(
                 item.getId(),
                 item.getStatus(),
@@ -91,7 +107,79 @@ public class ApiMapper {
                 item.getAddedAt(),
                 item.getStartedAt(),
                 item.getCompletedAt(),
-                toTitle(item.getTitle(), availability));
+                toTitle(item.getTitle(), availability),
+                progress);
+    }
+
+    public Responses.SeriesProgress toSeriesProgress(SeriesProgressCounts counts) {
+        return new Responses.SeriesProgress(
+                (int) counts.watchedEpisodes(),
+                (int) counts.airedEpisodes(),
+                counts.percentComplete());
+    }
+
+    public Responses.EpisodeResponse toEpisode(Episode episode, boolean watched, int watchCount) {
+        return new Responses.EpisodeResponse(
+                episode.getId(),
+                episode.getSeasonNumber(),
+                episode.getEpisodeNumber(),
+                episode.code(),
+                episode.getName(),
+                episode.getOverview(),
+                episode.getAirDate(),
+                episode.getRuntimeMinutes(),
+                images.still(episode.getStillPath()),
+                watched,
+                watchCount,
+                episode.hasAired());
+    }
+
+    public Responses.SeasonResponse toSeason(EpisodeListService.SeasonWithEpisodes season) {
+        List<Responses.EpisodeResponse> episodes = season.episodes().stream()
+                .map(episode -> toEpisode(episode, season.isWatched(episode), season.watchCount(episode)))
+                .toList();
+
+        Season source = season.season();
+        return new Responses.SeasonResponse(
+                source == null ? null : source.getId(),
+                season.seasonNumber(),
+                source == null ? null : source.getName(),
+                source == null ? null : source.getOverview(),
+                source == null ? null : source.getAirDate(),
+                source == null ? null : images.poster(source.getPosterPath()),
+                season.airedEpisodes(),
+                season.watchedEpisodes(),
+                episodes);
+    }
+
+    public Responses.SeasonsResponse toSeasons(EpisodeListService.SeasonListing listing) {
+        return new Responses.SeasonsResponse(
+                listing.title().getId(),
+                listing.title().getPrimaryTitle(),
+                listing.seasons().stream().map(this::toSeason).toList());
+    }
+
+    public Responses.UpNextResponse toUpNext(UpNextService.UpNext entry) {
+        return new Responses.UpNextResponse(
+                entry.title().getId(),
+                entry.title().getPrimaryTitle(),
+                images.poster(entry.title().getPosterPath()),
+                entry.nextEpisode().getId(),
+                entry.nextEpisode().code(),
+                entry.nextEpisode().getName(),
+                images.still(entry.nextEpisode().getStillPath()),
+                entry.watchedEpisodes(),
+                entry.airedEpisodes(),
+                entry.lastWatchedAt());
+    }
+
+    public Responses.BulkMarkResponse toBulkMark(WatchlistService.BulkMarkResult result) {
+        return new Responses.BulkMarkResponse(
+                result.titleId(),
+                result.newlyMarked(),
+                result.alreadyWatched(),
+                result.watchedEpisodes(),
+                result.airedEpisodes());
     }
 
     public Responses.WatchEventResponse toWatchEvent(WatchEvent event) {

@@ -94,6 +94,46 @@ open class WatchHistoryControllerAPI {
 
     /**
 
+     - parameter limit: (query)  (optional, default to 20)
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: [UpNextResponse]
+     */
+    open class func getUpNext(limit: Int? = nil, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) async throws(ErrorResponse) -> [UpNextResponse] {
+        return try await getUpNextWithRequestBuilder(limit: limit, apiConfiguration: apiConfiguration).execute().body
+    }
+
+    /**
+     - GET /api/v1/me/up-next
+     - Bearer Token:
+       - type: http
+       - name: bearerAuth
+     - parameter limit: (query)  (optional, default to 20)
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: RequestBuilder<[UpNextResponse]> 
+     */
+    open class func getUpNextWithRequestBuilder(limit: Int? = nil, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) -> RequestBuilder<[UpNextResponse]> {
+        let localVariablePath = "/api/v1/me/up-next"
+        let localVariableURLString = apiConfiguration.basePath + localVariablePath
+        let localVariableParameters: [String: any Sendable]? = nil
+
+        var localVariableUrlComponents = URLComponents(string: localVariableURLString)
+        localVariableUrlComponents?.queryItems = APIHelper.mapValuesToQueryItems([
+            "limit": (wrappedValue: limit?.asParameter(codableHelper: apiConfiguration.codableHelper), isExplode: true),
+        ])
+
+        let localVariableNillableHeaders: [String: (any Sendable)?] = [
+            :
+        ]
+
+        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
+
+        let localVariableRequestBuilder: RequestBuilder<[UpNextResponse]>.Type = apiConfiguration.requestBuilderFactory.getBuilder()
+
+        return localVariableRequestBuilder.init(method: "GET", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
+    }
+
+    /**
+
      - parameter logEpisodeWatched: (body)  
      - parameter apiConfiguration: The configuration for the http request.
      - returns: WatchEventResponse
@@ -162,6 +202,43 @@ open class WatchHistoryControllerAPI {
         let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
 
         let localVariableRequestBuilder: RequestBuilder<WatchEventResponse>.Type = apiConfiguration.requestBuilderFactory.getBuilder()
+
+        return localVariableRequestBuilder.init(method: "POST", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
+    }
+
+    /**
+
+     - parameter markWatchedUpTo: (body)  
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: BulkMarkResponse
+     */
+    open class func markWatchedUpTo(markWatchedUpTo: MarkWatchedUpTo, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) async throws(ErrorResponse) -> BulkMarkResponse {
+        return try await markWatchedUpToWithRequestBuilder(markWatchedUpTo: markWatchedUpTo, apiConfiguration: apiConfiguration).execute().body
+    }
+
+    /**
+     - POST /api/v1/me/watch-events/episodes/up-to
+     - Bearer Token:
+       - type: http
+       - name: bearerAuth
+     - parameter markWatchedUpTo: (body)  
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: RequestBuilder<BulkMarkResponse> 
+     */
+    open class func markWatchedUpToWithRequestBuilder(markWatchedUpTo: MarkWatchedUpTo, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) -> RequestBuilder<BulkMarkResponse> {
+        let localVariablePath = "/api/v1/me/watch-events/episodes/up-to"
+        let localVariableURLString = apiConfiguration.basePath + localVariablePath
+        let localVariableParameters = JSONEncodingHelper.encodingParameters(forEncodableObject: markWatchedUpTo, codableHelper: apiConfiguration.codableHelper)
+
+        let localVariableUrlComponents = URLComponents(string: localVariableURLString)
+
+        let localVariableNillableHeaders: [String: (any Sendable)?] = [
+            "Content-Type": "application/json",
+        ]
+
+        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
+
+        let localVariableRequestBuilder: RequestBuilder<BulkMarkResponse>.Type = apiConfiguration.requestBuilderFactory.getBuilder()
 
         return localVariableRequestBuilder.init(method: "POST", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
     }

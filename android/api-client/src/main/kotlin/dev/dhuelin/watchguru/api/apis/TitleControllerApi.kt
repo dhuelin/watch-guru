@@ -8,9 +8,23 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 import dev.dhuelin.watchguru.api.models.SearchResponse
+import dev.dhuelin.watchguru.api.models.SeasonsResponse
 import dev.dhuelin.watchguru.api.models.TitleResponse
 
 interface TitleControllerApi {
+    /**
+     * GET api/v1/titles/{titleId}/seasons
+     * 
+     * 
+     * Responses:
+     *  - 200: OK
+     *
+     * @param titleId 
+     * @return [SeasonsResponse]
+     */
+    @GET("api/v1/titles/{titleId}/seasons")
+    suspend fun getSeasons(@Path("titleId") titleId: kotlin.Long): Response<SeasonsResponse>
+
     /**
      * GET api/v1/titles/{titleId}
      * 

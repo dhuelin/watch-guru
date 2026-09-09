@@ -1,6 +1,7 @@
 package com.dhuelin.dev.watchguru.api;
 
 import com.dhuelin.dev.watchguru.api.dto.ApiMapper;
+import com.dhuelin.dev.watchguru.catalog.repository.EpisodeRepository;
 import com.dhuelin.dev.watchguru.catalog.repository.TitleRepository;
 import com.dhuelin.dev.watchguru.catalog.service.CatalogService;
 import com.dhuelin.dev.watchguru.config.AuthProperties;
@@ -13,7 +14,9 @@ import com.dhuelin.dev.watchguru.streaming.repository.StreamingServiceRepository
 import com.dhuelin.dev.watchguru.streaming.service.AvailabilityService;
 import com.dhuelin.dev.watchguru.tracking.repository.AppUserRepository;
 import com.dhuelin.dev.watchguru.tracking.repository.WatchEventRepository;
+import com.dhuelin.dev.watchguru.tracking.service.EpisodeListService;
 import com.dhuelin.dev.watchguru.tracking.service.StatsService;
+import com.dhuelin.dev.watchguru.tracking.service.UpNextService;
 import com.dhuelin.dev.watchguru.tracking.service.WatchlistService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -106,6 +109,9 @@ class OpenApiSpecTest {
     private MockMvc mvc;
 
     @MockitoBean private CatalogService catalogService;
+    @MockitoBean private EpisodeListService episodeListService;
+    @MockitoBean private UpNextService upNextService;
+    @MockitoBean private EpisodeRepository episodeRepository;
     @MockitoBean private AvailabilityService availabilityService;
     @MockitoBean private TitleRepository titleRepository;
     @MockitoBean private ApiMapper apiMapper;

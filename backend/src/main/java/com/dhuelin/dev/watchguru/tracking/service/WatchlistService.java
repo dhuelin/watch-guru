@@ -180,6 +180,68 @@ public class WatchlistService {
         });
     }
 
+    /**
+     * Marks every aired episode up to and including the given one as watched.
+     *
+     * <p>The single most-used action in a tracker: someone who finished a
+     * series years ago should be able to record all of it in one gesture, and
+     * someone who missed logging three episodes should not have to tap three
+     * times.
+     *
+     * <p>Idempotent by design. Episodes already watched are left completely
+     * alone rather than bumped -- marking up to S03E04 twice must not turn the
+     * first three seasons into rewatches, which is exactly what calling
+     * {@link #logEpisodeWatched} in a loop would do. The count of what was
+     * skipped is returned so a client can say something honest.
+     *
+     * <p>Season 0 specials are excluded: "everything up to here" means the main
+     * run, and sweeping specials in would mark episodes the user may never have
+     * watched.
+     */
+    @Transactional
+    public BulkMarkResult markWatchedUpTo(Long userId, Long episodeId, Instant watchedAt) {
+        AppUser user = requireUser(userId);
+        Episode target = episodes.findById(episodeId)
+                .orElseThrow(() -> NotFoundException.of("Episode", episodeId));
+        Title title = target.getTitle();
+        Instant when = watchedAt == null ? Instant.now() : watchedAt;
+
+        List<Episode> upTo = episodes.findAiredUpTo(
+                title.getId(), target.getSeasonNumber(), target.getEpisodeNumber());
+
+        // One query for what is already watched, rather than a lookup per
+        // episode: this runs over a whole series.
+        Set<Long> alreadyWatched = episodeWatches.findWatchedEpisodeIdSet(userId, title.getId());
+
+        int newlyMarked = 0;
+        int skipped = 0;
+        for (Episode episode : upTo) {
+            if (alreadyWatched.contains(episode.getId())) {
+                skipped++;
+                continue;
+            }
+            episodeWatches.save(new EpisodeWatch(user, episode, when));
+
+            // Still one watch event per episode: the history is the record of
+            // what happened, and collapsing a catch-up into a single event
+            // would lose which episodes it covered.
+            WatchEvent event = WatchEvent.forEpisode(user, episode, when);
+            watchEvents.save(event);
+            newlyMarked++;
+        }
+
+        advanceSeriesStatus(userId, title);
+
+        long aired = episodes.countAiredByTitleId(title.getId());
+        long watched = episodeWatches.countByUserIdAndTitleId(userId, title.getId());
+        return new BulkMarkResult(title.getId(), newlyMarked, skipped, (int) watched, (int) aired);
+    }
+
+    /** What a bulk mark changed. */
+    public record BulkMarkResult(
+            Long titleId, int newlyMarked, int alreadyWatched, int watchedEpisodes, int airedEpisodes) {
+    }
+
     /** Progress through the aired episodes of a series, plus what to watch next. */
     @Transactional(readOnly = true)
     public TitleProgress progress(Long userId, Long titleId) {

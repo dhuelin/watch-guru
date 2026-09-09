@@ -22,6 +22,15 @@ public interface WatchlistItemRepository extends JpaRepository<WatchlistItem, Lo
     @EntityGraph(attributePaths = "title")
     Page<WatchlistItem> findByUserIdAndStatus(Long userId, WatchStatus status, Pageable pageable);
 
+    /**
+     * Unpaged variant for Up Next.
+     *
+     * <p>Unbounded on purpose: it is the set of series a person is currently
+     * part-way through, which is a handful even for heavy users, and paging it
+     * would mean the "what do I watch now" screen could miss the answer.
+     */
+    List<WatchlistItem> findByUserIdAndStatus(Long userId, WatchStatus status);
+
     @Query("select w.status as status, count(w) as count from WatchlistItem w where w.user.id = :userId group by w.status")
     List<StatusCount> countByStatus(@Param("userId") Long userId);
 

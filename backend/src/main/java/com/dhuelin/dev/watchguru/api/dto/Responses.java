@@ -109,7 +109,23 @@ public final class Responses {
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Instant addedAt,
             Instant startedAt,
             Instant completedAt,
-            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) TitleResponse title
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) TitleResponse title,
+            /**
+             * Progress for a series, null for a film.
+             *
+             * <p>Carried on the list response on purpose. Without it a library
+             * row cannot show a progress bar without one extra request each,
+             * which is an N+1 on the screen users open most.
+             */
+            SeriesProgress progress
+    ) {
+    }
+
+    /** The counts a library row needs, and nothing more. */
+    public record SeriesProgress(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int watchedEpisodes,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int airedEpisodes,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int percentComplete
     ) {
     }
 
@@ -124,6 +140,95 @@ public final class Responses {
             Integer minutesWatched,
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean rewatch,
             String streamingServiceName
+    ) {
+    }
+
+    /**
+     * One episode, with whether the signed-in user has seen it.
+     *
+     * <p>Watched state is part of this rather than a separate call because the
+     * episode list is useless without it: the screen exists to show which
+     * episodes are ticked, and fetching that separately would mean two requests
+     * to draw one list.
+     */
+    public record EpisodeResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long id,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Integer seasonNumber,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Integer episodeNumber,
+            /** "S01E02" style label, so clients do not each format their own. */
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String code,
+            String name,
+            String overview,
+            LocalDate airDate,
+            Integer runtimeMinutes,
+            String stillUrl,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean watched,
+            /** Greater than one only for a rewatch. */
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int watchCount,
+            /**
+             * False for an episode that has not aired. Clients must not offer
+             * to mark these, and they are excluded from progress.
+             */
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean aired
+    ) {
+    }
+
+    public record SeasonResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long id,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Integer seasonNumber,
+            String name,
+            String overview,
+            LocalDate airDate,
+            String posterUrl,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int airedEpisodes,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int watchedEpisodes,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<EpisodeResponse> episodes
+    ) {
+    }
+
+    /**
+     * Every season of a series with its episodes.
+     *
+     * <p>Season 0 -- specials -- is included but flagged, so a client can show
+     * it while leaving it out of progress. Excluding it entirely would hide
+     * episodes people have genuinely watched.
+     */
+    public record SeasonsResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long titleId,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String primaryTitle,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<SeasonResponse> seasons
+    ) {
+    }
+
+    /**
+     * One in-progress series and the episode to watch next.
+     *
+     * <p>The shape the Home screen needs, in one row per series.
+     */
+    public record UpNextResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long titleId,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String primaryTitle,
+            String posterUrl,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long nextEpisodeId,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String nextEpisodeCode,
+            String nextEpisodeName,
+            String nextEpisodeStillUrl,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int watchedEpisodes,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int airedEpisodes,
+            /** When this series was last watched; drives the ordering. */
+            Instant lastWatchedAt
+    ) {
+    }
+
+    /** What a bulk mark actually changed. */
+    public record BulkMarkResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long titleId,
+            /** Episodes newly marked. Excludes ones already watched. */
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int newlyMarked,
+            /** Already watched, so left alone rather than counted as a rewatch. */
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int alreadyWatched,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int watchedEpisodes,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int airedEpisodes
     ) {
     }
 

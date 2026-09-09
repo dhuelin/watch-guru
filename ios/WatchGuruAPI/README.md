@@ -36,13 +36,16 @@ Class | Method | HTTP request | Description
 *StreamingControllerAPI* | [**listLinkedAccounts**](docs/StreamingControllerAPI.md#listlinkedaccounts) | **GET** /api/v1/me/streaming-accounts | 
 *StreamingControllerAPI* | [**listStreamingServices**](docs/StreamingControllerAPI.md#liststreamingservices) | **GET** /api/v1/streaming-services | 
 *StreamingControllerAPI* | [**reconcileStreamingServices**](docs/StreamingControllerAPI.md#reconcilestreamingservices) | **POST** /api/v1/streaming-services/reconcile | 
+*TitleControllerAPI* | [**getSeasons**](docs/TitleControllerAPI.md#getseasons) | **GET** /api/v1/titles/{titleId}/seasons | 
 *TitleControllerAPI* | [**getTitle**](docs/TitleControllerAPI.md#gettitle) | **GET** /api/v1/titles/{titleId} | 
 *TitleControllerAPI* | [**importTitle**](docs/TitleControllerAPI.md#importtitle) | **POST** /api/v1/titles/import | 
 *TitleControllerAPI* | [**searchTitles**](docs/TitleControllerAPI.md#searchtitles) | **GET** /api/v1/titles/search | 
 *WatchHistoryControllerAPI* | [**getHistory**](docs/WatchHistoryControllerAPI.md#gethistory) | **GET** /api/v1/me/history | 
 *WatchHistoryControllerAPI* | [**getStats**](docs/WatchHistoryControllerAPI.md#getstats) | **GET** /api/v1/me/stats | 
+*WatchHistoryControllerAPI* | [**getUpNext**](docs/WatchHistoryControllerAPI.md#getupnext) | **GET** /api/v1/me/up-next | 
 *WatchHistoryControllerAPI* | [**logEpisodeWatched**](docs/WatchHistoryControllerAPI.md#logepisodewatched) | **POST** /api/v1/me/watch-events/episode | 
 *WatchHistoryControllerAPI* | [**logMovieWatched**](docs/WatchHistoryControllerAPI.md#logmoviewatched) | **POST** /api/v1/me/watch-events/movie | 
+*WatchHistoryControllerAPI* | [**markWatchedUpTo**](docs/WatchHistoryControllerAPI.md#markwatchedupto) | **POST** /api/v1/me/watch-events/episodes/up-to | 
 *WatchlistControllerAPI* | [**addToWatchlist**](docs/WatchlistControllerAPI.md#addtowatchlist) | **POST** /api/v1/me/watchlist | 
 *WatchlistControllerAPI* | [**getTitleProgress**](docs/WatchlistControllerAPI.md#gettitleprogress) | **GET** /api/v1/me/watchlist/titles/{titleId}/progress | 
 *WatchlistControllerAPI* | [**listWatchlist**](docs/WatchlistControllerAPI.md#listwatchlist) | **GET** /api/v1/me/watchlist | 
@@ -55,16 +58,23 @@ Class | Method | HTTP request | Description
  - [AddToWatchlist](docs/AddToWatchlist.md)
  - [AvailabilityResponse](docs/AvailabilityResponse.md)
  - [Bucket](docs/Bucket.md)
+ - [BulkMarkResponse](docs/BulkMarkResponse.md)
+ - [EpisodeResponse](docs/EpisodeResponse.md)
  - [GenreResponse](docs/GenreResponse.md)
  - [LinkedAccountResponse](docs/LinkedAccountResponse.md)
  - [LogEpisodeWatched](docs/LogEpisodeWatched.md)
  - [LogMovieWatched](docs/LogMovieWatched.md)
+ - [MarkWatchedUpTo](docs/MarkWatchedUpTo.md)
  - [MonthBucket](docs/MonthBucket.md)
  - [SearchHit](docs/SearchHit.md)
  - [SearchResponse](docs/SearchResponse.md)
+ - [SeasonResponse](docs/SeasonResponse.md)
+ - [SeasonsResponse](docs/SeasonsResponse.md)
+ - [SeriesProgress](docs/SeriesProgress.md)
  - [StreamingServiceResponse](docs/StreamingServiceResponse.md)
  - [TitleProgress](docs/TitleProgress.md)
  - [TitleResponse](docs/TitleResponse.md)
+ - [UpNextResponse](docs/UpNextResponse.md)
  - [UpdateProfile](docs/UpdateProfile.md)
  - [UpdateWatchlistItem](docs/UpdateWatchlistItem.md)
  - [UserResponse](docs/UserResponse.md)

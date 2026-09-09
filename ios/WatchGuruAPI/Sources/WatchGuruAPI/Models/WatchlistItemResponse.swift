@@ -22,18 +22,20 @@ public struct WatchlistItemResponse: Sendable, Codable, Hashable {
     public var id: Int64
     public var notes: String?
     public var priority: Int
+    public var progress: SeriesProgress?
     public var startedAt: Date?
     public var status: Status
     public var title: TitleResponse
     public var userRating: Double?
 
-    public init(addedAt: Date, completedAt: Date? = nil, favorite: Bool, id: Int64, notes: String? = nil, priority: Int, startedAt: Date? = nil, status: Status, title: TitleResponse, userRating: Double? = nil) {
+    public init(addedAt: Date, completedAt: Date? = nil, favorite: Bool, id: Int64, notes: String? = nil, priority: Int, progress: SeriesProgress? = nil, startedAt: Date? = nil, status: Status, title: TitleResponse, userRating: Double? = nil) {
         self.addedAt = addedAt
         self.completedAt = completedAt
         self.favorite = favorite
         self.id = id
         self.notes = notes
         self.priority = priority
+        self.progress = progress
         self.startedAt = startedAt
         self.status = status
         self.title = title
@@ -47,6 +49,7 @@ public struct WatchlistItemResponse: Sendable, Codable, Hashable {
         case id
         case notes
         case priority
+        case progress
         case startedAt
         case status
         case title
@@ -63,6 +66,7 @@ public struct WatchlistItemResponse: Sendable, Codable, Hashable {
         try container.encode(id, forKey: .id)
         try container.encodeIfPresent(notes, forKey: .notes)
         try container.encode(priority, forKey: .priority)
+        try container.encodeIfPresent(progress, forKey: .progress)
         try container.encodeIfPresent(startedAt, forKey: .startedAt)
         try container.encode(status, forKey: .status)
         try container.encode(title, forKey: .title)

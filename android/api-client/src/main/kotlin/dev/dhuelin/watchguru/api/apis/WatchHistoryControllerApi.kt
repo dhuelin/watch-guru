@@ -7,8 +7,11 @@ import okhttp3.RequestBody
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+import dev.dhuelin.watchguru.api.models.BulkMarkResponse
 import dev.dhuelin.watchguru.api.models.LogEpisodeWatched
 import dev.dhuelin.watchguru.api.models.LogMovieWatched
+import dev.dhuelin.watchguru.api.models.MarkWatchedUpTo
+import dev.dhuelin.watchguru.api.models.UpNextResponse
 import dev.dhuelin.watchguru.api.models.WatchEventResponse
 import dev.dhuelin.watchguru.api.models.WatchStats
 
@@ -41,6 +44,19 @@ interface WatchHistoryControllerApi {
     suspend fun getStats(@Query("months") months: kotlin.Int? = 12): Response<WatchStats>
 
     /**
+     * GET api/v1/me/up-next
+     * 
+     * 
+     * Responses:
+     *  - 200: OK
+     *
+     * @param limit  (optional, default to 20)
+     * @return [kotlin.collections.List<UpNextResponse>]
+     */
+    @GET("api/v1/me/up-next")
+    suspend fun getUpNext(@Query("limit") limit: kotlin.Int? = 20): Response<kotlin.collections.List<UpNextResponse>>
+
+    /**
      * POST api/v1/me/watch-events/episode
      * 
      * 
@@ -65,5 +81,18 @@ interface WatchHistoryControllerApi {
      */
     @POST("api/v1/me/watch-events/movie")
     suspend fun logMovieWatched(@Body logMovieWatched: LogMovieWatched): Response<WatchEventResponse>
+
+    /**
+     * POST api/v1/me/watch-events/episodes/up-to
+     * 
+     * 
+     * Responses:
+     *  - 200: OK
+     *
+     * @param markWatchedUpTo 
+     * @return [BulkMarkResponse]
+     */
+    @POST("api/v1/me/watch-events/episodes/up-to")
+    suspend fun markWatchedUpTo(@Body markWatchedUpTo: MarkWatchedUpTo): Response<BulkMarkResponse>
 
 }

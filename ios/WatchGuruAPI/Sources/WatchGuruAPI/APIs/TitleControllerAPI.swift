@@ -12,6 +12,46 @@ open class TitleControllerAPI {
     /**
 
      - parameter titleId: (path)  
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: SeasonsResponse
+     */
+    open class func getSeasons(titleId: Int64, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) async throws(ErrorResponse) -> SeasonsResponse {
+        return try await getSeasonsWithRequestBuilder(titleId: titleId, apiConfiguration: apiConfiguration).execute().body
+    }
+
+    /**
+     - GET /api/v1/titles/{titleId}/seasons
+     - Bearer Token:
+       - type: http
+       - name: bearerAuth
+     - parameter titleId: (path)  
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: RequestBuilder<SeasonsResponse> 
+     */
+    open class func getSeasonsWithRequestBuilder(titleId: Int64, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) -> RequestBuilder<SeasonsResponse> {
+        var localVariablePath = "/api/v1/titles/{titleId}/seasons"
+        let titleIdPreEscape = "\(APIHelper.mapValueToPathItem(titleId))"
+        let titleIdPostEscape = titleIdPreEscape.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+        localVariablePath = localVariablePath.replacingOccurrences(of: "{titleId}", with: titleIdPostEscape, options: .literal, range: nil)
+        let localVariableURLString = apiConfiguration.basePath + localVariablePath
+        let localVariableParameters: [String: any Sendable]? = nil
+
+        let localVariableUrlComponents = URLComponents(string: localVariableURLString)
+
+        let localVariableNillableHeaders: [String: (any Sendable)?] = [
+            :
+        ]
+
+        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
+
+        let localVariableRequestBuilder: RequestBuilder<SeasonsResponse>.Type = apiConfiguration.requestBuilderFactory.getBuilder()
+
+        return localVariableRequestBuilder.init(method: "GET", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
+    }
+
+    /**
+
+     - parameter titleId: (path)  
      - parameter region: (query)  (optional)
      - parameter apiConfiguration: The configuration for the http request.
      - returns: TitleResponse

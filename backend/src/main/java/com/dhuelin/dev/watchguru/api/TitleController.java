@@ -8,6 +8,8 @@ import com.dhuelin.dev.watchguru.catalog.repository.TitleRepository;
 import com.dhuelin.dev.watchguru.catalog.service.CatalogService;
 import com.dhuelin.dev.watchguru.common.NotFoundException;
 import com.dhuelin.dev.watchguru.config.TmdbProperties;
+import com.dhuelin.dev.watchguru.security.CurrentUserService;
+import com.dhuelin.dev.watchguru.tracking.service.EpisodeListService;
 import com.dhuelin.dev.watchguru.streaming.service.AvailabilityService;
 import jakarta.validation.constraints.NotBlank;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,17 +26,23 @@ import org.springframework.web.bind.annotation.RestController;
 public class TitleController {
 
     private final CatalogService catalog;
+    private final EpisodeListService episodeList;
+    private final CurrentUserService currentUser;
     private final AvailabilityService availability;
     private final TitleRepository titles;
     private final ApiMapper mapper;
     private final TmdbProperties tmdbProperties;
 
     public TitleController(CatalogService catalog,
+                           EpisodeListService episodeList,
+                           CurrentUserService currentUser,
                            AvailabilityService availability,
                            TitleRepository titles,
                            ApiMapper mapper,
                            TmdbProperties tmdbProperties) {
         this.catalog = catalog;
+        this.episodeList = episodeList;
+        this.currentUser = currentUser;
         this.availability = availability;
         this.titles = titles;
         this.mapper = mapper;
@@ -67,6 +75,21 @@ public class TitleController {
         Title title = titles.findById(titleId)
                 .orElseThrow(() -> NotFoundException.of("Title", titleId));
         return mapper.toTitle(title, availability.offersFor(title, region(region)));
+    }
+
+    /**
+     * Every season of a series with its episodes, and whether the signed-in
+     * user has watched each one.
+     *
+     * <p>Under /titles rather than /me because the bulk of the payload is
+     * catalogue data; the watched flags are the caller's own, which every route
+     * here already implies. One call rather than two, because an episode list
+     * without its ticks is not a screen anyone wants.
+     */
+    @GetMapping("/{titleId}/seasons")
+    @Operation(operationId = "getSeasons")
+    public Responses.SeasonsResponse seasons(@PathVariable Long titleId) {
+        return mapper.toSeasons(episodeList.seasonsFor(currentUser.require().getId(), titleId));
     }
 
     private String region(String requested) {
