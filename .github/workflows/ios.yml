@@ -1,0 +1,66 @@
+name: iOS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios.yml'
+  pull_request:
+    paths:
+      - 'ios/**'
+      - '.github/workflows/ios.yml'
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: ios
+
+jobs:
+  build:
+    name: Build and test
+    # macOS runners cost several times a Linux minute, which is why this
+    # workflow is path-filtered tightly rather than running on every push.
+    runs-on: macos-15
+    timeout-minutes: 40
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        # Swift 6 with complete concurrency checking; the app is written for it.
+        run: sudo xcode-select -switch /Applications/Xcode_16.app
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      # The .xcodeproj is generated rather than committed, so this step is what
+      # proves project.yml is valid at all.
+      - name: Generate the Xcode project
+        run: xcodegen generate
+
+      # This is the first compilation these sources will ever have had: they
+      # were written in a Linux container with no Swift toolchain. Expect
+      # failures here until the first green run.
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project WatchGuru.xcodeproj \
+            -scheme WatchGuru \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcbeautify
+
+      - name: Test
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project WatchGuru.xcodeproj \
+            -scheme WatchGuru \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcbeautify

@@ -1,0 +1,128 @@
+name: Deploy backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  # A published release produces the versioned image; pushes to main produce
+  # the rolling one. Using the release event rather than a tag filter avoids
+  # the paths filter above silently skipping a tag whose commit happened not to
+  # touch backend/.
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  # Never cancel a deploy in progress: a half-finished rollout is worse than a
+  # queued one.
+  group: deploy-backend
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/backend
+
+jobs:
+  # The image is only built once the tests that matter have passed. Building
+  # first and testing after would mean publishing an image nobody has verified.
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+      - name: Verify
+        run: ./mvnw -B --no-transfer-progress verify
+
+  publish:
+    name: Build and publish image
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+      # For build provenance, so a published image can be traced to the commit
+      # and workflow that produced it.
+      id-token: write
+      attestations: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Derive tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,format=long
+          # No 'latest' on every main push: it makes "which image is running"
+          # unanswerable after the fact. Tag a release to move latest.
+          flavor: |
+            latest=${{ startsWith(github.ref, 'refs/tags/v') }}
+
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          file: backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Attest provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+
+  deploy:
+    name: Deploy
+    needs: publish
+    runs-on: ubuntu-latest
+    # A GitHub environment, so the deploy can require an approval and hold the
+    # runtime secrets rather than the repository holding them.
+    environment:
+      name: production
+      url: https://api.watch-guru.example
+    steps:
+      - name: Roll out
+        run: |
+          echo "::notice::No deploy target is configured yet."
+          echo
+          echo "The image is published and ready. Wiring this up means picking a"
+          echo "host and adding one step here:"
+          echo "  - Kubernetes: kubectl set image, or a Flux/Argo image update"
+          echo "  - Fly.io:     flyctl deploy --image \$IMAGE"
+          echo "  - Cloud Run:  gcloud run deploy --image \$IMAGE"
+          echo
+          echo "Whatever it is, it needs DATABASE credentials, TMDB_API_TOKEN"
+          echo "and WATCH_GURU_AUTH_AUDIENCES set in the environment's secrets."
+          echo "The API rejects every token without that last one configured."

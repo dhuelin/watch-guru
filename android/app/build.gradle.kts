@@ -20,6 +20,21 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            // Read from the environment so no key material is ever in the repo.
+            // Absent locally, in which case the release build stays unsigned
+            // and `assembleDebug` is unaffected.
+            val keystorePath = System.getenv("WATCHGURU_KEYSTORE_FILE")
+            if (!keystorePath.isNullOrBlank()) {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("WATCHGURU_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("WATCHGURU_KEY_ALIAS")
+                keyPassword = System.getenv("WATCHGURU_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         debug {
             // A local backend over cleartext; see network_security_config.xml,
