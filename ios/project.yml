@@ -31,6 +31,8 @@ targets:
         optional: true
     dependencies:
       - package: WatchGuruAPI
+    entitlements:
+      path: WatchGuru/WatchGuru.entitlements
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.dhuelin.watchguru

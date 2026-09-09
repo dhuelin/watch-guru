@@ -79,7 +79,7 @@ Both platforms, feature-equivalent, each looking correct on its own platform.
 | [#12](https://github.com/dhuelin/watch-guru/issues/12) | **Episode progress tracking** | ✅ Season/episode list, per-episode marking and unmarking, *mark all up to here* |
 | [#13](https://github.com/dhuelin/watch-guru/issues/13) | Home: Up Next | ✅ Both platforms, over `GET /me/up-next` |
 | [#25](https://github.com/dhuelin/watch-guru/issues/25) | Backend: episodes, progress, up-next | ✅ Closed the gap that blocked #12 and #13 |
-| [#15](https://github.com/dhuelin/watch-guru/issues/15) | Sign-in and account management | ⬜ **Next.** Until this lands both apps 401 on every call |
+| [#15](https://github.com/dhuelin/watch-guru/issues/15) | Sign-in and account management | 🟡 Written on both platforms — Apple on iOS, Google on Android, plus sign-out and account deletion. **Never compiled or run:** it needs an Apple Developer account and a Google OAuth client, neither of which existed here |
 | [#14](https://github.com/dhuelin/watch-guru/issues/14) | Offline cache and sync | ⬜ |
 
 **Done when:** a user can sign in, find a series, track it episode by episode,

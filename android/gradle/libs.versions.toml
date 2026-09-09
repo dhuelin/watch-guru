@@ -16,6 +16,8 @@ hilt = "2.53"
 hiltNavigation = "1.2.0"
 ksp = "2.1.21-2.0.1"
 security = "1.1.0-alpha06"
+credentials = "1.3.0"
+googleid = "1.1.1"
 junit = "4.13.2"
 turbine = "1.2.0"
 
@@ -47,6 +49,13 @@ androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-ru
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "security" }
+
+# Credential Manager is the current way to do Sign in with Google on Android;
+# the old GoogleSignInClient is deprecated. play-services-auth is still needed
+# for the credential provider itself on devices without a newer Play Services.
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
+androidx-credentials-play-services = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
+googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 

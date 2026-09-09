@@ -101,7 +101,33 @@ The backend half is done and tested: 401 without a token on every route, and
 expired, wrong-key and wrong-audience tokens all rejected, verified against a
 mock issuer with a controlled signing key.
 
-The client half is **issue #15 and not yet built**. Both apps expect a token to
-already be in secure storage, so every call returns 401 until it lands. That
-work needs an Apple Developer account, a Google OAuth client per platform, and
-the resulting client ids added to `WATCH_GURU_AUTH_AUDIENCES`.
+The client half is **written but never compiled or run**. iOS signs in with
+Apple (`SignInWithAppleButton` plus the entitlement in `project.yml`); Android
+signs in with Google through Credential Manager. Both gate the whole app on
+having a token, and both offer sign-out and account deletion.
+
+It is unverified for a concrete reason rather than a vague one: Sign in with
+Apple needs an Apple Developer account and a Mac, and Credential Manager needs
+AndroidX, which lives on Google's Maven — none of which was reachable where
+this was written.
+
+### What you must set up before it can work
+
+| | |
+|---|---|
+| Apple | Enable **Sign in with Apple** on the App ID. Put the bundle id (`dev.dhuelin.watchguru`) in `WATCH_GURU_AUTH_AUDIENCES` and `https://appleid.apple.com` in `WATCH_GURU_AUTH_ISSUERS`. |
+| Google | Create **two** OAuth clients in one project: an Android client (package name + signing SHA-1, never referenced in code but required for Credential Manager to return anything) and a **web** client. Build with `-Pwatchguru.googleWebClientId=<web id>`, and put that same web id in `WATCH_GURU_AUTH_AUDIENCES`, with `https://accounts.google.com` in `WATCH_GURU_AUTH_ISSUERS`. |
+
+The backend refuses to start with either variable unset. That is deliberate: an
+empty audience list would otherwise accept any token from a trusted issuer,
+including one minted for a different application.
+
+### Refresh is not implemented
+
+Both apps use the provider's ID token directly as the bearer token, and those
+expire in about an hour. There is no refresh, so a long-lived session ends in
+401s and the user has to sign in again. `## Client responsibilities` above says
+"on 401, re-authenticate" — today that means the user does it manually from the
+profile screen. Doing it properly means a token-exchange endpoint here that
+issues a session token of our own, which is a backend change rather than an app
+one.

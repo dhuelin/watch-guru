@@ -18,6 +18,17 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // The Google OAuth *web* client id, not the Android one: Credential
+        // Manager mints an ID token whose audience is the web client, and that
+        // audience is what the backend's WATCH_GURU_AUTH_AUDIENCES must list.
+        // Empty when unset, which SignInViewModel surfaces as a configuration
+        // error rather than a mysterious sign-in failure.
+        buildConfigField(
+            "String",
+            "GOOGLE_WEB_CLIENT_ID",
+            "\"${providers.gradleProperty("watchguru.googleWebClientId").orNull ?: ""}\"",
+        )
     }
 
     signingConfigs {
@@ -85,6 +96,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.security.crypto)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services)
+    implementation(libs.googleid)
 
     implementation(libs.coil.compose)
     implementation(libs.kotlinx.coroutines)

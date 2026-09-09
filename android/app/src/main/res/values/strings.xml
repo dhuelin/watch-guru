@@ -37,6 +37,17 @@
     <string name="error_provider_down">Couldn\'t reach the catalogue. Your library is still up to date.</string>
     <string name="error_generic">Something went wrong.</string>
 
+    <!-- Sign-in. There is no account to create: the first valid token from a
+         trusted provider provisions one, so this screen only signs in. -->
+    <string name="sign_in_tagline">Know what you\'ve watched and where you left off.</string>
+    <string name="action_sign_in_google">Sign in with Google</string>
+    <string name="action_sign_out">Sign out</string>
+    <string name="action_delete_account">Delete account</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="delete_account_title">Delete your account?</string>
+    <string name="delete_account_message">This removes your library, progress and history permanently. It cannot be undone.</string>
+    <string name="delete_account_footer">Deleting your account removes your library, progress and history permanently.</string>
+
     <string name="tmdb_attribution">This product uses the TMDB API but is not endorsed or certified by TMDB.</string>
 
     <!-- Content descriptions. These say what a control does, not what it is:

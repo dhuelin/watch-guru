@@ -13,10 +13,12 @@ import dev.dhuelin.watchguru.ui.home.HomeScreen
 import dev.dhuelin.watchguru.ui.library.LibraryScreen
 import dev.dhuelin.watchguru.ui.profile.ProfileScreen
 import dev.dhuelin.watchguru.ui.search.SearchScreen
+import dev.dhuelin.watchguru.ui.signin.SignInViewModel
 
 @Composable
 fun WatchGuruNavHost(
     navController: NavHostController,
+    signIn: SignInViewModel,
     modifier: Modifier = Modifier,
 ) {
     NavHost(
@@ -34,7 +36,10 @@ fun WatchGuruNavHost(
             LibraryScreen(onOpenTitle = { navController.navigate(Routes.titleDetail(it)) })
         }
         composable(TopLevelDestination.PROFILE.route) {
-            ProfileScreen(onOpenHistory = { navController.navigate(Routes.HISTORY) })
+            ProfileScreen(
+                onOpenHistory = { navController.navigate(Routes.HISTORY) },
+                signIn = signIn,
+            )
         }
         composable(Routes.HISTORY) {
             HistoryScreen(onBack = { navController.popBackStack() })

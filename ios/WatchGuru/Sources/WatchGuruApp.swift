@@ -7,8 +7,18 @@ struct WatchGuruApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .environment(session)
+            // Everything behind the token. Showing the tab bar first and then
+            // 401-ing on every screen would be a worse first launch than a
+            // sign-in screen.
+            switch session.signIn.state {
+            case .signedIn:
+                RootView()
+                    .environment(session)
+            case .checking:
+                ProgressView()
+            case .signedOut, .signingIn, .failed:
+                SignInView(model: session.signIn)
+            }
         }
     }
 }
@@ -21,12 +31,17 @@ struct WatchGuruApp: App {
 final class Session {
 
     let client: WatchGuruClient
+    let tokens: TokenStore
+    let signIn: SignInModel
 
     init(
         baseURL: URL = Session.defaultBaseURL,
         tokens: TokenStore = KeychainTokenStore()
     ) {
-        client = WatchGuruClient(baseURL: baseURL, tokens: tokens)
+        self.tokens = tokens
+        let client = WatchGuruClient(baseURL: baseURL, tokens: tokens)
+        self.client = client
+        self.signIn = SignInModel(tokens: tokens, client: client)
     }
 
     /// The simulator reaches a backend on the developer's machine at
