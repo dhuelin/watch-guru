@@ -80,6 +80,29 @@ struct TitleDetailView: View {
                     Text(overview).font(.body)
                 }
 
+                // The episode list. For a series this is the screen's real
+                // content; everything above it is context.
+                if let seasons = model.seasons, !seasons.seasons.isEmpty {
+                    Text("Episodes").font(.headline)
+                    ForEach(seasons.seasons, id: \.seasonNumber) { season in
+                        SeasonSection(
+                            season: season,
+                            isExpanded: model.expandedSeason == season.seasonNumber,
+                            isMarking: model.isMarking,
+                            toggle: {
+                                model.expandedSeason =
+                                    model.expandedSeason == season.seasonNumber ? nil : season.seasonNumber
+                            },
+                            markWatched: { episode in
+                                Task { await model.markEpisodeWatched(episode) }
+                            },
+                            markUpTo: { episode in
+                                Task { await model.markUpTo(episode) }
+                            }
+                        )
+                    }
+                }
+
                 // Required by TMDB's terms of use wherever their data is shown.
                 Text("This product uses the TMDB API but is not endorsed or certified by TMDB.")
                     .font(.caption2)

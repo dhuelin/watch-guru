@@ -79,14 +79,8 @@ Where they differ, they differ on purpose:
 - **Sign in with Apple and Google (#15).** The app expects a token to already
   be in the Keychain, so every call returns 401 until this lands. It is the
   next thing to do.
-- **Home / Up Next (#13).** A placeholder rather than something assembled from
-  the endpoints that exist: doing it properly needs a single
-  `GET /api/v1/me/up-next`, because the alternative is one `/progress` call per
-  in-progress series on the screen the app opens to.
-- **Library progress bars.** Same gap — the watchlist endpoint returns no
-  per-title progress, so rows show an episode count instead. A bar hardcoded to
-  zero would read as "you have watched nothing" for a series someone is halfway
-  through.
+- **Unmarking an episode.** No endpoint exists, so that direction is disabled
+  rather than shown as a control that does nothing.
 - **Offline cache (#14), stats (#17), notifications (#19), widgets (#20).**
 
 ## Regenerating the API client

@@ -118,16 +118,22 @@ private struct LibraryRow: View {
                 .font(.caption)
                 .foregroundStyle(item.status.style.color)
 
-                // No progress bar here yet, deliberately. GET /api/v1/me/watchlist
-                // does not return per-title progress, and the only way to get it
-                // today is one /progress call per row — an N+1 for a screen that
-                // scrolls. A bar hardcoded to zero would read as "you have
-                // watched nothing" for a series someone is halfway through. The
-                // fix belongs on the server; see issue #13.
-                if let episodes = item.title.numberOfEpisodes, episodes > 0 {
-                    Text("\(episodes) episodes")
+                // Progress now arrives with the list itself, gathered for the
+                // whole page in one query, so it costs no extra request. Nil
+                // for films, which have no episode progress — a bar there would
+                // be meaningless rather than merely empty.
+                if let progress = item.progress {
+                    ProgressView(
+                        value: Double(progress.watchedEpisodes),
+                        total: Double(max(progress.airedEpisodes, 1))
+                    )
+                    .accessibilityLabel(
+                        "\(progress.watchedEpisodes) of \(progress.airedEpisodes) episodes watched"
+                    )
+                    Text("\(progress.watchedEpisodes) / \(progress.airedEpisodes)")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
+                        .monospacedDigit()
                 }
             }
         }

@@ -83,6 +83,13 @@ actor WatchGuruClient {
         }
     }
 
+    /// Every season of a series with the caller's watched state already folded
+    /// in — one call, because an episode list without its ticks is not a screen
+    /// anyone wants.
+    func seasons(titleId: Int64) async throws(APIFailure) -> SeasonsResponse {
+        try await run { try await TitleControllerAPI.getSeasons(titleId: titleId, apiConfiguration: $0) }
+    }
+
     func progress(titleId: Int64) async throws(APIFailure) -> TitleProgress {
         try await run { try await WatchlistControllerAPI.getTitleProgress(titleId: titleId, apiConfiguration: $0) }
     }
@@ -96,6 +103,24 @@ actor WatchGuruClient {
                 apiConfiguration: $0
             )
         }
+    }
+
+    /// Marks everything up to and including one episode.
+    ///
+    /// One request rather than one per episode, and idempotent on the server,
+    /// so a mis-tap cannot turn a season into rewatches.
+    func markWatchedUpTo(episodeId: Int64) async throws(APIFailure) -> BulkMarkResponse {
+        try await run {
+            try await WatchHistoryControllerAPI.markWatchedUpTo(
+                markWatchedUpTo: MarkWatchedUpTo(episodeId: episodeId),
+                apiConfiguration: $0
+            )
+        }
+    }
+
+    /// The next unwatched episode of every series in progress.
+    func upNext(limit: Int = 20) async throws(APIFailure) -> [UpNextResponse] {
+        try await run { try await WatchHistoryControllerAPI.getUpNext(limit: limit, apiConfiguration: $0) }
     }
 
     func stats(months: Int = 12) async throws(APIFailure) -> WatchStats {

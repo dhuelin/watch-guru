@@ -30,7 +30,7 @@ single Gradle build**.
 | Layer | State |
 |---|---|
 | `api-client/` | **Compiled.** 108 classes, generated from the committed spec and built with kotlinc against Retrofit, OkHttp, coroutines and kotlinx.serialization. |
-| `data/` | **Compiled and tested.** 9 unit tests passing against the real generated client on a plain JVM. |
+| `data/` | **Compiled and tested**, except `EncryptedTokenStore` — 9 unit tests pass against the real generated client on a plain JVM. `EncryptedTokenStore` uses AndroidX Keystore APIs and could not be compiled here. |
 | `ui/` | **Not compiled.** Compose needs the Compose compiler plugin and the Android SDK. Field and enum names were checked against the generated models by hand, but the first `./gradlew` run is where this is really tested. |
 | Gradle setup | **Not resolved.** Plugin and library versions are pinned to known-compatible pairings (AGP 8.7.3 with Kotlin 2.1.21), but no build has confirmed them. |
 
@@ -64,15 +64,9 @@ logic regardless.
 - **Sign-in (#15).** The app expects a token to already be in the token store,
   so every call returns 401 until Sign in with Google and Apple land. This is
   the next thing to do.
-- **Home / Up Next (#13).** Left as a placeholder rather than assembled from
-  the endpoints that exist: doing it properly needs a single
-  `GET /api/v1/me/up-next`, because the alternative is one `/progress` call per
-  in-progress series on the screen the app opens to. The rule for what counts
-  as "next" also belongs on the server, where both apps share it.
-- **Library progress bars.** The same gap. `GET /api/v1/me/watchlist` does not
-  return per-title progress, so rows show an episode count instead of a
-  progress bar. A bar hardcoded to zero would read as "you have watched
-  nothing" for a series someone is halfway through.
+- **Unmarking an episode.** There is no endpoint for it, so the control is
+  disabled in that direction rather than shown as something that silently does
+  nothing.
 - **Offline cache (#14), stats (#17), notifications (#19), widgets (#20).**
 
 ## Regenerating the API client
