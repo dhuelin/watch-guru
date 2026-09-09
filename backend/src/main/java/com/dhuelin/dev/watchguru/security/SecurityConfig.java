@@ -66,9 +66,18 @@ public class SecurityConfig {
                             + "no bypass switch.");
         }
         if (properties.audiences().isEmpty()) {
-            log.warn("No watch-guru.auth.audiences configured: any token from a trusted issuer "
-                    + "will be accepted, including one minted for a different application. "
-                    + "Set WATCH_GURU_AUTH_AUDIENCES before exposing this API.");
+            // Fail closed, exactly as an empty issuer list does. This used to be
+            // a warning, which made the one control answering "was this token
+            // minted for us" optional in practice: Apple and Google issue
+            // tokens to any registered client, so without an audience check a
+            // token harvested by any unrelated app with Google sign-in is
+            // accepted here as its owner. A misconfiguration that silently
+            // opens every account is not something to log and carry on from.
+            throw new IllegalStateException(
+                    "No watch-guru.auth.audiences configured. Set WATCH_GURU_AUTH_AUDIENCES to the "
+                            + "OAuth client ids of the apps. Without it any token from a trusted "
+                            + "issuer is accepted, including one minted for a different "
+                            + "application.");
         }
 
         Map<String, AuthenticationManager> managers = new LinkedHashMap<>();

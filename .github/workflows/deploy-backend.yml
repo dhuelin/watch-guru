@@ -125,4 +125,4 @@ jobs:
           echo
           echo "Whatever it is, it needs DATABASE credentials, TMDB_API_TOKEN"
           echo "and WATCH_GURU_AUTH_AUDIENCES set in the environment's secrets."
-          echo "The API rejects every token without that last one configured."
+          echo "The API refuses to start without that last one, by design."

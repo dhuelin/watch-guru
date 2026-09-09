@@ -162,6 +162,27 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <systemPropertyVariables>
+                        <!--
+                          The audience list is mandatory: without it any token
+                          from Apple or Google is accepted, including one minted
+                          for a different application, so SecurityConfig refuses
+                          to start. Tests have to supply one, which is the
+                          point: a deployment cannot forget it either.
+
+                          Set here rather than in a test application.yaml,
+                          because a second application.yaml on the classpath
+                          shadows the real one entirely rather than merging with
+                          it, taking the datasource and Flyway settings with it.
+                        -->
+                        <watch-guru.auth.audiences>watch-guru-test</watch-guru.auth.audiences>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <executions>
                     <execution>
