@@ -181,6 +181,9 @@ things worth knowing before changing any of it:
 - **There is no bypass profile.** An empty issuer list fails startup rather
   than quietly serving unauthenticated traffic.
 
+Full detail, including the two Apple quirks that will otherwise cost an
+afternoon, is in [`docs/AUTHENTICATION.md`](docs/AUTHENTICATION.md).
+
 One trap worth knowing about, because the obvious spelling is wrong in a way
 that only shows up in production: `NimbusJwtDecoder.withIssuerLocation(...)
 .build()` and `JwtDecoders.fromIssuerLocation` both fetch the provider's
