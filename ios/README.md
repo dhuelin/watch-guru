@@ -108,7 +108,7 @@ Apple's flow has actually been run once.
 The identity token is used directly as the bearer token and expires in about an
 hour. There is no refresh, so a long-lived session eventually returns 401s;
 recovering means signing out and back in. The same limitation applies on
-Android, and the fix belongs on the backend rather than in each app.
+Android, and the fix belongs on the backend rather than in each app: #26.
 
 ## Not built yet
 

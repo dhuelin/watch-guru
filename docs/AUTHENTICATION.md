@@ -130,4 +130,4 @@ expire in about an hour. There is no refresh, so a long-lived session ends in
 "on 401, re-authenticate" — today that means the user does it manually from the
 profile screen. Doing it properly means a token-exchange endpoint here that
 issues a session token of our own, which is a backend change rather than an app
-one.
+one. Tracked as #26.

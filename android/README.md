@@ -90,8 +90,8 @@ looks like a sign-in failure but is not.
 The Google ID token is used directly as the bearer token and expires after
 about an hour. There is no refresh, so a long-lived session eventually returns
 401s; recovering means signing out and back in. Fixing that properly needs
-either a refresh flow or a token-exchange endpoint on the backend, and is
-tracked separately rather than papered over with a retry that cannot succeed.
+a token-exchange endpoint on the backend, tracked as #26, rather than a
+client-side retry that cannot succeed.
 
 ## Not built yet
 

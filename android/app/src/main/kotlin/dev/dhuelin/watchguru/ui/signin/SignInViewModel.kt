@@ -37,8 +37,8 @@ sealed interface AuthState {
  * Known limitation: the provider ID token is used directly as the bearer
  * token, and those expire in about an hour. There is no refresh yet, so a long
  * session ends in 401s rather than a silent renewal. Fixing that means either
- * a refresh flow here or a token exchange endpoint on the backend; it is
- * tracked separately rather than faked with a retry that cannot succeed.
+ * a token exchange endpoint on the backend, tracked as #26, rather than a
+ * retry here that cannot succeed.
  */
 @HiltViewModel
 class SignInViewModel @Inject constructor(

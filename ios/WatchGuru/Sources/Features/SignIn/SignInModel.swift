@@ -25,9 +25,8 @@ enum AuthState: Equatable {
 ///
 /// Known limitation: Apple's identity token expires in about an hour and is
 /// used directly as the bearer token, so a long session ends in 401s rather
-/// than a silent renewal. Fixing that means a refresh flow or a token exchange
-/// on the backend; it is tracked separately rather than faked with a retry that
-/// cannot succeed.
+/// than a silent renewal. Fixing that means a token exchange on the backend —
+/// tracked as #26 — rather than a retry here that cannot succeed.
 @Observable
 @MainActor
 final class SignInModel {
