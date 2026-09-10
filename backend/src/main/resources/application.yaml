@@ -51,6 +51,24 @@ watch-guru:
     # sign-in would validate here. Empty means no audience check, which is only
     # ever acceptable in a test.
     audiences: ${WATCH_GURU_AUTH_AUDIENCES:}
+    # Sessions this service issues itself, once a provider token has been
+    # exchanged. Provider tokens last about an hour and no app can renew one
+    # without prompting the user; these can be refreshed and, unlike Google's,
+    # revoked.
+    session:
+      # HMAC key for signing access tokens. No default: an absent secret fails
+      # startup, exactly as an absent audience list does. A generated-on-boot
+      # fallback would appear to work, then sign every user out on each restart
+      # and reject its own tokens across instances behind a load balancer.
+      secret: ${WATCH_GURU_AUTH_SESSION_SECRET:}
+      issuer: ${WATCH_GURU_AUTH_SESSION_ISSUER:https://watch-guru.dev}
+      audience: watch-guru-api
+      # Short, because an access token cannot be revoked once issued: this is
+      # the window in which a stolen one still works. Revocation acts on the
+      # refresh token.
+      access-ttl: 15m
+      # The session length as the user experiences it.
+      refresh-ttl: 30d
   tmdb:
     base-url: https://api.themoviedb.org/3
     image-base-url: https://image.tmdb.org/t/p

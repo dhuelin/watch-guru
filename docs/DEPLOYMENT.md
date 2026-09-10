@@ -61,7 +61,8 @@ the repository.
 |---|---|
 | `SPRING_DATASOURCE_URL` / `_USERNAME` / `_PASSWORD` | Postgres. Flyway migrates on startup. |
 | `TMDB_API_TOKEN` | Without it, search and title detail return 503. The user's own library still works. |
-| `WATCH_GURU_AUTH_AUDIENCES` | **Set this.** Without it any token from Apple or Google is accepted, including one minted for a different application. The server logs a warning at startup when it is unset. |
+| `WATCH_GURU_AUTH_AUDIENCES` | **Required.** The OAuth client ids of the apps. Startup fails without it: an empty list would accept any token from Apple or Google, including one minted for a different application. |
+| `WATCH_GURU_AUTH_SESSION_SECRET` | **Required.** At least 32 random bytes, the HMAC key for the access tokens this service signs. Startup fails without it. There is no generated fallback on purpose — one would appear to work, then sign every user out on each restart and reject its own tokens across instances behind a load balancer. Rotating it invalidates every live access token, which is the intended emergency lever; refresh tokens survive, so clients recover on their next refresh. |
 | `WATCH_GURU_IMDB_ENABLED` | Off by default, for licensing reasons — see the roadmap. |
 
 ## Android signing

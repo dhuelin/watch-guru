@@ -1,6 +1,7 @@
 package com.dhuelin.dev.watchguru.security;
 
 import com.dhuelin.dev.watchguru.config.AuthProperties;
+import com.dhuelin.dev.watchguru.security.session.AccessTokenIssuer;
 import com.dhuelin.dev.watchguru.tracking.domain.AppUser;
 import com.dhuelin.dev.watchguru.tracking.repository.AppUserRepository;
 import org.slf4j.Logger;
@@ -40,10 +41,14 @@ public class CurrentUserService {
 
     private final AppUserRepository users;
     private final AuthProperties authProperties;
+    private final AccessTokenIssuer accessTokens;
 
-    public CurrentUserService(AppUserRepository users, AuthProperties authProperties) {
+    public CurrentUserService(AppUserRepository users,
+                              AuthProperties authProperties,
+                              AccessTokenIssuer accessTokens) {
         this.users = users;
         this.authProperties = authProperties;
+        this.accessTokens = accessTokens;
     }
 
     /**
@@ -64,9 +69,24 @@ public class CurrentUserService {
         return resolve(token.getToken());
     }
 
-    /** Resolves a validated token to a user, creating one on first sign-in. */
+    /**
+     * Resolves a validated token to a user, creating one on first sign-in.
+     *
+     * <p>Two kinds of token arrive here. A session token this service minted
+     * carries the internal user id and stands for an account that already
+     * exists; it must never provision anything, and it is looked up by id.
+     * A provider token carries the provider's own opaque subject and may be the
+     * first sight of a new user.
+     *
+     * <p>Getting that distinction wrong would be quiet and bad: treating our
+     * own token as a provider token means {@code <our issuer>|<user id>} finds
+     * no account, and a duplicate user is created on every single request.
+     */
     @Transactional
     public AppUser resolve(Jwt jwt) {
+        if (isSessionToken(jwt)) {
+            return resolveSessionToken(jwt);
+        }
         String namespacedSubject = namespacedSubject(jwt);
 
         Optional<AppUser> existing = users.findByAuthSubject(namespacedSubject);
@@ -77,6 +97,27 @@ public class CurrentUserService {
         }
 
         return provision(jwt, namespacedSubject);
+    }
+
+    private boolean isSessionToken(Jwt jwt) {
+        return jwt.getIssuer() != null
+                && accessTokens.issuerUri().equals(jwt.getIssuer().toString());
+    }
+
+    /**
+     * The account a session token stands for.
+     *
+     * <p>A token whose subject no longer resolves is one whose account was
+     * deleted while the token was still inside its short lifetime. That is a
+     * dead session, not a request to make a new account.
+     */
+    private AppUser resolveSessionToken(Jwt jwt) {
+        Long userId = AccessTokenIssuer.userIdOf(jwt);
+        if (userId == null) {
+            throw new IllegalStateException("Session token subject is not a user id");
+        }
+        return users.findById(userId).orElseThrow(() -> new SessionUserGoneException(
+                "The account this session belonged to no longer exists."));
     }
 
     /**
@@ -233,6 +274,13 @@ public class CurrentUserService {
             hex.append(String.format("%02x", hash[i]));
         }
         return hex + "@users.noreply.watch-guru.invalid";
+    }
+
+    /** A valid session token for an account that has since been deleted. */
+    public static class SessionUserGoneException extends RuntimeException {
+        public SessionUserGoneException(String message) {
+            super(message);
+        }
     }
 
     /** Deletes the current user and, by cascade, everything they own. */

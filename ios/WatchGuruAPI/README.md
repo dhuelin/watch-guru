@@ -30,6 +30,9 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+*AuthenticationAPI* | [**createSession**](docs/AuthenticationAPI.md#createsession) | **POST** /api/v1/auth/session | Exchange a provider ID token for a session
+*AuthenticationAPI* | [**endSession**](docs/AuthenticationAPI.md#endsession) | **POST** /api/v1/auth/logout | Revoke a session
+*AuthenticationAPI* | [**refreshSession**](docs/AuthenticationAPI.md#refreshsession) | **POST** /api/v1/auth/refresh | Exchange a refresh token for a new session
 *MeControllerAPI* | [**deleteAccount**](docs/MeControllerAPI.md#deleteaccount) | **DELETE** /api/v1/me | 
 *MeControllerAPI* | [**getProfile**](docs/MeControllerAPI.md#getprofile) | **GET** /api/v1/me | 
 *MeControllerAPI* | [**updateProfile**](docs/MeControllerAPI.md#updateprofile) | **PATCH** /api/v1/me | 
@@ -62,17 +65,20 @@ Class | Method | HTTP request | Description
  - [Bucket](docs/Bucket.md)
  - [BulkMarkResponse](docs/BulkMarkResponse.md)
  - [EpisodeResponse](docs/EpisodeResponse.md)
+ - [ExchangeToken](docs/ExchangeToken.md)
  - [GenreResponse](docs/GenreResponse.md)
  - [LinkedAccountResponse](docs/LinkedAccountResponse.md)
  - [LogEpisodeWatched](docs/LogEpisodeWatched.md)
  - [LogMovieWatched](docs/LogMovieWatched.md)
  - [MarkWatchedUpTo](docs/MarkWatchedUpTo.md)
  - [MonthBucket](docs/MonthBucket.md)
+ - [RefreshSession](docs/RefreshSession.md)
  - [SearchHit](docs/SearchHit.md)
  - [SearchResponse](docs/SearchResponse.md)
  - [SeasonResponse](docs/SeasonResponse.md)
  - [SeasonsResponse](docs/SeasonsResponse.md)
  - [SeriesProgress](docs/SeriesProgress.md)
+ - [SessionResponse](docs/SessionResponse.md)
  - [StreamingServiceResponse](docs/StreamingServiceResponse.md)
  - [TitleProgress](docs/TitleProgress.md)
  - [TitleResponse](docs/TitleResponse.md)

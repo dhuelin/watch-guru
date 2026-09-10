@@ -4,10 +4,13 @@ import com.dhuelin.dev.watchguru.common.NotFoundException;
 import com.dhuelin.dev.watchguru.provider.MetadataProviderException;
 import com.dhuelin.dev.watchguru.provider.MetadataProviderNotConfiguredException;
 import com.dhuelin.dev.watchguru.security.AccountConflictException;
+import com.dhuelin.dev.watchguru.security.CurrentUserService;
+import com.dhuelin.dev.watchguru.security.session.SessionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -32,6 +35,38 @@ public class ApiExceptionHandler {
      * duplicate account is indistinguishable from having lost everything they
      * ever tracked.
      */
+    /**
+     * A provider token this service will not accept, at the exchange endpoint.
+     *
+     * <p>401 with a deliberately flat message. Saying which check failed --
+     * unknown issuer, bad signature, wrong audience, expired -- would tell an
+     * attacker probing the endpoint exactly how far they got.
+     */
+    @ExceptionHandler(JwtException.class)
+    ProblemDetail onBadProviderToken(JwtException e) {
+        log.debug("Rejected a provider token at the exchange endpoint: {}", e.getMessage());
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED,
+                "That sign-in could not be verified. Please try again.");
+    }
+
+    /** A refresh token that is unknown, spent, revoked or expired. */
+    @ExceptionHandler(SessionService.InvalidSessionException.class)
+    ProblemDetail onInvalidSession(SessionService.InvalidSessionException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, e.getMessage());
+    }
+
+    /**
+     * A still-valid access token for an account that has since been deleted.
+     *
+     * <p>401 rather than 404: from the client's point of view this is a dead
+     * session, and the correct response is to sign in again rather than to
+     * retry the call.
+     */
+    @ExceptionHandler(CurrentUserService.SessionUserGoneException.class)
+    ProblemDetail onSessionUserGone(CurrentUserService.SessionUserGoneException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, e.getMessage());
+    }
+
     @ExceptionHandler(AccountConflictException.class)
     ProblemDetail onAccountConflict(AccountConflictException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());

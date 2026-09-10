@@ -178,6 +178,11 @@
                           it, taking the datasource and Flyway settings with it.
                         -->
                         <watch-guru.auth.audiences>watch-guru-test</watch-guru.auth.audiences>
+                        <!-- A fixed non-secret for tests. Real deployments must
+                             set WATCH_GURU_AUTH_SESSION_SECRET; startup fails
+                             without it, which is what SecurityConfigFailClosedTest
+                             asserts. -->
+                        <watch-guru.auth.session.secret>test-signing-secret-not-for-production-use</watch-guru.auth.session.secret>
                     </systemPropertyVariables>
                 </configuration>
             </plugin>

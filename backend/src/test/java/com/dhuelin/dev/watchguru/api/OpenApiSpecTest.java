@@ -24,6 +24,10 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.dhuelin.dev.watchguru.security.TrustedIssuers;
+import com.dhuelin.dev.watchguru.security.session.AccessTokenIssuer;
+import com.dhuelin.dev.watchguru.security.session.SessionService;
+import com.dhuelin.dev.watchguru.support.TestAuth;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -62,8 +66,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
         TitleController.class,
         WatchlistController.class,
         WatchHistoryController.class,
-        StreamingController.class})
-@Import({SecurityConfig.class, OpenApiConfig.class, OpenApiSpecTest.SpecTestConfig.class})
+        StreamingController.class,
+        AuthController.class})
+@Import({SecurityConfig.class, TrustedIssuers.class, AccessTokenIssuer.class,
+        OpenApiConfig.class, OpenApiSpecTest.SpecTestConfig.class})
 // @WebMvcTest applies only a fixed list of auto-configurations, and springdoc
 // is not on it, so without this the /v3/api-docs handler is never registered
 // and the endpoint 404s with an empty body.
@@ -81,10 +87,7 @@ class OpenApiSpecTest {
 
         @Bean
         AuthProperties authProperties() {
-            return new AuthProperties(
-                    List.of(new AuthProperties.Issuer("google", "https://accounts.google.com", true)),
-                    List.of("watch-guru-test"),
-                    true);
+            return TestAuth.properties();
         }
 
         /** A record, so it is supplied rather than mocked. */
@@ -109,6 +112,7 @@ class OpenApiSpecTest {
     private MockMvc mvc;
 
     @MockitoBean private CatalogService catalogService;
+    @MockitoBean private SessionService sessionService;
     @MockitoBean private EpisodeListService episodeListService;
     @MockitoBean private UpNextService upNextService;
     @MockitoBean private EpisodeRepository episodeRepository;

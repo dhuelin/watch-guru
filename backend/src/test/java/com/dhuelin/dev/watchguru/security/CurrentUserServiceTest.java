@@ -1,6 +1,8 @@
 package com.dhuelin.dev.watchguru.security;
 
 import com.dhuelin.dev.watchguru.config.AuthProperties;
+import com.dhuelin.dev.watchguru.security.session.AccessTokenIssuer;
+import com.dhuelin.dev.watchguru.support.TestAuth;
 import com.dhuelin.dev.watchguru.tracking.domain.AppUser;
 import com.dhuelin.dev.watchguru.tracking.repository.AppUserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,8 +53,9 @@ class CurrentUserServiceTest {
                         new AuthProperties.Issuer("google", GOOGLE, true),
                         new AuthProperties.Issuer("legacy", UNTRUSTED, false)),
                 List.of("watch-guru-app"),
-                true);
-        service = new CurrentUserService(users, properties);
+                true,
+                TestAuth.session());
+        service = new CurrentUserService(users, properties, new AccessTokenIssuer(properties));
 
         when(users.saveAndFlush(any(AppUser.class))).thenAnswer(call -> call.getArgument(0));
         when(users.save(any(AppUser.class))).thenAnswer(call -> call.getArgument(0));

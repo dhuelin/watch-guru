@@ -12,7 +12,94 @@
   "security" : [ {
     "bearerAuth" : [ ]
   } ],
+  "tags" : [ {
+    "description" : "Exchanging a provider sign-in for a session",
+    "name" : "Authentication"
+  } ],
   "paths" : {
+    "/api/v1/auth/logout" : {
+      "post" : {
+        "description" : "Revokes the refresh token and every token descended from the same sign-in. Succeeds even if the token was already invalid.",
+        "operationId" : "endSession",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RefreshSession"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "summary" : "Revoke a session",
+        "tags" : [ "Authentication" ]
+      }
+    },
+    "/api/v1/auth/refresh" : {
+      "post" : {
+        "description" : "Rotates the refresh token. The presented token is invalidated, and presenting it a second time revokes the entire session.",
+        "operationId" : "refreshSession",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RefreshSession"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SessionResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Exchange a refresh token for a new session",
+        "tags" : [ "Authentication" ]
+      }
+    },
+    "/api/v1/auth/session" : {
+      "post" : {
+        "description" : "Verifies the provider's ID token and returns an access token and a refresh token issued by this service. Provisions the account on first use.",
+        "operationId" : "createSession",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ExchangeToken"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SessionResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "summary" : "Exchange a provider ID token for a session",
+        "tags" : [ "Authentication" ]
+      }
+    },
     "/api/v1/me" : {
       "delete" : {
         "operationId" : "deleteAccount",
@@ -800,6 +887,17 @@
         },
         "required" : [ "aired", "code", "episodeNumber", "id", "seasonNumber", "watchCount", "watched" ]
       },
+      "ExchangeToken" : {
+        "type" : "object",
+        "properties" : {
+          "providerToken" : {
+            "type" : "string",
+            "maxLength" : 4096,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "providerToken" ]
+      },
       "GenreResponse" : {
         "type" : "object",
         "properties" : {
@@ -914,6 +1012,17 @@
           }
         },
         "required" : [ "minutes", "month", "viewings", "year" ]
+      },
+      "RefreshSession" : {
+        "type" : "object",
+        "properties" : {
+          "refreshToken" : {
+            "type" : "string",
+            "maxLength" : 512,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "refreshToken" ]
       },
       "SearchHit" : {
         "type" : "object",
@@ -1053,6 +1162,29 @@
           }
         },
         "required" : [ "airedEpisodes", "percentComplete", "watchedEpisodes" ]
+      },
+      "SessionResponse" : {
+        "type" : "object",
+        "properties" : {
+          "accessToken" : {
+            "type" : "string"
+          },
+          "expiresIn" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "refreshToken" : {
+            "type" : "string"
+          },
+          "refreshTokenExpiresAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "tokenType" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "accessToken", "expiresIn", "refreshToken", "refreshTokenExpiresAt", "tokenType" ]
       },
       "StreamingServiceResponse" : {
         "type" : "object",

@@ -11,6 +11,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
+import com.dhuelin.dev.watchguru.security.TrustedIssuers;
+import com.dhuelin.dev.watchguru.security.session.AccessTokenIssuer;
+import com.dhuelin.dev.watchguru.support.TestAuth;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -38,7 +41,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * would have caught that.
  */
 @WebMvcTest(WatchlistController.class)
-@Import({SecurityConfig.class, WatchlistControllerSecurityTest.TestAuthConfig.class})
+@Import({SecurityConfig.class, TrustedIssuers.class, AccessTokenIssuer.class,
+        WatchlistControllerSecurityTest.TestAuthConfig.class})
 class WatchlistControllerSecurityTest {
 
     @TestConfiguration(proxyBeanMethods = false)
@@ -47,10 +51,7 @@ class WatchlistControllerSecurityTest {
         AuthProperties authProperties() {
             // A real issuer URI so the config validates; the decoder resolves
             // discovery lazily and jwt() bypasses it, so nothing is fetched.
-            return new AuthProperties(
-                    List.of(new AuthProperties.Issuer("google", "https://accounts.google.com", true)),
-                    List.of("watch-guru-test"),
-                    true);
+            return TestAuth.properties();
         }
     }
 

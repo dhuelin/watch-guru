@@ -45,6 +45,7 @@ class WatchGuruApplicationTests {
                 "genre",
                 "imdb_import_run",
                 "linked_streaming_account",
+                "refresh_token",
                 "season",
                 "streaming_service",
                 "sync_run",

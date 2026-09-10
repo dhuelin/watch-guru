@@ -26,6 +26,27 @@ public final class Requests {
      * here -- it is asserted by the identity provider and changing it locally
      * would decouple the account from the identity that owns it.
      */
+    /**
+     * A provider ID token being exchanged for a session.
+     *
+     * @param providerToken Apple's or Google's ID token, exactly as the
+     *                      platform sign-in returned it
+     */
+    public record ExchangeToken(
+            @NotBlank @Size(max = 4096) String providerToken) {
+    }
+
+    /**
+     * A refresh token being rotated or revoked.
+     *
+     * <p>In the body rather than the Authorization header: it is not a bearer
+     * credential for the API, it is the input to one endpoint, and headers end
+     * up in access logs far more often than bodies do.
+     */
+    public record RefreshSession(
+            @NotBlank @Size(max = 512) String refreshToken) {
+    }
+
     public record UpdateProfile(
             @Size(max = 128) String displayName,
             @Size(min = 2, max = 2) String region,

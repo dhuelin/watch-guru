@@ -14,16 +14,33 @@ token; the backend verifies it and resolves it to an account.
    │  2. ID token (JWT)              │                             │
    │<────────────────────────────────┤                             │
    │                                 │                             │
-   │  3. Any request, Authorization: Bearer <ID token>             │
+   │  3. POST /api/v1/auth/session { providerToken }               │
    ├──────────────────────────────────────────────────────────────>│
    │                                 │   4. Fetch JWKS (first use, │
    │                                 │<─────── then cached) ───────┤
-   │  5. Response                    │                             │
+   │  5. { accessToken, refreshToken }                             │
+   │<──────────────────────────────────────────────────────────────┤
+   │                                 │                             │
+   │  6. Every request, Authorization: Bearer <accessToken>        │
+   ├──────────────────────────────────────────────────────────────>│
+   │                                 │                             │
+   │  7. On expiry: POST /api/v1/auth/refresh { refreshToken }     │
+   ├──────────────────────────────────────────────────────────────>│
+   │     → a new pair; the old refresh token is now dead           │
    │<──────────────────────────────────────────────────────────────┤
 ```
 
-There is no separate registration call and no token exchange. An account comes
-into existence the first time a valid token arrives.
+There is no separate registration call. An account comes into existence the
+first time a valid provider token is exchanged.
+
+**Why the exchange exists.** Provider ID tokens expire in about an hour and no
+app can renew one without putting a sheet in front of the user. They are also
+unrevocable by us — nobody can revoke Google's token but Google. Exchanging one
+for a token of our own fixes both.
+
+A provider token presented directly as a bearer token still works. Both apps
+shipped that way, and breaking them from the server side is not an upgrade
+path; but it inherits the one-hour limit, so clients should exchange.
 
 ## What the backend checks
 
@@ -44,11 +61,12 @@ one user reading another's history.
 
 | Setting | Notes |
 |---|---|
-| `WATCH_GURU_AUTH_AUDIENCES` | Comma-separated OAuth client ids for the iOS and Android apps. **The API is not safe without this** — the server logs a warning at startup when it is unset |
+| `WATCH_GURU_AUTH_AUDIENCES` | Comma-separated OAuth client ids for the iOS and Android apps. **Startup fails without it** — an empty list means no check on who a token was minted for |
+| `WATCH_GURU_AUTH_SESSION_SECRET` | At least 32 random bytes; the HMAC key for the access tokens this service signs. **Startup fails without it** |
 | `watch-guru.auth.issuers` | Defaults to Apple and Google; both are configured as trusted to assert email verification |
 
-There is deliberately no bypass profile. An empty issuer list fails startup
-rather than quietly serving unauthenticated traffic. For local development,
+There is deliberately no bypass profile. Each of those fails startup rather
+than degrading quietly. For local development,
 point `watch-guru.auth.issuers[0].uri` at a mock OIDC issuer.
 
 ## Account linking, and why it is restrictive
@@ -122,12 +140,54 @@ The backend refuses to start with either variable unset. That is deliberate: an
 empty audience list would otherwise accept any token from a trusted issuer,
 including one minted for a different application.
 
-### Refresh is not implemented
+### Sessions this service issues
 
-Both apps use the provider's ID token directly as the bearer token, and those
-expire in about an hour. There is no refresh, so a long-lived session ends in
-401s and the user has to sign in again. `## Client responsibilities` above says
-"on 401, re-authenticate" — today that means the user does it manually from the
-profile screen. Doing it properly means a token-exchange endpoint here that
-issues a session token of our own, which is a backend change rather than an app
-one. Tracked as #26.
+| | |
+|---|---|
+| Access token | A JWT signed here with HS256, `iss` `https://watch-guru.dev`, `aud` `watch-guru-api`, subject the **internal** user id. 15 minutes. Not stored anywhere: a table of live access tokens is a table worth stealing. |
+| Refresh token | 256 bits of CSPRNG output, returned once and stored only as a SHA-256 hash. 30 days. |
+
+HMAC rather than RSA because the only party that verifies these is this
+service, so a public key buys nothing and a private key would have to be
+managed and rotated. If a second service ever needs to verify them, that is the
+moment to switch to RS256 and publish a JWK set — not before.
+
+SHA-256 rather than bcrypt for the stored hash because the input is 256 bits of
+random, not a password: there is nothing guessable to slow an attacker down,
+and refresh runs on every app launch.
+
+### Rotation, and what happens when a token is stolen
+
+Every refresh burns the presented token and issues a successor in the same
+**family** — the set of tokens descended from one sign-in.
+
+Presenting a token that has already been exchanged means two parties hold it.
+There is no way to tell which one is legitimate, so the entire family is
+revoked and both are signed out. That is the intended outcome: a stolen refresh
+token is worth at most one refresh, and using it is what reveals the theft.
+
+Sign-out revokes the family too, not just the presented token — but families
+are per sign-in, so signing out on the phone leaves the tablet alone.
+
+Deleting an account removes its refresh tokens by `ON DELETE CASCADE`. An
+access token issued moments earlier still verifies for up to 15 minutes, so
+`CurrentUserService` rejects a session token whose user no longer exists rather
+than provisioning a replacement for someone who asked to be deleted.
+
+### Access tokens cannot be revoked
+
+Revocation acts on the refresh token. The 15-minute access-token lifetime is
+therefore the window in which a stolen access token still works, and shortening
+that window is the only lever. Making access tokens revocable would mean a
+database lookup on every request, which is the cost this design deliberately
+avoids.
+
+### Nonces are still not used
+
+Neither app sets a nonce. With the exchange in place a nonce finally *could* be
+meaningful — the backend would issue a challenge, the app would pass it to the
+provider, and the backend would reject any token whose `nonce` claim is not the
+challenge it issued. That is not built yet; #26 carries the design. Until then,
+replay protection is TLS plus the provider token's own short expiry, and the
+exchange narrows the window in which a captured provider token is useful,
+because the app stops sending it on every request.

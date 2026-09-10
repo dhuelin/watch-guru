@@ -27,6 +27,26 @@ public final class Responses {
     private Responses() {
     }
 
+    /**
+     * A freshly issued session.
+     *
+     * <p>The refresh token is returned exactly once, here. It is not stored in
+     * a form that can be given back, so a client that loses it has to sign in
+     * again -- which is the correct outcome, not a gap.
+     *
+     * @param expiresIn seconds until the access token expires, rather than an
+     *                  absolute time: a client whose clock is wrong would
+     *                  otherwise refresh constantly or not at all
+     */
+    public record SessionResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String accessToken,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String tokenType,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) long expiresIn,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String refreshToken,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Instant refreshTokenExpiresAt
+    ) {
+    }
+
     public record UserResponse(
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long id,
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String email,

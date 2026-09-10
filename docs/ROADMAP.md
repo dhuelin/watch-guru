@@ -80,6 +80,7 @@ Both platforms, feature-equivalent, each looking correct on its own platform.
 | [#13](https://github.com/dhuelin/watch-guru/issues/13) | Home: Up Next | ✅ Both platforms, over `GET /me/up-next` |
 | [#25](https://github.com/dhuelin/watch-guru/issues/25) | Backend: episodes, progress, up-next | ✅ Closed the gap that blocked #12 and #13 |
 | [#15](https://github.com/dhuelin/watch-guru/issues/15) | Sign-in and account management | 🟡 Written on both platforms — Apple on iOS, Google on Android, plus sign-out and account deletion. **Never compiled or run:** it needs an Apple Developer account and a Google OAuth client, neither of which existed here |
+| [#26](https://github.com/dhuelin/watch-guru/issues/26) | Session tokens (exchange + refresh) | 🟡 **Backend done and tested** — `POST /auth/session`, `/auth/refresh`, `/auth/logout`, rotating refresh tokens with family reuse detection. The apps still send the provider token directly and have not been switched over |
 | [#14](https://github.com/dhuelin/watch-guru/issues/14) | Offline cache and sync | ⬜ |
 
 **Done when:** a user can sign in, find a series, track it episode by episode,
@@ -161,9 +162,11 @@ library rots.
 
 ## Known constraints, carried forward
 
-**Set `WATCH_GURU_AUTH_AUDIENCES` before exposing the API.** Without it, any
+**The API refuses to start without `WATCH_GURU_AUTH_AUDIENCES` and
+`WATCH_GURU_AUTH_SESSION_SECRET`.** Deliberate: without an audience list, any
 token from Apple or Google validates, including one minted for a completely
-different application. The server logs a warning at startup when it is unset.
+different application. Both were briefly warn-and-continue, which is the state
+this now prevents.
 
 **IMDb datasets are non-commercial.** Fine for a free app, a blocker for a paid
 one. The import is behind a flag specifically so this stays a configuration

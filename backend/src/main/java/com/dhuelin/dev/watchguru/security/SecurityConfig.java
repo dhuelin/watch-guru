@@ -1,8 +1,6 @@
 package com.dhuelin.dev.watchguru.security;
 
-import com.dhuelin.dev.watchguru.config.AuthProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.dhuelin.dev.watchguru.security.session.AccessTokenIssuer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,18 +10,12 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
-import org.springframework.security.oauth2.core.OAuth2TokenValidator;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtValidators;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
 import org.springframework.security.oauth2.server.resource.authentication.JwtIssuerAuthenticationManagerResolver;
 import org.springframework.security.web.SecurityFilterChain;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -37,8 +29,6 @@ import java.util.Map;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
-
     /**
      * One authentication manager per trusted issuer, selected by the token's
      * {@code iss} claim.
@@ -46,84 +36,32 @@ public class SecurityConfig {
      * <p>Built from an explicit issuer-to-manager map rather than
      * {@code JwtIssuerAuthenticationManagerResolver.fromTrustedIssuers(String...)}.
      * That convenience method constructs its own decoders internally, which
-     * would quietly discard the audience validator configured below and leave
-     * the API accepting tokens minted for other applications.
+     * would quietly discard the audience validators and leave the API accepting
+     * tokens minted for other applications.
      *
      * <p>An issuer absent from the map resolves to null, and Spring Security
      * rejects the request. That is what stops a token carrying an attacker's
      * own {@code iss} from pointing this server at a JWK set they control.
+     *
+     * <p>The providers' issuers are still here alongside this service's own.
+     * Apps are expected to exchange a provider token for a session token at
+     * {@code POST /api/v1/auth/session} and use that thereafter, but a provider
+     * token presented directly is still honoured -- both apps shipped that way,
+     * and breaking them from the server side is not an upgrade path.
      */
     @Bean
-    JwtIssuerAuthenticationManagerResolver issuerResolver(AuthProperties properties) {
-        if (properties.issuers().isEmpty()) {
-            // Failing to start is the correct response. An API that silently
-            // serves unauthenticated traffic because its issuer list was empty
-            // is exactly the state this change exists to remove, and a
-            // misconfigured deployment must not be able to reach it.
-            throw new IllegalStateException(
-                    "No OIDC issuers configured. Set watch-guru.auth.issuers[0].uri. For local "
-                            + "development point it at a mock OIDC issuer; there is deliberately "
-                            + "no bypass switch.");
-        }
-        if (properties.audiences().isEmpty()) {
-            // Fail closed, exactly as an empty issuer list does. This used to be
-            // a warning, which made the one control answering "was this token
-            // minted for us" optional in practice: Apple and Google issue
-            // tokens to any registered client, so without an audience check a
-            // token harvested by any unrelated app with Google sign-in is
-            // accepted here as its owner. A misconfiguration that silently
-            // opens every account is not something to log and carry on from.
-            throw new IllegalStateException(
-                    "No watch-guru.auth.audiences configured. Set WATCH_GURU_AUTH_AUDIENCES to the "
-                            + "OAuth client ids of the apps. Without it any token from a trusted "
-                            + "issuer is accepted, including one minted for a different "
-                            + "application.");
-        }
-
+    JwtIssuerAuthenticationManagerResolver issuerResolver(TrustedIssuers trustedIssuers,
+                                                          AccessTokenIssuer accessTokens) {
         Map<String, AuthenticationManager> managers = new LinkedHashMap<>();
-        for (AuthProperties.Issuer issuer : properties.issuers()) {
-            if (properties.requireHttps() && !issuer.uri().startsWith("https://")) {
-                throw new IllegalStateException(
-                        "Issuer " + issuer.name() + " is not HTTPS: " + issuer.uri());
-            }
-            managers.put(issuer.uri(),
-                    new ProviderManager(new JwtAuthenticationProvider(decoderFor(issuer, properties.audiences()))));
-            log.info("Trusting OIDC issuer {} ({}); email verification trusted: {}",
-                    issuer.name(), issuer.uri(), issuer.trustEmailVerification());
-        }
+        trustedIssuers.decoders().forEach((issuer, decoder) -> managers.put(issuer, managerFor(decoder)));
+        managers.put(accessTokens.issuerUri(), managerFor(accessTokens.decoder()));
 
         AuthenticationManagerResolver<String> byIssuer = managers::get;
         return new JwtIssuerAuthenticationManagerResolver(byIssuer);
     }
 
-    /**
-     * Decoder for one issuer, with audience validation on top of the defaults.
-     *
-     * <p>Wrapped in a {@link LazyJwtDecoder}. Both {@code withIssuerLocation}
-     * and {@code JwtDecoders.fromIssuerLocation} fetch the provider's discovery
-     * document while <em>building</em> the decoder, so without this the
-     * application cannot start unless Apple and Google are both reachable --
-     * verified the hard way: startup fails outright behind restricted egress.
-     *
-     * <p>The default validators cover signature, expiry and issuer. Audience is
-     * the one that stops a correctly signed token minted for a <em>different</em>
-     * application being replayed here: both Apple and Google issue tokens to any
-     * registered client, so "signed by Google" says nothing about who the token
-     * was for.
-     */
-    private JwtDecoder decoderFor(AuthProperties.Issuer issuer, List<String> audiences) {
-        return new LazyJwtDecoder(() -> {
-            NimbusJwtDecoder decoder = NimbusJwtDecoder.withIssuerLocation(issuer.uri()).build();
-
-            OAuth2TokenValidator<Jwt> validator = audiences.isEmpty()
-                    ? JwtValidators.createDefaultWithIssuer(issuer.uri())
-                    : new DelegatingOAuth2TokenValidator<>(
-                            JwtValidators.createDefaultWithIssuer(issuer.uri()),
-                            new AudienceValidator(audiences));
-
-            decoder.setJwtValidator(validator);
-            return decoder;
-        });
+    private static AuthenticationManager managerFor(JwtDecoder decoder) {
+        return new ProviderManager(new JwtAuthenticationProvider(decoder));
     }
 
     @Bean
@@ -142,7 +80,16 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                             .permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Everything else, including every /api route, needs a token.
+                        // The token endpoints carry their credential in the
+                        // body, not the Authorization header, so the filter
+                        // chain has nothing to check. They are not unprotected:
+                        // each verifies its own credential and returns 401
+                        // otherwise. Requiring a bearer token to obtain a
+                        // bearer token would be circular.
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/auth/session", "/api/v1/auth/refresh", "/api/v1/auth/logout")
+                            .permitAll()
+                        // Everything else, including every other /api route, needs a token.
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.authenticationManagerResolver(issuerResolver))
                 .build();
