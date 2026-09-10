@@ -8,7 +8,7 @@ import Foundation
 /// ``upstream`` — the backend keeps serving a user's own library when TMDB is
 /// down, so "the catalogue is unavailable" and "you have no connection" are
 /// genuinely different, and only one of them means their data is unreachable.
-enum APIFailure: Error, Equatable {
+enum APIFailure: Error, Equatable, Sendable {
     /// No usable network. Reads may still be served from cache.
     case offline
     /// Token missing, expired or rejected. Re-authenticate.

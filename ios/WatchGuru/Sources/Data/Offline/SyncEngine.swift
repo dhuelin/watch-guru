@@ -13,7 +13,7 @@ import Foundation
 ///   mutation behind it for ever.
 /// - **A server error is transient; keep it.** The user's work is not thrown
 ///   away because the server had a bad minute.
-struct SyncEngine {
+struct SyncEngine: Sendable {
 
     /// What happened, so a caller can decide whether to refresh or say "still
     /// offline".
@@ -33,7 +33,13 @@ struct SyncEngine {
 
     /// Performs one mutation. Injected so the rules above are testable without
     /// a network.
-    let send: (PendingMutation) async -> APIFailure?
+    ///
+    /// `@Sendable`, and the struct with it: `sync()` is async, so calling it
+    /// from an actor sends this value to a nonisolated executor. Without the
+    /// conformance that is "sending value of non-Sendable type 'SyncEngine'
+    /// risks causing data races" -- which is a fair complaint rather than
+    /// pedantry, since the closure is what actually touches shared state.
+    let send: @Sendable (PendingMutation) async -> APIFailure?
 
     func sync() async -> Outcome {
         var outcome = Outcome()
