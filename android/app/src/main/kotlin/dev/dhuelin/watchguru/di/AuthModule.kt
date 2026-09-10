@@ -1,11 +1,15 @@
 package dev.dhuelin.watchguru.di
 
+import android.content.Context
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.dhuelin.watchguru.BuildConfig
+import dev.dhuelin.watchguru.data.CoilDataCleaner
 import dev.dhuelin.watchguru.data.GoogleSignIn
+import dev.dhuelin.watchguru.data.LocalDataCleaner
 import javax.inject.Singleton
 
 @Module
@@ -20,4 +24,9 @@ object AuthModule {
     @Provides
     @Singleton
     fun googleSignIn(): GoogleSignIn = GoogleSignIn(BuildConfig.GOOGLE_WEB_CLIENT_ID)
+
+    @Provides
+    @Singleton
+    fun localDataCleaner(@ApplicationContext context: Context): LocalDataCleaner =
+        CoilDataCleaner(context)
 }

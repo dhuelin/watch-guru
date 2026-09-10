@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.dhuelin.watchguru.data.ApiResult
 import dev.dhuelin.watchguru.data.GoogleSignIn
+import dev.dhuelin.watchguru.data.LocalDataCleaner
 import dev.dhuelin.watchguru.data.TokenStore
 import dev.dhuelin.watchguru.data.WatchGuruRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,6 +46,7 @@ class SignInViewModel @Inject constructor(
     private val tokens: TokenStore,
     private val googleSignIn: GoogleSignIn,
     private val repository: WatchGuruRepository,
+    private val localData: LocalDataCleaner,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<AuthState>(AuthState.Checking)
@@ -92,16 +94,19 @@ class SignInViewModel @Inject constructor(
     }
 
     /**
-     * Clears the token.
+     * Clears the token and everything derived from it.
      *
-     * A shared device must not leak the previous user's watch history, so
-     * anything cached from the API has to go with it. Nothing is cached on disk
-     * today (#14 is the offline cache); when it is, this is where it gets
-     * cleared.
+     * The token goes first and synchronously, so the very next request is
+     * already unauthenticated and the UI switches immediately; wiping the
+     * caches is disk I/O and follows on its own.
+     *
+     * A shared device must not leak the previous user's watch history, and
+     * cached poster art alone is enough to do that -- see [LocalDataCleaner].
      */
     fun signOut() {
         tokens.clear()
         _state.value = AuthState.SignedOut
+        viewModelScope.launch { localData.clear() }
     }
 
     /**

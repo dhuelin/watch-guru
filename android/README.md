@@ -30,7 +30,7 @@ single Gradle build**.
 | Layer | State |
 |---|---|
 | `api-client/` | **Compiled.** 108 classes, generated from the committed spec and built with kotlinc against Retrofit, OkHttp, coroutines and kotlinx.serialization. |
-| `data/` | **Compiled and tested**, except `EncryptedTokenStore` — 9 unit tests pass against the real generated client on a plain JVM. `EncryptedTokenStore` uses AndroidX Keystore APIs and could not be compiled here. |
+| `data/` | **Compiled and tested**, except `EncryptedTokenStore` and `CoilDataCleaner` — 9 unit tests pass against the real generated client on a plain JVM. Those two touch AndroidX Keystore and Coil respectively and could not be compiled here. |
 | `ui/` | **Not compiled.** Compose needs the Compose compiler plugin and the Android SDK. Field and enum names were checked against the generated models by hand, and every `R.string` reference was checked against `strings.xml`, but the first `./gradlew` run is where this is really tested. |
 | Sign-in | **Not compiled at all.** `data/GoogleSignIn.kt` and `ui/signin/` depend on Credential Manager and AndroidX Lifecycle, which live on Google's Maven. Nothing here has ever run. |
 | Gradle setup | **Not resolved.** Plugin and library versions are pinned to known-compatible pairings (AGP 8.7.3 with Kotlin 2.1.21), but no build has confirmed them. |
@@ -56,9 +56,16 @@ app/src/main/kotlin/dev/dhuelin/watchguru/
     └── profile/     Profile
 ```
 
-`data/` deliberately contains no Android types. That is what let the repository
-and its error mapping be tested here at all, and it is the right place for the
-logic regardless.
+`data/` is almost free of Android types — the exceptions are `EncryptedTokenStore`
+and `CoilDataCleaner`, which exist to *be* the Android-specific half behind an
+interface (`TokenStore`, `LocalDataCleaner`). Everything else, the repository
+and its error mapping in particular, stays plain Kotlin, which is what let it be
+tested here at all.
+
+Signing out clears the token synchronously and then wipes Coil's image caches
+off the main thread. That second part is not cosmetic: on a shared device the
+cached poster art is a list of what the previous user was watching. API
+responses need no equivalent — the OkHttp client is built without a cache.
 
 ## Sign-in
 
