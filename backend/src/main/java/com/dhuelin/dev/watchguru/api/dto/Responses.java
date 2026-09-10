@@ -272,4 +272,26 @@ public final class Responses {
             String lastSyncError
     ) {
     }
+
+    /**
+     * What one series' notification setting is.
+     *
+     * <p>Only series the user has said something explicit about are listed.
+     * Absence means notify, so a client renders every followed series as on
+     * unless it appears here.
+     */
+    public record SeriesNotificationResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long titleId,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String titleName,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean newEpisodes
+    ) {
+    }
+
+    /** The notification settings screen, in one response. */
+    public record NotificationSettingsResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean enabled,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<SeriesNotificationResponse> series,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int registeredDevices
+    ) {
+    }
 }

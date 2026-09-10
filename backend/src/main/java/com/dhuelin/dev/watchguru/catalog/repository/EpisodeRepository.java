@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.dhuelin.dev.watchguru.tracking.service.SeriesProgressCounts;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -88,4 +89,29 @@ public interface EpisodeRepository extends JpaRepository<Episode, Long> {
     List<Episode> findAiredUpTo(@Param("titleId") Long titleId,
                                 @Param("seasonNumber") Integer seasonNumber,
                                 @Param("episodeNumber") Integer episodeNumber);
+
+    /**
+     * Episodes of these series that aired within a window, in broadcast order.
+     *
+     * <p>Backs the new-episode scan. The window has a floor rather than being
+     * "since yesterday" so that a scan which did not run -- a deploy, an
+     * outage, a user who was asleep through their whole quiet-hours window --
+     * still catches what it missed, and the delivery log rather than the query
+     * is what stops a repeat.
+     *
+     * <p>Season 0 is excluded: a special appearing in the catalogue is not the
+     * event somebody asked to be told about.
+     */
+    @Query("""
+            select e from Episode e
+            where e.title.id in :titleIds
+              and e.seasonNumber > 0
+              and e.airDate is not null
+              and e.airDate >= :from
+              and e.airDate <= :to
+            order by e.title.id asc, e.seasonNumber asc, e.episodeNumber asc
+            """)
+    List<Episode> findAiredBetween(@Param("titleIds") Collection<Long> titleIds,
+                                   @Param("from") LocalDate from,
+                                   @Param("to") LocalDate to);
 }

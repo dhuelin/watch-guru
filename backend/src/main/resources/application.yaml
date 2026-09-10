@@ -111,6 +111,26 @@ watch-guru:
     cron: "0 30 3 * * *"
     batch-size: 5000
     read-timeout: 10m
+  notifications:
+    # New-episode pushes (#19). On by default, but nothing is delivered until
+    # a real push provider exists: the only sender today logs the message and
+    # says NOT DELIVERED in as many words. See issue #19 and docs/DEPLOYMENT.md.
+    enabled: ${WATCH_GURU_NOTIFICATIONS_ENABLED:true}
+    push-provider: ${WATCH_GURU_PUSH_PROVIDER:log}
+    # How far back an episode may have aired and still be announced. Three days
+    # rather than one so a scan that did not run, or a user whose quiet hours
+    # covered the whole window, does not silently lose the episode.
+    lookback-days: 3
+    # Local to the user, using app_user.time_zone. Nobody is woken at 3am.
+    quiet-from: "09:00"
+    quiet-until: "21:00"
+    # Six series returning on the same Tuesday is a real Tuesday; six pushes in
+    # a minute is how an app gets muted for good.
+    daily-cap: 3
+    # Five past every hour. Air dates are dates, not times, so there is no
+    # minute to be punctual to; what this really decides is how soon after a
+    # user's quiet hours open they hear about it.
+    cron: "0 5 * * * *"
   catalog:
     # How long a cached title detail record is considered fresh.
     detail-ttl: 7d

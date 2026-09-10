@@ -39,12 +39,15 @@ class WatchGuruApplicationTests {
         // 15 is not 14.
         assertThat(tables).containsExactly(
                 "app_user",
+                "device_token",
                 "episode",
                 "episode_watch",
                 "flyway_schema_history",
                 "genre",
                 "imdb_import_run",
                 "linked_streaming_account",
+                "notification_delivery",
+                "notification_preference",
                 "refresh_token",
                 "season",
                 "streaming_service",
@@ -67,6 +70,19 @@ class WatchGuruApplicationTests {
 
         assertThat(columns).containsExactly(
                 "auth_issuer", "auth_subject", "email_verified", "last_login_at");
+    }
+
+    @Test
+    void notificationColumnsFromV6Exist() {
+        // The global off switch lives on the user rather than in the
+        // preference table, so it is the one part of V6 a column check catches.
+        var columns = jdbcTemplate.queryForList("""
+                select column_name from information_schema.columns
+                where table_schema = 'public' and table_name = 'app_user'
+                  and column_name = 'notifications_enabled'
+                """, String.class);
+
+        assertThat(columns).containsExactly("notifications_enabled");
     }
 
     @Test

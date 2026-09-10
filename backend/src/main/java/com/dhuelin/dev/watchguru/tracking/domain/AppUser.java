@@ -69,6 +69,16 @@ public class AppUser {
     @Column(name = "time_zone", nullable = false, length = 64)
     private String timeZone = "UTC";
 
+    /**
+     * The global notification off switch.
+     *
+     * <p>Defaulted on, and honoured before any per-series preference is read:
+     * a user who turns everything off has said something more general than any
+     * individual series toggle, and it must win.
+     */
+    @Column(name = "notifications_enabled", nullable = false)
+    private boolean notificationsEnabled = true;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 

@@ -1,6 +1,7 @@
 package com.dhuelin.dev.watchguru.api.dto;
 
 import com.dhuelin.dev.watchguru.catalog.domain.TitleType;
+import com.dhuelin.dev.watchguru.notifications.domain.DevicePlatform;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchStatus;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -98,6 +99,30 @@ public final class Requests {
             @NotNull Long episodeId,
             Instant watchedAt,
             Long streamingServiceId
+    ) {
+    }
+
+    /**
+     * Registers this install for push notifications.
+     *
+     * <p>Sent on every launch, not only the first: APNs and FCM both reissue
+     * tokens, and the app cannot tell when they have.
+     */
+    public record RegisterDevice(
+            @NotBlank @Size(max = 512) String token,
+            @NotNull DevicePlatform platform
+    ) {
+    }
+
+    /** The global notification switch. */
+    public record UpdateNotificationSettings(
+            @NotNull Boolean enabled
+    ) {
+    }
+
+    /** Whether one series may produce new-episode notifications. */
+    public record UpdateSeriesNotification(
+            @NotNull Boolean newEpisodes
     ) {
     }
 }

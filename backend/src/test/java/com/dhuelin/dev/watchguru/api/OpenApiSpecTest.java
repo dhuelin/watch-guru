@@ -11,6 +11,7 @@ import com.dhuelin.dev.watchguru.security.CurrentUserService;
 import com.dhuelin.dev.watchguru.security.SecurityConfig;
 import com.dhuelin.dev.watchguru.streaming.repository.LinkedStreamingAccountRepository;
 import com.dhuelin.dev.watchguru.streaming.repository.StreamingServiceRepository;
+import com.dhuelin.dev.watchguru.notifications.service.NotificationSettingsService;
 import com.dhuelin.dev.watchguru.streaming.service.AvailabilityService;
 import com.dhuelin.dev.watchguru.tracking.repository.AppUserRepository;
 import com.dhuelin.dev.watchguru.tracking.repository.WatchEventRepository;
@@ -67,6 +68,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
         WatchlistController.class,
         WatchHistoryController.class,
         StreamingController.class,
+        NotificationController.class,
         AuthController.class})
 @Import({SecurityConfig.class, TrustedIssuers.class, AccessTokenIssuer.class,
         OpenApiConfig.class, OpenApiSpecTest.SpecTestConfig.class})
@@ -126,6 +128,7 @@ class OpenApiSpecTest {
     @MockitoBean private StreamingServiceRepository streamingServiceRepository;
     @MockitoBean private LinkedStreamingAccountRepository linkedStreamingAccountRepository;
     @MockitoBean private AppUserRepository appUserRepository;
+    @MockitoBean private NotificationSettingsService notificationSettingsService;
 
     /**
      * Fetches the document, insisting the endpoint actually served one.

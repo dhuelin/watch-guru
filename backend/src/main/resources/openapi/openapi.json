@@ -153,6 +153,46 @@
         "tags" : [ "me-controller" ]
       }
     },
+    "/api/v1/me/devices" : {
+      "post" : {
+        "operationId" : "registerDevice",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RegisterDevice"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [ "notification-controller" ]
+      }
+    },
+    "/api/v1/me/devices/{token}" : {
+      "delete" : {
+        "operationId" : "unregisterDevice",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "token",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [ "notification-controller" ]
+      }
+    },
     "/api/v1/me/history" : {
       "get" : {
         "operationId" : "getHistory",
@@ -191,6 +231,87 @@
           }
         },
         "tags" : [ "watch-history-controller" ]
+      }
+    },
+    "/api/v1/me/notifications" : {
+      "get" : {
+        "operationId" : "getNotificationSettings",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NotificationSettingsResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "notification-controller" ]
+      },
+      "patch" : {
+        "operationId" : "updateNotificationSettings",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateNotificationSettings"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NotificationSettingsResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "notification-controller" ]
+      }
+    },
+    "/api/v1/me/notifications/titles/{titleId}" : {
+      "put" : {
+        "operationId" : "updateSeriesNotification",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "titleId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateSeriesNotification"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NotificationSettingsResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "notification-controller" ]
       }
     },
     "/api/v1/me/stats" : {
@@ -1013,6 +1134,25 @@
         },
         "required" : [ "minutes", "month", "viewings", "year" ]
       },
+      "NotificationSettingsResponse" : {
+        "type" : "object",
+        "properties" : {
+          "enabled" : {
+            "type" : "boolean"
+          },
+          "registeredDevices" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "series" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SeriesNotificationResponse"
+            }
+          }
+        },
+        "required" : [ "enabled", "registeredDevices", "series" ]
+      },
       "RefreshSession" : {
         "type" : "object",
         "properties" : {
@@ -1023,6 +1163,21 @@
           }
         },
         "required" : [ "refreshToken" ]
+      },
+      "RegisterDevice" : {
+        "type" : "object",
+        "properties" : {
+          "platform" : {
+            "type" : "string",
+            "enum" : [ "IOS", "ANDROID" ]
+          },
+          "token" : {
+            "type" : "string",
+            "maxLength" : 512,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "platform", "token" ]
       },
       "SearchHit" : {
         "type" : "object",
@@ -1144,6 +1299,22 @@
           }
         },
         "required" : [ "primaryTitle", "seasons", "titleId" ]
+      },
+      "SeriesNotificationResponse" : {
+        "type" : "object",
+        "properties" : {
+          "newEpisodes" : {
+            "type" : "boolean"
+          },
+          "titleId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "titleName" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "newEpisodes", "titleId", "titleName" ]
       },
       "SeriesProgress" : {
         "type" : "object",
@@ -1375,6 +1546,15 @@
         },
         "required" : [ "airedEpisodes", "nextEpisodeCode", "nextEpisodeId", "primaryTitle", "titleId", "watchedEpisodes" ]
       },
+      "UpdateNotificationSettings" : {
+        "type" : "object",
+        "properties" : {
+          "enabled" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "enabled" ]
+      },
       "UpdateProfile" : {
         "type" : "object",
         "properties" : {
@@ -1399,6 +1579,15 @@
             "minLength" : 0
           }
         }
+      },
+      "UpdateSeriesNotification" : {
+        "type" : "object",
+        "properties" : {
+          "newEpisodes" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "newEpisodes" ]
       },
       "UpdateWatchlistItem" : {
         "type" : "object",

@@ -36,6 +36,11 @@ Class | Method | HTTP request | Description
 *MeControllerAPI* | [**deleteAccount**](docs/MeControllerAPI.md#deleteaccount) | **DELETE** /api/v1/me | 
 *MeControllerAPI* | [**getProfile**](docs/MeControllerAPI.md#getprofile) | **GET** /api/v1/me | 
 *MeControllerAPI* | [**updateProfile**](docs/MeControllerAPI.md#updateprofile) | **PATCH** /api/v1/me | 
+*NotificationControllerAPI* | [**getNotificationSettings**](docs/NotificationControllerAPI.md#getnotificationsettings) | **GET** /api/v1/me/notifications | 
+*NotificationControllerAPI* | [**registerDevice**](docs/NotificationControllerAPI.md#registerdevice) | **POST** /api/v1/me/devices | 
+*NotificationControllerAPI* | [**unregisterDevice**](docs/NotificationControllerAPI.md#unregisterdevice) | **DELETE** /api/v1/me/devices/{token} | 
+*NotificationControllerAPI* | [**updateNotificationSettings**](docs/NotificationControllerAPI.md#updatenotificationsettings) | **PATCH** /api/v1/me/notifications | 
+*NotificationControllerAPI* | [**updateSeriesNotification**](docs/NotificationControllerAPI.md#updateseriesnotification) | **PUT** /api/v1/me/notifications/titles/{titleId} | 
 *StreamingControllerAPI* | [**listLinkedAccounts**](docs/StreamingControllerAPI.md#listlinkedaccounts) | **GET** /api/v1/me/streaming-accounts | 
 *StreamingControllerAPI* | [**listStreamingServices**](docs/StreamingControllerAPI.md#liststreamingservices) | **GET** /api/v1/streaming-services | 
 *StreamingControllerAPI* | [**reconcileStreamingServices**](docs/StreamingControllerAPI.md#reconcilestreamingservices) | **POST** /api/v1/streaming-services/reconcile | 
@@ -72,18 +77,23 @@ Class | Method | HTTP request | Description
  - [LogMovieWatched](docs/LogMovieWatched.md)
  - [MarkWatchedUpTo](docs/MarkWatchedUpTo.md)
  - [MonthBucket](docs/MonthBucket.md)
+ - [NotificationSettingsResponse](docs/NotificationSettingsResponse.md)
  - [RefreshSession](docs/RefreshSession.md)
+ - [RegisterDevice](docs/RegisterDevice.md)
  - [SearchHit](docs/SearchHit.md)
  - [SearchResponse](docs/SearchResponse.md)
  - [SeasonResponse](docs/SeasonResponse.md)
  - [SeasonsResponse](docs/SeasonsResponse.md)
+ - [SeriesNotificationResponse](docs/SeriesNotificationResponse.md)
  - [SeriesProgress](docs/SeriesProgress.md)
  - [SessionResponse](docs/SessionResponse.md)
  - [StreamingServiceResponse](docs/StreamingServiceResponse.md)
  - [TitleProgress](docs/TitleProgress.md)
  - [TitleResponse](docs/TitleResponse.md)
  - [UpNextResponse](docs/UpNextResponse.md)
+ - [UpdateNotificationSettings](docs/UpdateNotificationSettings.md)
  - [UpdateProfile](docs/UpdateProfile.md)
+ - [UpdateSeriesNotification](docs/UpdateSeriesNotification.md)
  - [UpdateWatchlistItem](docs/UpdateWatchlistItem.md)
  - [UserResponse](docs/UserResponse.md)
  - [WatchEventResponse](docs/WatchEventResponse.md)
