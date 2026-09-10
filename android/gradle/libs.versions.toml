@@ -12,7 +12,16 @@ activityCompose = "1.9.3"
 lifecycle = "2.8.7"
 navigation = "2.8.5"
 coil = "2.7.0"
-hilt = "2.53"
+# 2.56+ because KSP 2.x runs KSP2 (the Analysis API backend) by default, and
+# Hilt only gained KSP2 support in 2.56. On 2.53 the processor could not see the
+# value that Hilt's own Gradle plugin writes into @AndroidEntryPoint, and the
+# build failed with "Expected @AndroidEntryPoint to have a value. Did you forget
+# to apply the Gradle Plugin?" -- which is misleading: the plugin was applied,
+# and its processor was the thing reporting the error.
+#
+# The alternative was ksp.useKSP2=false, which pins the build to a backend that
+# is being removed. Moving forward is the cheaper direction.
+hilt = "2.56.2"
 hiltNavigation = "1.2.0"
 ksp = "2.1.21-2.0.1"
 security = "1.1.0-alpha06"
