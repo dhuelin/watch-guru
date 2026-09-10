@@ -31,20 +31,19 @@ struct RootView: View {
         }
     }
 
+    // `.tabItem`, not the `Tab` builder: that is iOS 18, and the deployment
+    // target is 17. Everything else the app relies on -- @Observable,
+    // ContentUnavailableView -- genuinely is iOS 17, so the floor stays.
     private var tabs: some View {
         TabView {
-            Tab("Home", systemImage: "house") {
-                NavigationStack { HomeView() }
-            }
-            Tab("Search", systemImage: "magnifyingglass") {
-                NavigationStack { SearchView() }
-            }
-            Tab("Library", systemImage: "books.vertical") {
-                NavigationStack { LibraryView() }
-            }
-            Tab("Profile", systemImage: "person") {
-                NavigationStack { ProfileView() }
-            }
+            NavigationStack { HomeView() }
+                .tabItem { Label("Home", systemImage: "house") }
+            NavigationStack { SearchView() }
+                .tabItem { Label("Search", systemImage: "magnifyingglass") }
+            NavigationStack { LibraryView() }
+                .tabItem { Label("Library", systemImage: "books.vertical") }
+            NavigationStack { ProfileView() }
+                .tabItem { Label("Profile", systemImage: "person") }
         }
     }
 }

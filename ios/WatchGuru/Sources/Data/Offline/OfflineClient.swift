@@ -84,7 +84,7 @@ actor OfflineClient {
     func markEpisodeWatched(episodeId: Int64, titleId: Int64) async -> Written {
         let watchedAt = Date.now
         return await write {
-            try await client.markEpisodeWatched(episodeId: episodeId, watchedAt: watchedAt)
+            _ = try await client.markEpisodeWatched(episodeId: episodeId, watchedAt: watchedAt)
         } queueing: { id in
             .markEpisodeWatched(id: id, episodeId: episodeId, titleId: titleId, watchedAt: watchedAt)
         }
@@ -152,21 +152,28 @@ actor OfflineClient {
 
     // MARK: - Internals
 
+    /// - Parameter operation: untyped `throws` rather than `throws(APIFailure)`.
+    ///   Swift infers a closure literal's thrown type as `any Error` even when
+    ///   the parameter declares a typed throw, so declaring the narrower type
+    ///   here only produced "invalid conversion of thrown error type" at every
+    ///   call site. The mapping happens below instead.
     private func write(
-        _ operation: () async throws(APIFailure) -> Void,
+        _ operation: () async throws -> Void,
         queueing build: (Int64) -> PendingMutation
     ) async -> Written {
         do {
             try await operation()
             return .sent
-        } catch {
-            if case .offline = error {
+        } catch let failure as APIFailure {
+            if case .offline = failure {
                 queue.enqueue(build)
                 return .queued
             }
             // Anything the server actually answered is a real failure. Queueing
             // a rejected change would replay it later and be rejected again.
-            return .failed(error)
+            return .failed(failure)
+        } catch {
+            return .failed(.unexpected(status: nil, message: error.localizedDescription))
         }
     }
 

@@ -11,9 +11,11 @@ name: WatchGuru
 options:
   bundleIdPrefix: dev.dhuelin
   deploymentTarget:
-    # iOS 17 is the floor: @Observable, the modern Tab API, ContentUnavailableView
-    # and typed throws are all used throughout, and back-porting them would mean
-    # writing the app twice.
+    # iOS 17 is the floor: @Observable and ContentUnavailableView are used
+    # throughout, and back-porting them would mean writing the app twice.
+    #
+    # Not the Tab builder, despite what this comment used to claim -- that is
+    # iOS 18, and the compiler said so. The tab bar uses .tabItem.
     iOS: "17.0"
   createIntermediateGroups: true
 
