@@ -1,6 +1,7 @@
 package dev.dhuelin.watchguru.data
 
 import android.content.Context
+import coil.annotation.ExperimentalCoilApi
 import coil.imageLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -17,6 +18,10 @@ import kotlinx.coroutines.withContext
  */
 class CoilDataCleaner(private val context: Context) : LocalDataCleaner {
 
+    // diskCache is still experimental in Coil 2.x. Opted in deliberately: the
+    // alternative is leaving the previous user's cached artwork on a shared
+    // device, which is what this class exists to prevent.
+    @OptIn(ExperimentalCoilApi::class)
     override suspend fun clear() {
         withContext(Dispatchers.IO) {
             val loader = context.imageLoader
