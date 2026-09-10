@@ -23,20 +23,28 @@ only; see `network_security_config.xml`.
 
 ## What has actually been verified
 
-Honesty matters more than optimism here, because the environment this was
-written in could not reach Google's Maven and therefore **could not run a
-single Gradle build**.
-
 | Layer | State |
 |---|---|
-| `api-client/` | **Compiled.** 108 classes, generated from the committed spec and built with kotlinc against Retrofit, OkHttp, coroutines and kotlinx.serialization. |
-| `data/` | **Compiled and tested**, except `EncryptedTokenStore`, `CoilDataCleaner` and `AndroidFileStore` — 39 unit tests pass against the real generated client on a plain JVM, including the session authenticator (rotation, refusal, no-loop, and eight threads racing to prove one refresh). Those three touch AndroidX Keystore, Coil and `Context.filesDir` and could not be compiled here. |
-| `ui/` | **Not compiled.** Compose needs the Compose compiler plugin and the Android SDK. Field and enum names were checked against the generated models by hand, and every `R.string` reference was checked against `strings.xml`, but the first `./gradlew` run is where this is really tested. |
-| Sign-in | **Not compiled at all.** `data/GoogleSignIn.kt` and `ui/signin/` depend on Credential Manager and AndroidX Lifecycle, which live on Google's Maven. Nothing here has ever run. |
-| Gradle setup | **Not resolved.** Plugin and library versions are pinned to known-compatible pairings (AGP 8.7.3 with Kotlin 2.1.21), but no build has confirmed them. |
+| The whole app | **Builds.** `./gradlew :app:assembleDebug` passes in CI — resources, KSP, Hilt aggregation, Kotlin, Java, dexing, packaging. |
+| Unit tests | **Pass.** 39 of them, covering the session authenticator (rotation, refusal, no-loop, and eight threads racing to prove exactly one refresh), the offline queue's ordering and failure rules, and the repository's error mapping. |
+| `api-client/` | **Compiled**, generated from the committed spec. |
 
-Expect the first build to need small fixes in `ui/`. The data layer beneath it
-is on firmer ground.
+That is a real green build, and it is not the same as a working app.
+
+**Nobody has run it.** Not on a device, not on an emulator. Compiling proves
+the code is well-formed, not that a screen lays out, that navigation goes where
+it should, or that the offline queue behaves on a real network transition.
+
+**Sign-in has never executed.** It needs a Google OAuth client that does not
+exist yet, so the one path that gates every other screen is unproven beyond
+compiling.
+
+The first Gradle build found six real defects, in order: a `DayNight` theme
+parent that does not exist in the platform, a missing launcher icon, Hilt 2.53
+being incompatible with KSP2, five `retrofit.create()` calls missing the
+reified extension import, a `FontFeature` import for a class that is not real,
+and AGP putting JavaPoet 1.10 on a plugin classpath that needs 1.13. None of
+those were findable by reading.
 
 ## Layout
 

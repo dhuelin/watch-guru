@@ -88,6 +88,13 @@ see where they left off, and do all of that on a train with no signal.
 
 ### What the mobile work could not verify
 
+**Superseded, as of PR #27.** Both apps now build and pass their tests in CI,
+which the environment they were written in could not do. What follows describes
+the constraint they were written under; the remaining gap is that neither app
+has been *run* by anyone, and neither sign-in flow has ever executed.
+
+
+
 The apps were built in an environment that could reach neither Google's Maven
 nor a Swift toolchain, so **no Gradle build and no Xcode build has ever run**.
 What was verified, and what was not:
