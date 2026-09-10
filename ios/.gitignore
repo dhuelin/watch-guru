@@ -35,3 +35,7 @@ Carthage/Build/
 ### Secrets ###
 *.xcconfig.local
 GoogleService-Info.plist
+
+# Written by XcodeGen from the info: block in project.yml. Derived, like the
+# .xcodeproj itself.
+WatchGuru/Info.plist

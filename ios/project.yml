@@ -35,6 +35,33 @@ targets:
       - package: WatchGuruAPI
     entitlements:
       path: WatchGuru/WatchGuru.entitlements
+    # An explicit Info.plist rather than INFOPLIST_KEY_* build settings.
+    #
+    # Two reasons, both found by the first build that got this far. Without
+    # either this block or GENERATE_INFOPLIST_FILE, no plist is produced at all
+    # and packaging fails with "Build input file cannot be found:
+    # WatchGuru.app/Info.plist". And INFOPLIST_KEY_NSAppTransportSecurity does
+    # not exist -- that mechanism covers a fixed set of scalar keys, and ATS is
+    # a dictionary -- so the App Transport Security exception this project
+    # believed it had was never actually applied.
+    info:
+      path: WatchGuru/Info.plist
+      properties:
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        # Scoped to loopback and nothing else, so the simulator can reach a
+        # backend running on the developer's machine. It ships in release too,
+        # which the previous comment claimed it would not -- but an exception
+        # for "localhost" permits no cleartext over the network at all, only to
+        # the device itself. Splitting it per configuration would mean two
+        # plists to keep in step for no security gain.
+        NSAppTransportSecurity:
+          NSExceptionDomains:
+            localhost:
+              NSExceptionAllowsInsecureHTTPLoads: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.dhuelin.watchguru
@@ -45,18 +72,6 @@ targets:
         # relaxing it later is far easier than adopting it later.
         SWIFT_STRICT_CONCURRENCY: complete
         ENABLE_USER_SCRIPT_SANDBOXING: YES
-        INFOPLIST_KEY_UILaunchScreen_Generation: YES
-        INFOPLIST_KEY_UISupportedInterfaceOrientations: >-
-          UIInterfaceOrientationPortrait
-          UIInterfaceOrientationLandscapeLeft
-          UIInterfaceOrientationLandscapeRight
-      configs:
-        debug:
-          # The simulator reaches a backend on the developer's machine at
-          # localhost. Cleartext is allowed for that alone; App Transport
-          # Security stays on everywhere else, and the release build has no
-          # exception at all.
-          INFOPLIST_KEY_NSAppTransportSecurity: ""
 
   WatchGuruTests:
     type: bundle.unit-test
@@ -68,6 +83,11 @@ targets:
     settings:
       base:
         SWIFT_VERSION: "6.0"
+        # The test bundle needs an Info.plist too, and needs no custom keys in
+        # it, so let Xcode synthesise one. The app target cannot do the same:
+        # it needs an ATS dictionary, which the generated-plist build settings
+        # cannot express.
+        GENERATE_INFOPLIST_FILE: YES
 
 schemes:
   WatchGuru:
