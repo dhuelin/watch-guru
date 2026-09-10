@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Compose owns the real theming; this exists so the window has sane
-         colours before the first frame and the splash does not flash white
-         in dark mode. -->
-    <style name="Theme.WatchGuru" parent="android:Theme.Material.DayNight.NoActionBar">
+    <!--
+      Compose owns the real theming; this exists so the window has sane colours
+      before the first frame and does not flash white in dark mode.
+
+      The parent is the platform's light Material theme, with the dark variant
+      in values-night. There is deliberately no "DayNight" parent: that only
+      exists in AppCompat and Material Components, and this app depends on
+      neither — Compose Material 3 ships no XML themes. Naming one anyway is
+      how the first CI build failed.
+    -->
+    <style name="Theme.WatchGuru" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowBackground">?android:attr/colorBackground</item>

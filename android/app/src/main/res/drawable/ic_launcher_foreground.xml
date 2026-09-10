@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The launcher icon's foreground layer.
+
+  A vector rather than a set of PNGs: it is one file instead of five densities,
+  it is reviewable in a diff, and this repository has no binary assets by
+  design.
+
+  108dp canvas with the artwork inside the middle 72dp, which is the adaptive
+  icon safe zone — anything outside it is cropped by the launcher's mask on
+  some devices and not on others.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Screen -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,36h48a4,4 0,0 1,4 4v26a4,4 0,0 1,-4 4h-48a4,4 0,0 1,-4 -4v-26a4,4 0,0 1,4 -4z" />
+    <!-- Stand -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M46,74h16v4h-16z" />
+    <!-- Play mark, knocked out of the screen -->
+    <path
+        android:fillColor="#1B5E9B"
+        android:pathData="M49,45l16,8l-16,8z" />
+</vector>

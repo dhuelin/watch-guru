@@ -30,9 +30,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Select Xcode
-        # Swift 6 with complete concurrency checking; the app is written for it.
-        run: sudo xcode-select -switch /Applications/Xcode_16.app
+      # Deliberately not pinned to a specific Xcode.app. Pinning it is what
+      # broke the first run: the pinned Xcode had no iOS simulator runtimes
+      # installed, so every destination resolved to "My Mac" and xcodebuild
+      # exited before compiling a line. The image default ships with matching
+      # simulators.
+      - name: Show the toolchain
+        run: |
+          xcodebuild -version
+          xcrun simctl list runtimes
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -45,15 +51,42 @@ jobs:
       # This is the first compilation these sources will ever have had: they
       # were written in a Linux container with no Swift toolchain. Expect
       # failures here until the first green run.
+      #
+      # A generic destination, not a named device: building needs the simulator
+      # SDK, not a bootable simulator, and naming a model ties the build to
+      # whichever handset the runner image happens to ship this month.
       - name: Build
         run: |
           set -o pipefail
           xcodebuild build \
             -project WatchGuru.xcodeproj \
             -scheme WatchGuru \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO \
             | xcbeautify
+
+      # Running tests does need a real simulator, so find one rather than
+      # guessing its name.
+      - name: Pick a simulator
+        id: simulator
+        run: |
+          udid=$(xcrun simctl list devices available --json | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          for runtime, entries in devices.items():
+              if "iOS" not in runtime:
+                  continue
+              for device in entries:
+                  if device.get("isAvailable") and "iPhone" in device["name"]:
+                      print(device["udid"])
+                      raise SystemExit
+          ')
+          if [ -z "$udid" ]; then
+            echo "::error::No iOS simulator is available on this runner; tests cannot run."
+            exit 1
+          fi
+          echo "Using simulator $udid"
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
 
       - name: Test
         run: |
@@ -61,6 +94,6 @@ jobs:
           xcodebuild test \
             -project WatchGuru.xcodeproj \
             -scheme WatchGuru \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -destination "id=${{ steps.simulator.outputs.udid }}" \
             CODE_SIGNING_ALLOWED=NO \
             | xcbeautify
