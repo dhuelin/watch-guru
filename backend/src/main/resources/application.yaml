@@ -131,6 +131,12 @@ watch-guru:
     # minute to be punctual to; what this really decides is how soon after a
     # user's quiet hours open they hear about it.
     cron: "0 5 * * * *"
+  imports:
+    # How many rows of one file may be looked up against TMDB. A decade of
+    # Netflix history is thousands of rows, and firing thousands of searches
+    # upstream on one button press is how an API key gets suspended. Rows past
+    # the budget are reported as not looked up rather than as not found.
+    provider-lookups-per-import: 50
   catalog:
     # How long a cached title detail record is considered fresh.
     detail-ttl: 7d

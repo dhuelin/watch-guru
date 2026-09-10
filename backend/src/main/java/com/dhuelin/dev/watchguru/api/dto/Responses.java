@@ -1,6 +1,8 @@
 package com.dhuelin.dev.watchguru.api.dto;
 
 import com.dhuelin.dev.watchguru.catalog.domain.TitleType;
+import com.dhuelin.dev.watchguru.imports.domain.ImportSource;
+import com.dhuelin.dev.watchguru.imports.domain.MatchStatus;
 import com.dhuelin.dev.watchguru.streaming.domain.LinkStatus;
 import com.dhuelin.dev.watchguru.streaming.domain.OfferType;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchStatus;
@@ -292,6 +294,67 @@ public final class Responses {
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean enabled,
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<SeriesNotificationResponse> series,
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int registeredDevices
+    ) {
+    }
+
+    /** One title the user could mean, where the file was ambiguous. */
+    public record ImportCandidateResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long titleId,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String titleName,
+            Integer year
+    ) {
+    }
+
+    /**
+     * One row of the file, and what the catalogue made of it.
+     *
+     * <p>Unmatched rows are in here too. A row that vanished quietly is a row
+     * nobody knows to re-enter.
+     */
+    public record ImportRowResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String sourceRef,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String titleText,
+            Integer year,
+            String imdbId,
+            Integer seasonNumber,
+            Integer episodeNumber,
+            String episodeName,
+            LocalDate watchedAt,
+            BigDecimal rating,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) MatchStatus status,
+            Long titleId,
+            String titleName,
+            Long episodeId,
+            String episodeCode,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<ImportCandidateResponse> candidates,
+            String note
+    ) {
+    }
+
+    /**
+     * What a file would do, before it does anything.
+     *
+     * @param problems       lines that could not be read at all
+     * @param warnings       where this source does not mean quite what it looks
+     *                       like -- an IMDb rating date is not a watch date
+     * @param alreadyImported rows this user has imported before, which a second
+     *                       run will skip rather than duplicate
+     */
+    public record ImportPreviewResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) ImportSource source,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<ImportRowResponse> rows,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<String> problems,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<String> warnings,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int alreadyImported
+    ) {
+    }
+
+    /** What a commit actually did. */
+    public record ImportResultResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int imported,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int skipped,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int failed,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<String> problems
     ) {
     }
 }

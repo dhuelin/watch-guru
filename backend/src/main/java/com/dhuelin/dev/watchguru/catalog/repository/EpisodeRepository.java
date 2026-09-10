@@ -114,4 +114,32 @@ public interface EpisodeRepository extends JpaRepository<Episode, Long> {
     List<Episode> findAiredBetween(@Param("titleIds") Collection<Long> titleIds,
                                    @Param("from") LocalDate from,
                                    @Param("to") LocalDate to);
+
+    /**
+     * An episode of a season, found by the name the user's export gave.
+     *
+     * <p>Netflix identifies an episode by its name and nothing else -- there is
+     * no number anywhere in their export -- so an import has this or it has
+     * nothing. Case-insensitive because export capitalisation is its own
+     * dialect.
+     */
+    @Query("""
+            select e from Episode e
+            where e.title.id = :titleId
+              and e.seasonNumber = :seasonNumber
+              and lower(e.name) = lower(:name)
+            """)
+    List<Episode> findBySeasonAndName(@Param("titleId") Long titleId,
+                                      @Param("seasonNumber") Integer seasonNumber,
+                                      @Param("name") String name);
+
+    @Query("""
+            select e from Episode e
+            where e.title.id = :titleId
+              and e.seasonNumber = :seasonNumber
+              and e.episodeNumber = :episodeNumber
+            """)
+    Optional<Episode> findByTitleSeasonAndNumber(@Param("titleId") Long titleId,
+                                                 @Param("seasonNumber") Integer seasonNumber,
+                                                 @Param("episodeNumber") Integer episodeNumber);
 }

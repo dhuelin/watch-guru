@@ -12,6 +12,8 @@ import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
 
 /** Request bodies for the write endpoints. */
 public final class Requests {
@@ -123,6 +125,50 @@ public final class Requests {
     /** Whether one series may produce new-episode notifications. */
     public record UpdateSeriesNotification(
             @NotNull Boolean newEpisodes
+    ) {
+    }
+
+    /**
+     * A file to be read, before anything is written.
+     *
+     * <p>The contents rather than a multipart upload: these files are small
+     * text exports, both generated clients handle JSON without extra work, and
+     * a preview that is not stored server-side has nothing to stream.
+     */
+    public record PreviewImport(
+            @NotBlank @Size(max = 5_000_000) String content
+    ) {
+    }
+
+    /**
+     * The rows a user agreed to after seeing the preview.
+     *
+     * <p>Sent back rather than held server-side between the two calls: a parked
+     * import would be one more thing to expire and clean up, and the file
+     * belongs to the user anyway.
+     */
+    public record CommitImport(
+            @NotNull @Size(max = 10_000) List<ImportSelection> rows
+    ) {
+    }
+
+    /**
+     * One accepted row.
+     *
+     * @param sourceRef  the reference from the preview; it is what makes a
+     *                   repeated import write nothing the second time
+     * @param titleId    the title to record against -- the preview's match, or
+     *                   the one the user picked for an ambiguous row
+     * @param episodeId  the episode, for an episode row
+     * @param titleText  what the file called it, for the failure summary
+     * @param watchedAt  the date from the file; today if absent
+     */
+    public record ImportSelection(
+            @NotBlank @Size(max = 255) String sourceRef,
+            @NotNull Long titleId,
+            Long episodeId,
+            @Size(max = 512) String titleText,
+            LocalDate watchedAt
     ) {
     }
 }

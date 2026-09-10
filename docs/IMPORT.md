@@ -1,0 +1,100 @@
+# Importing an existing viewing history
+
+Nobody starts from zero, and an empty library is the most common reason a
+tracking app gets deleted on day one. Watch Guru reads four kinds of file.
+
+Every import happens in two steps: a **preview** that writes nothing, and a
+**commit** that writes only the rows you accepted. An import that silently
+marked four hundred titles watched — some of them wrongly — would be worse than
+no import at all, and undoing it by hand is the worst first hour an app can
+offer.
+
+## What it reads
+
+The format is worked out from the header row. You do not pick it, because
+everybody knows which site they downloaded a file from and nobody knows which
+of four radio buttons matches its columns.
+
+| Source | Where to get it | What comes across |
+|---|---|---|
+| **Watch Guru** | Documented below | Everything, including episodes by number |
+| **IMDb** | Your Lists or Ratings → Export | IMDb id, title, year, your rating, and the date you *rated* it |
+| **Letterboxd** | Settings → Import & Export → Export | Films, watch dates, ratings out of five |
+| **Netflix** | Account → Profile → Viewing activity → Download all | Titles and dates; episodes by name |
+
+### Where each source is less than it looks
+
+These are told to you in the preview too, because they are the places where a
+file does not mean quite what it appears to.
+
+- **IMDb exports have no watch date.** They carry the date you rated something,
+  which is the closest thing available, and that is what gets imported.
+- **Netflix does not number episodes.** Its export says
+  `Breaking Bad: Season 5: Ozymandias`, so the episode is matched by name.
+  Anything that cannot be found is listed for you rather than guessed at.
+- **Letterboxd rates out of five**, in halves. Ratings are doubled onto this
+  app's ten-point scale.
+- **Letterboxd is films only**, which is what keeps *Fargo* the film from
+  matching *Fargo* the series.
+
+## The Watch Guru format
+
+A UTF-8 CSV with a header row. Only `title` is required.
+
+```csv
+title,year,type,imdb_id,season,episode,watched_at,rating
+Fargo,1996,movie,tt0116282,,,2024-01-15,8
+Breaking Bad,2008,series,tt0903747,5,14,2024-05-01,9.5
+```
+
+| Column | Meaning |
+|---|---|
+| `title` | **Required.** What it is called |
+| `year` | Release year. The single most useful way to tell a remake from what it remade |
+| `type` | `movie` or `series` |
+| `imdb_id` | `tt…`. Worth more than title and year together, because it is exact |
+| `season`, `episode` | Both, to record one episode |
+| `watched_at` | `YYYY-MM-DD`. Missing means today |
+| `rating` | 0–10, decimals allowed |
+
+Quoted fields, commas inside titles, doubled quotes and embedded newlines are
+all handled — they occur in real exports constantly.
+
+## Matching
+
+In order of how much the evidence is worth:
+
+1. **An IMDb id**, which is exact.
+2. **An exact name in your catalogue**, narrowed by type and then by year.
+3. **A search against TMDB**, for rows the first two did not settle.
+
+The third step is budgeted — 50 rows per file by default, see
+`watch-guru.imports.provider-lookups-per-import`. A decade of Netflix history
+is thousands of rows, and firing thousands of searches upstream on one button
+press is how an API key gets suspended. Rows past the budget come back saying
+they were **not looked up**, which you can act on by importing the file again,
+rather than **not found**, which would be a claim the import had not earned.
+
+A name that matches more than one title comes back as ambiguous with the
+candidates, for you to choose between. Nothing ambiguous is imported by
+default.
+
+## Running the same file twice
+
+Nothing is duplicated. Every row carries a reference derived from its contents
+— the IMDb id, the Letterboxd URI, or a hash of the fields — and the database
+holds a unique index on `(user, origin, origin_ref)`. The second run reports
+the rows as already imported and writes nothing.
+
+That reference is deliberately **not** the line number. Line numbers look
+stable inside one file and are not stable between two, so a second export would
+collide with the first and rows would vanish silently.
+
+## What is not here yet
+
+**Trakt.** It is the highest-value source, and it needs OAuth credentials and
+an app registration with Trakt — see #21. The file formats above cover the
+common cases without asking anybody to authorise anything.
+
+**Undo.** A committed import can be unpicked title by title, which is tedious
+for four hundred rows. Preview is what stands in for it: look before you agree.

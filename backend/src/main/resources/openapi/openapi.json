@@ -233,6 +233,62 @@
         "tags" : [ "watch-history-controller" ]
       }
     },
+    "/api/v1/me/imports" : {
+      "post" : {
+        "operationId" : "commitImport",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CommitImport"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ImportResultResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "import-controller" ]
+      }
+    },
+    "/api/v1/me/imports/preview" : {
+      "post" : {
+        "operationId" : "previewImport",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PreviewImport"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ImportPreviewResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "import-controller" ]
+      }
+    },
     "/api/v1/me/notifications" : {
       "get" : {
         "operationId" : "getNotificationSettings",
@@ -960,6 +1016,20 @@
         },
         "required" : [ "airedEpisodes", "alreadyWatched", "newlyMarked", "titleId", "watchedEpisodes" ]
       },
+      "CommitImport" : {
+        "type" : "object",
+        "properties" : {
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ImportSelection"
+            },
+            "maxItems" : 10000,
+            "minItems" : 0
+          }
+        },
+        "required" : [ "rows" ]
+      },
       "EpisodeResponse" : {
         "type" : "object",
         "properties" : {
@@ -1031,6 +1101,171 @@
           }
         },
         "required" : [ "id", "name" ]
+      },
+      "ImportCandidateResponse" : {
+        "type" : "object",
+        "properties" : {
+          "titleId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "titleName" : {
+            "type" : "string"
+          },
+          "year" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "titleId", "titleName" ]
+      },
+      "ImportPreviewResponse" : {
+        "type" : "object",
+        "properties" : {
+          "alreadyImported" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "problems" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ImportRowResponse"
+            }
+          },
+          "source" : {
+            "type" : "string",
+            "enum" : [ "WATCH_GURU", "IMDB", "LETTERBOXD", "NETFLIX", "UNKNOWN" ]
+          },
+          "warnings" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "alreadyImported", "problems", "rows", "source", "warnings" ]
+      },
+      "ImportResultResponse" : {
+        "type" : "object",
+        "properties" : {
+          "failed" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "imported" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "problems" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "skipped" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "failed", "imported", "problems", "skipped" ]
+      },
+      "ImportRowResponse" : {
+        "type" : "object",
+        "properties" : {
+          "candidates" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ImportCandidateResponse"
+            }
+          },
+          "episodeCode" : {
+            "type" : "string"
+          },
+          "episodeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "episodeName" : {
+            "type" : "string"
+          },
+          "episodeNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "imdbId" : {
+            "type" : "string"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "rating" : {
+            "type" : "number"
+          },
+          "seasonNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sourceRef" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "MATCHED", "AMBIGUOUS", "UNMATCHED" ]
+          },
+          "titleId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "titleName" : {
+            "type" : "string"
+          },
+          "titleText" : {
+            "type" : "string"
+          },
+          "watchedAt" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "year" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "candidates", "sourceRef", "status", "titleText" ]
+      },
+      "ImportSelection" : {
+        "type" : "object",
+        "properties" : {
+          "episodeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "sourceRef" : {
+            "type" : "string",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "titleId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "titleText" : {
+            "type" : "string",
+            "maxLength" : 512,
+            "minLength" : 0
+          },
+          "watchedAt" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "sourceRef", "titleId" ]
       },
       "LinkedAccountResponse" : {
         "type" : "object",
@@ -1152,6 +1387,17 @@
           }
         },
         "required" : [ "enabled", "registeredDevices", "series" ]
+      },
+      "PreviewImport" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "string",
+            "maxLength" : 5000000,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "content" ]
       },
       "RefreshSession" : {
         "type" : "object",
