@@ -48,6 +48,27 @@
     <string name="delete_account_message">This removes your library, progress and history permanently. It cannot be undone.</string>
     <string name="delete_account_footer">Deleting your account removes your library, progress and history permanently.</string>
 
+    <!-- Region. Not cosmetic: it decides which streaming offers are shown,
+         and every account starts on a default that is wrong for most people. -->
+    <string name="region_label">Region</string>
+    <string name="region_picker_title">Choose your region</string>
+    <string name="region_search_hint">Search countries</string>
+    <string name="region_explainer">Streaming offers are shown for this country.</string>
+    <string name="error_region_update">Couldn\'t change your region. Please try again.</string>
+
+    <!-- Where to watch. The provider gives one link per region listing every
+         way to watch a title, not a deep link per service, so the section
+         offers a single link rather than pretending each row opens that app. -->
+    <string name="where_to_watch">Where to watch</string>
+    <string name="offer_flatrate">Stream</string>
+    <string name="offer_free">Free</string>
+    <string name="offer_ads">Free with ads</string>
+    <string name="offer_rent">Rent</string>
+    <string name="offer_buy">Buy</string>
+    <string name="action_watch_options">See all watch options</string>
+    <string name="where_to_watch_region">Offers for the country set in your profile.</string>
+    <string name="justwatch_attribution">Streaming availability data provided by JustWatch.</string>
+
     <string name="tmdb_attribution">This product uses the TMDB API but is not endorsed or certified by TMDB.</string>
 
     <!-- Shown when changes made offline have not reached the server yet. Not

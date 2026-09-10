@@ -91,6 +91,35 @@ A null rating is **omitted entirely**, never rendered as `0.0` or `—`. The
 rated" from "rated zero"; every title predates its IMDb import, and most titles
 in a fresh catalog have no IMDb rating at all.
 
+## Where to watch
+
+The offers on a title screen are grouped by *how* you watch, in one fixed
+order: **Stream, Free, Free with ads, Rent, Buy**. Free before paid,
+subscription before transactional — the cheapest way to watch something
+tonight comes first, and a list that ordered by whatever the provider returned
+would bury it.
+
+Three things this section must not do.
+
+**It must not imply a deep link it does not have.** The provider gives one
+link per region — a page listing every way to watch the title — not a link
+per service. So the service rows are not tappable, and a single link sits
+below them. A tappable "Netflix" row that opened a web page for all eleven
+services would be a lie told eleven times.
+
+**It must not guess the country.** Offers are for the region on the user's
+profile, which the backend takes from their token. That region is editable in
+Profile, and the section says which country it is showing, because offers for
+the wrong country are worse than no offers at all.
+
+**It must not claim "not available" when it means "we do not know".** An empty
+offer list means either *on no service in this country* or *we could not reach
+the provider*, and the response cannot tell them apart. So an empty list
+renders nothing at all rather than an unavailability the app cannot vouch for.
+
+Availability data comes from JustWatch by way of TMDB, and their attribution
+line goes with it wherever it is shown.
+
 ## Imagery
 
 | Asset | Aspect | Notes |
