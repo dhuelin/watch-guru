@@ -7,7 +7,7 @@ import WatchGuruAPI
 final class LibraryModel {
 
     private(set) var state: ViewState<[WatchlistItemResponse]> = .loading
-    var filter: WatchlistControllerAPI.StatusListWatchlist? {
+    var filter: WatchlistControllerAPI.Status_listWatchlist? {
         didSet {
             guard filter != oldValue else { return }
             Task { await load() }

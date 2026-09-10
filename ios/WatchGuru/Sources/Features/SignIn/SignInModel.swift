@@ -38,6 +38,9 @@ final class SignInModel {
     var accountError: String?
 
     /// Cleared local data belongs to whoever was signed in. Set by ``Session``.
+    ///
+    /// Not observed: a callback is wiring, not state, and nothing renders it.
+    @ObservationIgnored
     var onSignedOut: (@Sendable () -> Void)?
 
     private let tokens: TokenStore

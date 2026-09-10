@@ -126,7 +126,7 @@ actor WatchGuruClient {
     // MARK: - Library
 
     func library(
-        status: WatchlistControllerAPI.StatusListWatchlist? = nil
+        status: WatchlistControllerAPI.Status_listWatchlist? = nil
     ) async throws(APIFailure) -> [WatchlistItemResponse] {
         try await run { try await WatchlistControllerAPI.listWatchlist(status: status, apiConfiguration: $0) }
     }

@@ -45,7 +45,7 @@ actor OfflineClient {
     /// the backend is up and answering, so its answer — including an empty one
     /// — is the truth; substituting a snapshot there would hide a real state.
     func library(
-        status: WatchlistControllerAPI.StatusListWatchlist? = nil
+        status: WatchlistControllerAPI.Status_listWatchlist? = nil
     ) async throws(APIFailure) -> [WatchlistItemResponse] {
         do {
             let items = try await client.library(status: status)
@@ -188,10 +188,12 @@ actor OfflineClient {
                     // Permanent, so report it as such and let it be dropped.
                     return .notFound
                 }
+                // Argument order follows the generated initialiser
+                // (providerId, status, titleType), which Swift enforces.
                 _ = try await client.addToLibrary(AddToWatchlist(
                     providerId: providerId,
-                    titleType: type,
-                    status: status.flatMap(AddToWatchlist.Status.init(rawValue:))
+                    status: status.flatMap(AddToWatchlist.Status.init(rawValue:)),
+                    titleType: type
                 ))
             case .updateLibraryItem(_, let itemId, let status):
                 _ = try await client.updateLibraryItem(

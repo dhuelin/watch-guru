@@ -65,10 +65,10 @@ struct LibraryView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Picker("Status", selection: $model.filter) {
-                        Text("All").tag(WatchlistControllerAPI.StatusListWatchlist?.none)
-                        ForEach(WatchlistControllerAPI.StatusListWatchlist.allCases, id: \.self) { status in
+                        Text("All").tag(WatchlistControllerAPI.Status_listWatchlist?.none)
+                        ForEach(WatchlistControllerAPI.Status_listWatchlist.allCases, id: \.self) { status in
                             Text(label(for: status))
-                                .tag(WatchlistControllerAPI.StatusListWatchlist?.some(status))
+                                .tag(WatchlistControllerAPI.Status_listWatchlist?.some(status))
                         }
                     }
                 } label: {
@@ -81,7 +81,7 @@ struct LibraryView: View {
         }
     }
 
-    private func label(for status: WatchlistControllerAPI.StatusListWatchlist) -> String {
+    private func label(for status: WatchlistControllerAPI.Status_listWatchlist) -> String {
         switch status {
         case .watchlist: "Watchlist"
         case .watching: "Watching"

@@ -27,7 +27,12 @@ struct WatchGuruApp: App {
 ///
 /// `@Observable` rather than a singleton so previews can hand a view a session
 /// pointed at fixtures instead of the network.
+///
+/// `@MainActor` because it builds and wires `SignInModel`, which is main-actor
+/// isolated, and because every view reads it on the main actor anyway. Without
+/// it, complete concurrency checking rejects the init.
 @Observable
+@MainActor
 final class Session {
 
     let client: WatchGuruClient
@@ -73,7 +78,7 @@ final class Session {
 
     /// The simulator reaches a backend on the developer's machine at
     /// `localhost`; a device does not, which is the usual first surprise.
-    static var defaultBaseURL: URL {
+    nonisolated static var defaultBaseURL: URL {
         #if DEBUG
         URL(string: "http://localhost:8080")!
         #else
