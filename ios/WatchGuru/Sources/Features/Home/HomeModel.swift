@@ -11,9 +11,11 @@ final class HomeModel {
     private(set) var marking: Set<Int64> = []
 
     private let client: WatchGuruClient
+    private let offline: OfflineClient
 
-    init(client: WatchGuruClient) {
+    init(client: WatchGuruClient, offline: OfflineClient) {
         self.client = client
+        self.offline = offline
     }
 
     func load() async {
@@ -24,7 +26,7 @@ final class HomeModel {
         }
 
         do {
-            let entries = try await client.upNext()
+            let entries = try await offline.upNext()
             state = entries.isEmpty ? .empty : .content(entries)
         } catch {
             state = .failed(error)
@@ -42,7 +44,7 @@ final class HomeModel {
         marking.insert(entry.titleId)
         defer { marking.remove(entry.titleId) }
 
-        if (try? await client.markEpisodeWatched(episodeId: entry.nextEpisodeId)) != nil {
+        if await offline.markEpisodeWatched(episodeId: entry.nextEpisodeId, titleId: entry.titleId) == .sent {
             await load()
         }
     }

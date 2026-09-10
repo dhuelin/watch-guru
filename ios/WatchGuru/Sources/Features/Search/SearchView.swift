@@ -17,7 +17,7 @@ struct SearchView: View {
         .navigationTitle("Search")
         .task {
             if model == nil {
-                model = SearchModel(client: session.client)
+                model = SearchModel(client: session.client, offline: session.offline)
             }
         }
     }

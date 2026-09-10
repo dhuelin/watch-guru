@@ -31,6 +31,7 @@ struct WatchGuruApp: App {
 final class Session {
 
     let client: WatchGuruClient
+    let offline: OfflineClient
     let tokens: TokenStore
     let signIn: SignInModel
 
@@ -42,6 +43,14 @@ final class Session {
         let sessions = SessionClient(baseURL: baseURL)
         let client = WatchGuruClient(baseURL: baseURL, tokens: tokens, sessions: sessions)
         self.client = client
+
+        let store = FileOfflineStore()
+        let offline = OfflineClient(
+            client: client,
+            cache: SnapshotCache(store: store),
+            queue: MutationQueue(store: store)
+        )
+        self.offline = offline
         let signIn = SignInModel(tokens: tokens, client: client, sessions: sessions)
         self.signIn = signIn
 
@@ -52,6 +61,14 @@ final class Session {
         Task { await client.setOnSessionLost { @Sendable in
             Task { @MainActor in signIn.sessionExpired() }
         } }
+
+        // Signing out must leave nothing of the previous user behind. The
+        // cached library is their watch history in all but name, and the queue
+        // may hold changes that would otherwise be replayed against whoever
+        // signs in next -- attributing one person's viewing to another.
+        signIn.onSignedOut = { @Sendable in
+            Task { await offline.clearLocalData() }
+        }
     }
 
     /// The simulator reaches a backend on the developer's machine at

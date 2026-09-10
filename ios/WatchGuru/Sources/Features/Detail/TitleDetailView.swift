@@ -28,7 +28,7 @@ struct TitleDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task {
             if model == nil {
-                let created = TitleDetailModel(client: session.client, titleId: titleId)
+                let created = TitleDetailModel(client: session.client, offline: session.offline, titleId: titleId)
                 model = created
                 await created.load()
             }

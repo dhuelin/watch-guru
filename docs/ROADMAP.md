@@ -81,7 +81,7 @@ Both platforms, feature-equivalent, each looking correct on its own platform.
 | [#25](https://github.com/dhuelin/watch-guru/issues/25) | Backend: episodes, progress, up-next | ✅ Closed the gap that blocked #12 and #13 |
 | [#15](https://github.com/dhuelin/watch-guru/issues/15) | Sign-in and account management | 🟡 Written on both platforms — Apple on iOS, Google on Android, plus sign-out and account deletion. **Never compiled or run:** it needs an Apple Developer account and a Google OAuth client, neither of which existed here |
 | [#26](https://github.com/dhuelin/watch-guru/issues/26) | Session tokens (exchange + refresh) | ✅ Backend and both apps. Rotating refresh tokens with family reuse detection; renewal on the server's 401, serialised so a rotating token is never spent twice. Android's half is unit-tested; iOS's is not compiled |
-| [#14](https://github.com/dhuelin/watch-guru/issues/14) | Offline cache and sync | ⬜ |
+| [#14](https://github.com/dhuelin/watch-guru/issues/14) | Offline cache and sync | ✅ Snapshot cache for library and Up Next, plus a persisted mutation queue replayed in order. Android's logic is unit-tested; iOS's mirrors it and is not compiled |
 
 **Done when:** a user can sign in, find a series, track it episode by episode,
 see where they left off, and do all of that on a train with no signal.

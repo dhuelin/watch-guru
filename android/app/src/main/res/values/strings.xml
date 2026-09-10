@@ -50,6 +50,13 @@
 
     <string name="tmdb_attribution">This product uses the TMDB API but is not endorsed or certified by TMDB.</string>
 
+    <!-- Shown when changes made offline have not reached the server yet. Not
+         an error: nothing has gone wrong, and they will be sent. -->
+    <plurals name="pending_changes">
+        <item quantity="one">%1$d change waiting to sync</item>
+        <item quantity="other">%1$d changes waiting to sync</item>
+    </plurals>
+
     <!-- Content descriptions. These say what a control does, not what it is:
          "button" tells a TalkBack user nothing about which episode it marks. -->
     <string name="cd_mark_episode_watched">Mark %1$s watched</string>

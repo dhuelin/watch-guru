@@ -15,9 +15,11 @@ final class LibraryModel {
     }
 
     private let client: WatchGuruClient
+    private let offline: OfflineClient
 
-    init(client: WatchGuruClient) {
+    init(client: WatchGuruClient, offline: OfflineClient) {
         self.client = client
+        self.offline = offline
     }
 
     func load() async {
@@ -31,7 +33,7 @@ final class LibraryModel {
         }
 
         do {
-            let items = try await client.library(status: filter)
+            let items = try await offline.library(status: filter)
             state = items.isEmpty ? .empty : .content(items)
         } catch {
             state = .failed(error)
@@ -47,9 +49,9 @@ final class LibraryModel {
         guard let before = state.value else { return }
         state = .content(before.filter { $0.id != item.id })
 
-        do {
-            try await client.removeFromLibrary(itemId: item.id)
-        } catch {
+        // Queued counts as done for the undo snackbar: the row is gone locally
+        // and the removal will reach the server. Only a refusal puts it back.
+        if case .failed = await offline.removeFromLibrary(itemId: item.id) {
             state = .content(before)
         }
     }

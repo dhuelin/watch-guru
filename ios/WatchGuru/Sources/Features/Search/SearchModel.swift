@@ -18,10 +18,12 @@ final class SearchModel {
     }
 
     private let client: WatchGuruClient
+    private let offline: OfflineClient
     private var searchTask: Task<Void, Never>?
 
-    init(client: WatchGuruClient) {
+    init(client: WatchGuruClient, offline: OfflineClient) {
         self.client = client
+        self.offline = offline
     }
 
     /// Debounces, then searches.
@@ -77,8 +79,9 @@ final class SearchModel {
             providerId: hit.providerId,
             titleType: AddToWatchlist.TitleType(rawValue: hit.titleType.rawValue) ?? .movie
         )
-        if (try? await client.addToLibrary(request)) != nil {
-            added.insert(hit.providerId)
-        }
+        // Queued counts as added: it is stored and it will be sent. Only a
+        // refusal from the server leaves the row untouched.
+        if case .failed = await offline.addToLibrary(request) { return }
+        added.insert(hit.providerId)
     }
 }

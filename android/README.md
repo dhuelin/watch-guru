@@ -30,7 +30,7 @@ single Gradle build**.
 | Layer | State |
 |---|---|
 | `api-client/` | **Compiled.** 108 classes, generated from the committed spec and built with kotlinc against Retrofit, OkHttp, coroutines and kotlinx.serialization. |
-| `data/` | **Compiled and tested**, except `EncryptedTokenStore` and `CoilDataCleaner` — 24 unit tests pass against the real generated client on a plain JVM, including the session authenticator (rotation, refusal, no-loop, and eight threads racing to prove one refresh). Those two touch AndroidX Keystore and Coil respectively and could not be compiled here. |
+| `data/` | **Compiled and tested**, except `EncryptedTokenStore`, `CoilDataCleaner` and `AndroidFileStore` — 39 unit tests pass against the real generated client on a plain JVM, including the session authenticator (rotation, refusal, no-loop, and eight threads racing to prove one refresh). Those three touch AndroidX Keystore, Coil and `Context.filesDir` and could not be compiled here. |
 | `ui/` | **Not compiled.** Compose needs the Compose compiler plugin and the Android SDK. Field and enum names were checked against the generated models by hand, and every `R.string` reference was checked against `strings.xml`, but the first `./gradlew` run is where this is really tested. |
 | Sign-in | **Not compiled at all.** `data/GoogleSignIn.kt` and `ui/signin/` depend on Credential Manager and AndroidX Lifecycle, which live on Google's Maven. Nothing here has ever run. |
 | Gradle setup | **Not resolved.** Plugin and library versions are pinned to known-compatible pairings (AGP 8.7.3 with Kotlin 2.1.21), but no build has confirmed them. |
@@ -112,9 +112,42 @@ A refused renewal is final (revoked, expired, or detected as reused), so it
 clears the tokens and pushes the app back to the sign-in screen through
 `SessionEvents` rather than letting every screen 401 in silence.
 
+## Working without a signal (#14)
+
+Reads go to the network **first** and fall back to the last snapshot. Never the
+other way round — showing a stale library to someone with a working connection
+would be a bug, not a feature. A snapshot is only substituted when the failure
+was `Offline`: an upstream error means the backend is up and answering, so its
+answer, including an empty one, is the truth.
+
+Writes go to the network first and fall back to a persisted queue, and the
+caller is told it worked — because it did. Marking an episode on a train has to
+feel certain.
+
+The queue's rules are where the bugs would be, so they are the tested part:
+
+| Rule | What goes wrong without it |
+|---|---|
+| Replay strictly in order | An unmark overtaking the mark it was meant to undo leaves the episode watched — silently, days later, on a device nobody is watching |
+| Stop at the first offline failure | Skipping ahead reorders everything behind it |
+| A rejection (4xx) is permanent — drop it | Keeping it blocks every later change for ever |
+| A server error (5xx) is transient — keep it | The user's work is thrown away because the server had a bad minute |
+| A later change to the same target replaces the earlier one | Toggling one episode forty times queues forty entries |
+| An expired session stops the drain | Otherwise it collects a 401 per entry and achieves nothing |
+
+The stored timestamp travels with the mutation. Replaying with "now" would file
+three episodes watched last night as watched the moment the train reached
+signal, which is wrong on the history screen and wrong in the streak.
+
+Storage is a JSON file, not Room. Nothing here queries — the app loads a few
+hundred rows and filters in memory — so Room would buy code generation and
+schema migrations for no benefit, and would put all of this logic behind an
+Android dependency instead of under test. `FileStore` is the seam to swap if the
+library ever outgrows loading it whole.
+
 ## Not built yet
 
-- **Offline cache (#14), stats (#17), notifications (#19), widgets (#20).**
+- **Stats (#17), notifications (#19), widgets (#20).**
 
 ## Regenerating the API client
 

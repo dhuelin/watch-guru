@@ -110,9 +110,29 @@ hour. There is no refresh, so a long-lived session eventually returns 401s;
 recovering means signing out and back in. The same limitation applies on
 Android, and the fix belongs on the backend rather than in each app: #26.
 
+## Working without a signal (#14)
+
+Mirrors the Android design exactly, including the rules that matter: reads fall
+back to a snapshot only when the failure was `offline`; writes fall back to a
+persisted queue and report success, because queued *is* success; replay is
+strictly in order and stops at the first offline failure; a 4xx is dropped as
+permanent and a 5xx kept as transient; a later change to the same target
+replaces the earlier one; and the watched-at timestamp travels with the
+mutation so a replay does not file last night's viewing as this morning's.
+
+Storage is JSON files rather than SwiftData or Core Data. Nothing here queries,
+so a model container would buy schema migrations for no benefit. `OfflineStore`
+is the seam to swap if that ever changes. Snapshots live in Caches, where the
+system may reclaim them; the pending queue does not, because losing it loses
+work the user believes is saved.
+
+Those rules are **tested on Android and not here**, for the usual reason. The
+Swift is a transliteration of logic that passes, which is evidence about the
+design and none at all about this code.
+
 ## Not built yet
 
-- **Offline cache (#14), stats (#17), notifications (#19), widgets (#20).**
+- **Stats (#17), notifications (#19), widgets (#20).**
 
 ## Regenerating the API client
 

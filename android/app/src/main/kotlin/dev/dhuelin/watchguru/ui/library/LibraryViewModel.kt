@@ -6,7 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.dhuelin.watchguru.api.apis.WatchlistControllerApi
 import dev.dhuelin.watchguru.api.models.WatchlistItemResponse
 import dev.dhuelin.watchguru.data.ApiResult
-import dev.dhuelin.watchguru.data.WatchGuruRepository
+import dev.dhuelin.watchguru.data.OfflineRepository
 import dev.dhuelin.watchguru.ui.components.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
-    private val repository: WatchGuruRepository,
+    private val repository: OfflineRepository,
 ) : ViewModel() {
 
     private val _filter = MutableStateFlow<WatchlistControllerApi.StatusListWatchlist?>(null)
@@ -65,7 +65,10 @@ class LibraryViewModel @Inject constructor(
         _items.value = UiState.Content(before.filterNot { it.id == item.id })
 
         viewModelScope.launch {
-            if (repository.removeFromLibrary(item.id) !is ApiResult.Success) {
+            // Queued is a success for the purposes of the undo snackbar: the
+            // row is gone locally and the removal will reach the server. Only a
+            // refusal puts it back.
+            if (repository.removeFromLibrary(item.id) is OfflineRepository.Written.Failed) {
                 _items.value = UiState.Content(before)
             }
         }

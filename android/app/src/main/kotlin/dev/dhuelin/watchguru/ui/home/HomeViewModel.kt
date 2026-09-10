@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.dhuelin.watchguru.api.models.UpNextResponse
 import dev.dhuelin.watchguru.data.ApiResult
-import dev.dhuelin.watchguru.data.WatchGuruRepository
+import dev.dhuelin.watchguru.data.OfflineRepository
 import dev.dhuelin.watchguru.ui.components.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val repository: WatchGuruRepository,
+    private val repository: OfflineRepository,
 ) : ViewModel() {
 
     private val _upNext = MutableStateFlow<UiState<List<UpNextResponse>>>(UiState.Loading)
@@ -55,11 +55,13 @@ class HomeViewModel @Inject constructor(
 
         viewModelScope.launch {
             _marking.value = _marking.value + entry.titleId
-            val result = repository.markEpisodeWatched(
-                dev.dhuelin.watchguru.api.models.LogEpisodeWatched(episodeId = entry.nextEpisodeId)
-            )
-            if (result is ApiResult.Success) {
-                refresh()
+            when (repository.markEpisodeWatched(entry.nextEpisodeId, entry.titleId)) {
+                // Queued counts as done from here: it is stored and it will be
+                // sent. Refreshing is pointless offline, and the card stays put
+                // rather than pretending the server moved on.
+                OfflineRepository.Written.Sent -> refresh()
+                OfflineRepository.Written.Queued -> Unit
+                is OfflineRepository.Written.Failed -> Unit
             }
             _marking.value = _marking.value - entry.titleId
         }

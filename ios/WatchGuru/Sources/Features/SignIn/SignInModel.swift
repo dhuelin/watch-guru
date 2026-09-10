@@ -37,6 +37,9 @@ final class SignInModel {
     /// leaves the user signed in, so it cannot travel as `.failed`.
     var accountError: String?
 
+    /// Cleared local data belongs to whoever was signed in. Set by ``Session``.
+    var onSignedOut: (@Sendable () -> Void)?
+
     private let tokens: TokenStore
     private let client: WatchGuruClient
     private let sessions: SessionClient
@@ -111,6 +114,7 @@ final class SignInModel {
         let refreshToken = tokens.tokens()?.refreshToken
         tokens.clear()
         URLCache.shared.removeAllCachedResponses()
+        onSignedOut?()
         state = .signedOut
 
         // Revoking server-side is best-effort and deliberately after the local

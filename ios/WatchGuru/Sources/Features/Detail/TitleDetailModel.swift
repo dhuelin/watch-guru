@@ -16,10 +16,12 @@ final class TitleDetailModel {
     var expandedSeason: Int?
 
     private let client: WatchGuruClient
+    private let offline: OfflineClient
     private let titleId: Int64
 
-    init(client: WatchGuruClient, titleId: Int64) {
+    init(client: WatchGuruClient, offline: OfflineClient, titleId: Int64) {
         self.client = client
+        self.offline = offline
         self.titleId = titleId
     }
 
@@ -45,9 +47,9 @@ final class TitleDetailModel {
 
         let succeeded: Bool
         if episode.watched {
-            succeeded = (try? await client.unmarkEpisode(episodeId: episode.id)) != nil
+            succeeded = await offline.unmarkEpisode(episodeId: episode.id) == .sent
         } else {
-            succeeded = (try? await client.markEpisodeWatched(episodeId: episode.id)) != nil
+            succeeded = await offline.markEpisodeWatched(episodeId: episode.id, titleId: titleId) == .sent
         }
 
         if succeeded {
@@ -66,7 +68,7 @@ final class TitleDetailModel {
         isMarking = true
         defer { isMarking = false }
 
-        if (try? await client.markWatchedUpTo(episodeId: episode.id)) != nil {
+        if await offline.markWatchedUpTo(episodeId: episode.id) == .sent {
             await refreshProgress()
             await refreshSeasons()
         }
@@ -97,7 +99,7 @@ final class TitleDetailModel {
         isMarking = true
         defer { isMarking = false }
 
-        if (try? await client.markEpisodeWatched(episodeId: next)) != nil {
+        if await offline.markEpisodeWatched(episodeId: next, titleId: titleId) == .sent {
             await refreshProgress()
         }
     }

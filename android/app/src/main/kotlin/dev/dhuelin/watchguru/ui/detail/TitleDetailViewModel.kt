@@ -4,11 +4,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dev.dhuelin.watchguru.api.models.LogEpisodeWatched
 import dev.dhuelin.watchguru.api.models.SeasonsResponse
 import dev.dhuelin.watchguru.api.models.TitleProgress
 import dev.dhuelin.watchguru.api.models.TitleResponse
 import dev.dhuelin.watchguru.data.ApiResult
+import dev.dhuelin.watchguru.data.OfflineRepository
 import dev.dhuelin.watchguru.data.WatchGuruRepository
 import dev.dhuelin.watchguru.ui.components.UiState
 import dev.dhuelin.watchguru.ui.navigation.Routes
@@ -21,6 +21,7 @@ import javax.inject.Inject
 @HiltViewModel
 class TitleDetailViewModel @Inject constructor(
     private val repository: WatchGuruRepository,
+    private val offline: OfflineRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -69,11 +70,14 @@ class TitleDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _marking.value = true
             val result = if (currentlyWatched) {
-                repository.unmarkEpisode(episodeId)
+                offline.unmarkEpisode(episodeId)
             } else {
-                repository.markEpisodeWatched(LogEpisodeWatched(episodeId = episodeId))
+                offline.markEpisodeWatched(episodeId, titleId)
             }
-            if (result is ApiResult.Success) {
+            // Sent refreshes from the server. Queued does not: there is no
+            // network to refresh from, and the local state already reflects
+            // what the user asked for.
+            if (result is OfflineRepository.Written.Sent) {
                 refreshProgress()
                 refreshSeasons()
             }
@@ -92,7 +96,7 @@ class TitleDetailViewModel @Inject constructor(
         if (_marking.value) return
         viewModelScope.launch {
             _marking.value = true
-            if (repository.markWatchedUpTo(episodeId) is ApiResult.Success) {
+            if (offline.markWatchedUpTo(episodeId) is OfflineRepository.Written.Sent) {
                 refreshProgress()
                 refreshSeasons()
             }
@@ -131,8 +135,7 @@ class TitleDetailViewModel @Inject constructor(
 
         viewModelScope.launch {
             _marking.value = true
-            val result = repository.markEpisodeWatched(LogEpisodeWatched(episodeId = next))
-            if (result is ApiResult.Success) {
+            if (offline.markEpisodeWatched(next, titleId) is OfflineRepository.Written.Sent) {
                 refreshProgress()
             }
             _marking.value = false

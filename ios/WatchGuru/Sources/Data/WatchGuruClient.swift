@@ -137,6 +137,17 @@ actor WatchGuruClient {
         }
     }
 
+    func updateLibraryItem(
+        itemId: Int64,
+        _ update: UpdateWatchlistItem
+    ) async throws(APIFailure) -> WatchlistItemResponse {
+        try await run {
+            try await WatchlistControllerAPI.updateWatchlistItem(
+                itemId: itemId, updateWatchlistItem: update, apiConfiguration: $0
+            )
+        }
+    }
+
     func removeFromLibrary(itemId: Int64) async throws(APIFailure) {
         try await runVoid {
             try await WatchlistControllerAPI.removeFromWatchlist(itemId: itemId, apiConfiguration: $0)
@@ -156,10 +167,17 @@ actor WatchGuruClient {
 
     // MARK: - History
 
-    func markEpisodeWatched(episodeId: Int64) async throws(APIFailure) -> WatchEventResponse {
+    /// - Parameter watchedAt: when the user watched it, defaulting to now.
+    ///   Passed explicitly by the offline replay, which must record the moment
+    ///   the user actually watched rather than the moment the train reached
+    ///   signal.
+    func markEpisodeWatched(
+        episodeId: Int64,
+        watchedAt: Date? = nil
+    ) async throws(APIFailure) -> WatchEventResponse {
         try await run {
             try await WatchHistoryControllerAPI.logEpisodeWatched(
-                logEpisodeWatched: LogEpisodeWatched(episodeId: episodeId),
+                logEpisodeWatched: LogEpisodeWatched(episodeId: episodeId, watchedAt: watchedAt),
                 apiConfiguration: $0
             )
         }

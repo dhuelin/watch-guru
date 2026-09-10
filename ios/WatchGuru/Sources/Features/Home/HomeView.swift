@@ -21,7 +21,7 @@ struct HomeView: View {
         .navigationTitle("Up Next")
         .task {
             if model == nil {
-                let created = HomeModel(client: session.client)
+                let created = HomeModel(client: session.client, offline: session.offline)
                 model = created
                 await created.load()
             }

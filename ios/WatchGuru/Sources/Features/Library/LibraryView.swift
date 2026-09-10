@@ -17,7 +17,7 @@ struct LibraryView: View {
         .navigationTitle("Library")
         .task {
             if model == nil {
-                let created = LibraryModel(client: session.client)
+                let created = LibraryModel(client: session.client, offline: session.offline)
                 model = created
                 await created.load()
             }
