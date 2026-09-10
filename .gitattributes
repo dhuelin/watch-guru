@@ -1,2 +1,22 @@
-/mvnw text eol=lf
-*.cmd text eol=crlf
+* text=auto eol=lf
+
+/backend/mvnw       text eol=lf
+/android/gradlew    text eol=lf
+*.cmd               text eol=crlf
+*.bat               text eol=crlf
+
+# Xcode project files are line-oriented and merge far better with a union
+# strategy than with the default three-way merge, which routinely produces
+# an unopenable project on any concurrent change.
+*.pbxproj           text eol=lf merge=union
+*.xcworkspacedata   text eol=lf
+*.xcscheme          text eol=lf
+
+# Binary assets: never diff, never munge line endings.
+*.png               binary
+*.jpg               binary
+*.jpeg              binary
+*.pdf               binary
+*.jar               binary
+*.keystore          binary
+*.jks               binary

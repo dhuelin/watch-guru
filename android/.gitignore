@@ -1,0 +1,36 @@
+### Gradle ###
+.gradle/
+build/
+local.properties
+!gradle/wrapper/gradle-wrapper.jar
+
+### Android ###
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+bin/
+gen/
+out/
+release/
+captures/
+.externalNativeBuild/
+.cxx/
+
+### Android Studio ###
+*.iml
+.navigation/
+lint/intermediates/
+lint/generated/
+lint/outputs/
+lint/tmp/
+
+### Signing and secrets ###
+*.jks
+*.keystore
+keystore.properties
+google-services.json
+
+### Gradle wrapper: the jar is intentionally committed so a fresh clone can build.
+!gradle/wrapper/gradle-wrapper.jar

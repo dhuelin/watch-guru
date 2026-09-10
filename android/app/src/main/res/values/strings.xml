@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Copy is shared with the iOS app verbatim: see docs/DESIGN.md. A status called
+  "Watching" on one platform and "In progress" on the other is the same product
+  contradicting itself.
+-->
+<resources>
+    <string name="app_name">Watch Guru</string>
+
+    <string name="tab_home">Home</string>
+    <string name="tab_search">Search</string>
+    <string name="tab_library">Library</string>
+    <string name="tab_profile">Profile</string>
+
+    <string name="status_watchlist">Watchlist</string>
+    <string name="status_watching">Watching</string>
+    <string name="status_completed">Completed</string>
+    <string name="status_on_hold">On hold</string>
+    <string name="status_dropped">Dropped</string>
+
+    <string name="action_mark_watched">Mark watched</string>
+    <string name="action_mark_unwatched">Mark unwatched</string>
+    <string name="action_mark_up_to_here">Mark all up to here</string>
+    <string name="action_add_to_library">Add to library</string>
+    <string name="action_retry">Retry</string>
+
+    <string name="empty_up_next">Nothing on the go. Start a series and it will show up here.</string>
+    <string name="title_history">History</string>
+    <string name="empty_history">Nothing watched yet. Marking an episode will show it here.</string>
+    <string name="action_view_history">Viewing history</string>
+    <string name="empty_library">Nothing tracked yet. Search for a film or series to get started.</string>
+    <string name="empty_search">No results for \"%1$s\".</string>
+    <string name="search_hint">Search films and series</string>
+    <string name="search_prompt">Search for something to watch.</string>
+
+    <string name="error_offline">Offline — changes will sync when you reconnect.</string>
+    <string name="error_provider_down">Couldn\'t reach the catalogue. Your library is still up to date.</string>
+    <string name="error_generic">Something went wrong.</string>
+
+    <!-- Sign-in. There is no account to create: the first valid token from a
+         trusted provider provisions one, so this screen only signs in. -->
+    <string name="sign_in_tagline">Know what you\'ve watched and where you left off.</string>
+    <string name="action_sign_in_google">Sign in with Google</string>
+    <string name="action_sign_out">Sign out</string>
+    <string name="action_delete_account">Delete account</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="delete_account_title">Delete your account?</string>
+    <string name="delete_account_message">This removes your library, progress and history permanently. It cannot be undone.</string>
+    <string name="delete_account_footer">Deleting your account removes your library, progress and history permanently.</string>
+
+    <string name="tmdb_attribution">This product uses the TMDB API but is not endorsed or certified by TMDB.</string>
+
+    <!-- Shown when changes made offline have not reached the server yet. Not
+         an error: nothing has gone wrong, and they will be sent. -->
+    <plurals name="pending_changes">
+        <item quantity="one">%1$d change waiting to sync</item>
+        <item quantity="other">%1$d changes waiting to sync</item>
+    </plurals>
+
+    <!-- Content descriptions. These say what a control does, not what it is:
+         "button" tells a TalkBack user nothing about which episode it marks. -->
+    <string name="cd_mark_episode_watched">Mark %1$s watched</string>
+    <string name="cd_mark_episode_unwatched">Mark %1$s unwatched</string>
+    <string name="cd_poster">Poster for %1$s</string>
+    <string name="cd_progress">%1$d of %2$d episodes watched</string>
+</resources>

@@ -1,0 +1,100 @@
+# XcodeGen project definition.
+#
+# The Xcode project is generated rather than committed. A .pbxproj is a large
+# machine-managed file that merges badly and cannot be reviewed; this is the
+# same information in a form a human can read in a pull request.
+#
+#   brew install xcodegen
+#   cd ios && xcodegen generate && open WatchGuru.xcodeproj
+#
+name: WatchGuru
+options:
+  bundleIdPrefix: dev.dhuelin
+  deploymentTarget:
+    # iOS 17 is the floor: @Observable and ContentUnavailableView are used
+    # throughout, and back-porting them would mean writing the app twice.
+    #
+    # Not the Tab builder, despite what this comment used to claim -- that is
+    # iOS 18, and the compiler said so. The tab bar uses .tabItem.
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+packages:
+  WatchGuruAPI:
+    path: WatchGuruAPI
+
+targets:
+  WatchGuru:
+    type: application
+    platform: iOS
+    sources:
+      - path: WatchGuru/Sources
+      - path: WatchGuru/Resources
+        optional: true
+    dependencies:
+      - package: WatchGuruAPI
+    entitlements:
+      path: WatchGuru/WatchGuru.entitlements
+    # An explicit Info.plist rather than INFOPLIST_KEY_* build settings.
+    #
+    # Two reasons, both found by the first build that got this far. Without
+    # either this block or GENERATE_INFOPLIST_FILE, no plist is produced at all
+    # and packaging fails with "Build input file cannot be found:
+    # WatchGuru.app/Info.plist". And INFOPLIST_KEY_NSAppTransportSecurity does
+    # not exist -- that mechanism covers a fixed set of scalar keys, and ATS is
+    # a dictionary -- so the App Transport Security exception this project
+    # believed it had was never actually applied.
+    info:
+      path: WatchGuru/Info.plist
+      properties:
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        # Scoped to loopback and nothing else, so the simulator can reach a
+        # backend running on the developer's machine. It ships in release too,
+        # which the previous comment claimed it would not -- but an exception
+        # for "localhost" permits no cleartext over the network at all, only to
+        # the device itself. Splitting it per configuration would mean two
+        # plists to keep in step for no security gain.
+        NSAppTransportSecurity:
+          NSExceptionDomains:
+            localhost:
+              NSExceptionAllowsInsecureHTTPLoads: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.dhuelin.watchguru
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "6.0"
+        # Complete checking, not minimal: the app is written for it, and
+        # relaxing it later is far easier than adopting it later.
+        SWIFT_STRICT_CONCURRENCY: complete
+        ENABLE_USER_SCRIPT_SANDBOXING: YES
+
+  WatchGuruTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - WatchGuru/Tests
+    dependencies:
+      - target: WatchGuru
+    settings:
+      base:
+        SWIFT_VERSION: "6.0"
+        # The test bundle needs an Info.plist too, and needs no custom keys in
+        # it, so let Xcode synthesise one. The app target cannot do the same:
+        # it needs an ATS dictionary, which the generated-plist build settings
+        # cannot express.
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  WatchGuru:
+    build:
+      targets:
+        WatchGuru: all
+        WatchGuruTests: [test]
+    test:
+      targets:
+        - WatchGuruTests

@@ -1,0 +1,143 @@
+spring:
+  application:
+    name: watch-guru
+
+  docker:
+    compose:
+      lifecycle-management: start_and_stop
+
+  datasource:
+    hikari:
+      maximum-pool-size: 10
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Flyway owns the schema; Hibernate only checks the mappings agree with it.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+        query.in_clause_parameter_padding: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  threads:
+    virtual:
+      enabled: true
+
+  jackson:
+    default-property-inclusion: non_null
+
+watch-guru:
+  auth:
+    # Trusted identity providers. A token signed by anyone else is rejected
+    # before its claims are read.
+    issuers:
+      - name: apple
+        uri: https://appleid.apple.com
+        # Apple verifies the addresses it asserts, including private relay
+        # addresses, so a verified address from Apple may adopt an existing
+        # account. See AuthProperties.Issuer#trustEmailVerification for why
+        # this is off by default for anyone else.
+        trust-email-verification: true
+      - name: google
+        uri: https://accounts.google.com
+        trust-email-verification: true
+    # Expected 'aud' claims: the OAuth client ids of the two apps. Without
+    # these, a token minted for an unrelated application that also uses Google
+    # sign-in would validate here. Empty means no audience check, which is only
+    # ever acceptable in a test.
+    audiences: ${WATCH_GURU_AUTH_AUDIENCES:}
+    # Sessions this service issues itself, once a provider token has been
+    # exchanged. Provider tokens last about an hour and no app can renew one
+    # without prompting the user; these can be refreshed and, unlike Google's,
+    # revoked.
+    session:
+      # HMAC key for signing access tokens. No default: an absent secret fails
+      # startup, exactly as an absent audience list does. A generated-on-boot
+      # fallback would appear to work, then sign every user out on each restart
+      # and reject its own tokens across instances behind a load balancer.
+      secret: ${WATCH_GURU_AUTH_SESSION_SECRET:}
+      issuer: ${WATCH_GURU_AUTH_SESSION_ISSUER:https://watch-guru.dev}
+      audience: watch-guru-api
+      # Short, because an access token cannot be revoked once issued: this is
+      # the window in which a stolen one still works. Revocation acts on the
+      # refresh token.
+      access-ttl: 15m
+      # The session length as the user experiences it.
+      refresh-ttl: 30d
+  tmdb:
+    base-url: https://api.themoviedb.org/3
+    image-base-url: https://image.tmdb.org/t/p
+    # TMDB "API Read Access Token" (v4 auth), sent as a Bearer token.
+    api-token: ${TMDB_API_TOKEN:}
+    default-language: en-US
+    default-region: US
+    connect-timeout: 5s
+    read-timeout: 10s
+    retry:
+      # Total attempts including the first. Applies to rate limiting, 5xx and
+      # transport failures only -- a 404 or a bad token is a real answer and
+      # retrying it just spends the rate-limit budget.
+      max-attempts: 3
+      initial-backoff: 250ms
+      max-backoff: 4s
+      # TMDB's Retry-After is honoured, but clamped: a provider asking for a
+      # ten-minute wait must not pin a request thread for ten minutes.
+      max-retry-after: 10s
+    circuit-breaker:
+      # Consecutive failures before calls are rejected outright. An exhausted
+      # retry sequence counts once, not once per attempt.
+      failure-threshold: 5
+      open-duration: 30s
+    search:
+      # Short on purpose: this collapses the burst a debounced search box still
+      # produces, rather than holding results.
+      cache-ttl: 60s
+      cache-max-size: 1000
+      # Queries shorter than this never reach TMDB.
+      min-query-length: 2
+  imdb:
+    # Off by default, and that default is a licensing position rather than a
+    # convenience: IMDb's public datasets are licensed for personal and
+    # non-commercial use only. Fine for a free app; a blocker for a paid or
+    # ad-supported one. See docs/ROADMAP.md and issue #24.
+    enabled: ${WATCH_GURU_IMDB_ENABLED:false}
+    ratings-url: https://datasets.imdbws.com/title.ratings.tsv.gz
+    # 03:30 daily. IMDb refreshes the datasets once a day.
+    cron: "0 30 3 * * *"
+    batch-size: 5000
+    read-timeout: 10m
+  catalog:
+    # How long a cached title detail record is considered fresh.
+    detail-ttl: 7d
+    # How long cached streaming availability is considered fresh.
+    availability-ttl: 1d
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,flyway,caches
+  endpoint:
+    health:
+      show-details: when-authorized
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    # Alphabetical rather than declaration order, so the rendered document is
+    # stable across refactors and the committed snapshot does not churn when a
+    # method moves within a controller.
+    operations-sorter: alpha
+    tags-sorter: alpha
+  writer-with-order-by-keys: true
+
+logging:
+  level:
+    com.dhuelin.dev.watchguru: DEBUG

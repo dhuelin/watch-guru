@@ -1,0 +1,70 @@
+name: Backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
+  pull_request:
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yml'
+
+# A second push to the same branch makes the first run irrelevant.
+concurrency:
+  group: backend-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Java 25 is the current LTS and is what pom.xml targets. Declaring it
+      # here rather than relying on the runner's default is the point: the
+      # project previously targeted Java 26, which meant it silently failed to
+      # compile anywhere that shipped an older JDK.
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+
+      # Testcontainers needs a working Docker daemon. ubuntu-latest provides
+      # one; this step fails loudly and early if that ever stops being true,
+      # rather than surfacing as a confusing container-startup error mid-suite.
+      - name: Verify Docker is available
+        run: docker info > /dev/null
+
+      # OpenApiSpecTest runs as part of this suite and fails the build if the
+      # committed openapi.json no longer matches the controllers. Both mobile
+      # clients are generated from that file, so drift means the apps are built
+      # against an API that no longer exists.
+      - name: Build and test
+        run: ./mvnw -B --no-transfer-progress verify
+
+      - name: Publish test report
+        uses: mikepenz/action-junit-report@v4
+        if: always()
+        with:
+          report_paths: backend/target/surefire-reports/TEST-*.xml
+          check_name: Backend test results
+
+      - name: Upload surefire reports on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: surefire-reports
+          path: backend/target/surefire-reports/
+          retention-days: 7
+

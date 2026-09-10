@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The launcher icon's background layer. A flat colour: the launcher may
+         shrink, mask and parallax this, and detail here survives none of it. -->
+    <color name="ic_launcher_background">#1B5E9B</color>
+</resources>
