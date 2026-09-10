@@ -26,6 +26,10 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
+// The reified extension. Without it retrofit.create() resolves to Retrofit's
+// Java create(Class<T>) and the compiler asks for the argument that the Kotlin
+// form exists to avoid.
+import retrofit2.create
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Qualifier
