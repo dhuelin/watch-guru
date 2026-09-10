@@ -29,7 +29,7 @@ struct SnapshotCache {
     /// Failures are swallowed on purpose: a cache that cannot be written is a
     /// missing convenience, and turning it into a visible error would break a
     /// request that actually succeeded.
-    func put<Value: Encodable>(_ key: String, _ value: Value) {
+    func put<Value: Codable>(_ key: String, _ value: Value) {
         guard let data = try? JSONEncoder().encode(Envelope(storedAt: now(), value: value)) else { return }
         store.write(key, data)
     }
@@ -37,7 +37,7 @@ struct SnapshotCache {
     /// - Parameter maxAge: how old a snapshot may be and still be worth
     ///   showing. `nil` means any age — correct for a library the user last saw
     ///   a week ago, because the alternative on a train is an empty screen.
-    func get<Value: Decodable>(
+    func get<Value: Codable>(
         _ key: String,
         as type: Value.Type = Value.self,
         maxAge: TimeInterval? = nil
@@ -59,6 +59,11 @@ struct SnapshotCache {
         store.delete(key)
     }
 
+    /// Requires the full `Codable` rather than one half on each side: the
+    /// envelope is a single type used for both directions, so constraining
+    /// `put` to `Encodable` alone left it unable to satisfy its own
+    /// `Decodable` requirement. Every value cached here is `Codable` anyway —
+    /// they are all generated API models.
     private struct Envelope<Value: Codable>: Codable {
         let storedAt: Date
         let value: Value

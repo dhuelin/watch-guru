@@ -235,7 +235,7 @@ actor WatchGuruClient {
     /// Acting on the server's 401 rather than on this device's clock is
     /// deliberate: the server decides when a token is dead, and a device with a
     /// wrong clock would otherwise renew constantly or never.
-    private func run<T>(
+    private func run<T: Sendable>(
         _ operation: (WatchGuruAPIAPIConfiguration) async throws -> T
     ) async throws(APIFailure) -> T {
         do {
@@ -257,8 +257,11 @@ actor WatchGuruClient {
         }
     }
 
+    /// `T: Sendable` because this actor awaits a nonisolated closure and then
+    /// returns its result across the isolation boundary. Every generated model
+    /// is declared `Sendable`, so this constrains nothing in practice.
     @discardableResult
-    private func attempt<T>(
+    private func attempt<T: Sendable>(
         _ operation: (WatchGuruAPIAPIConfiguration) async throws -> T
     ) async throws(APIFailure) -> T {
         applyAuthorization()
