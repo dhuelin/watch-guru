@@ -40,7 +40,13 @@ struct PosterView: View {
             .accessibilityLabel(Text("Poster for \(title)"))
     }
 
-    static func initials(of title: String) -> String {
+    /// `nonisolated` because it is pure: a String in, a String out, no view
+    /// state touched. `PosterView` is a `View`, so under Swift 6 the whole type
+    /// is main-actor isolated and this inherited that for no reason -- which
+    /// the test caught, being the only caller outside the main actor. Marking
+    /// the test @MainActor instead would have hidden a declaration that was
+    /// simply wrong.
+    nonisolated static func initials(of title: String) -> String {
         let words = title.split(separator: " ").prefix(2)
         let letters = words.compactMap(\.first).map(String.init).joined().uppercased()
         return letters.isEmpty ? "?" : letters
