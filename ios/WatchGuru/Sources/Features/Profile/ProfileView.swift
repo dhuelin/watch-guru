@@ -89,7 +89,10 @@ struct ProfileView: View {
 
     private func load() async {
         do {
-            state = .content(try await session.client.profile())
+            // See TitleDetailModel.load: inlining the await into the case
+            // defeats the region based isolation checker.
+            let profile = try await session.client.profile()
+            state = .content(profile)
         } catch {
             state = .failed(error)
         }

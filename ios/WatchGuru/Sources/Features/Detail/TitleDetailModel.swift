@@ -27,7 +27,14 @@ final class TitleDetailModel {
 
     func load() async {
         do {
-            state = .content(try await client.title(titleId))
+            // Hoisted rather than inlined into the case. Inline, the region
+            // based isolation checker gives up with "pattern that the ...
+            // checker does not understand how to check. Please file a bug" --
+            // a compiler limitation rather than a fault here, and a local is
+            // the standard way around it. HomeModel and LibraryModel already
+            // did this, which is why they compiled.
+            let title = try await client.title(titleId)
+            state = .content(title)
         } catch {
             state = .failed(error)
         }
