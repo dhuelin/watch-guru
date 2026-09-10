@@ -12,14 +12,35 @@ import WatchGuruAPI
 actor WatchGuruClient {
 
     private let tokens: TokenStore
+    private let sessions: SessionClient
     private let configuration: WatchGuruAPIAPIConfiguration
 
-    init(baseURL: URL, tokens: TokenStore) {
+    /// The renewal in progress, if any.
+    ///
+    /// Refresh tokens rotate, and the backend treats a token presented twice as
+    /// theft and revokes the whole session. Two calls that 401 at the same
+    /// moment must therefore produce one renewal, not two — so the second joins
+    /// the first rather than starting its own. The check-and-set is safe
+    /// because it runs without an `await` between reading and writing, so the
+    /// actor cannot interleave another task in the middle.
+    private var renewal: Task<Tokens, Error>?
+
+    /// Called when the refresh token is refused. Not transient: it means
+    /// revoked, expired, or detected as reused, and the user must sign in
+    /// again.
+    private var onSessionLost: (@Sendable () -> Void)?
+
+    init(baseURL: URL, tokens: TokenStore, sessions: SessionClient? = nil) {
         self.tokens = tokens
+        self.sessions = sessions ?? SessionClient(baseURL: baseURL)
         // A configuration of our own rather than the shared singleton, so tests
         // and previews can hold several clients without fighting over global
         // state.
         self.configuration = WatchGuruAPIAPIConfiguration(basePath: baseURL.absoluteString)
+    }
+
+    func setOnSessionLost(_ handler: @escaping @Sendable () -> Void) {
+        onSessionLost = handler
     }
 
     /// Refreshes the Authorization header from the token store.
@@ -28,11 +49,50 @@ actor WatchGuruClient {
     /// or sign-out takes effect on the very next request without rebuilding the
     /// client.
     private func applyAuthorization() {
-        if let token = tokens.token() {
-            configuration.customHeaders["Authorization"] = "Bearer \(token)"
+        if let session = tokens.tokens() {
+            configuration.customHeaders["Authorization"] = "Bearer \(session.accessToken)"
         } else {
             configuration.customHeaders.removeValue(forKey: "Authorization")
         }
+    }
+
+    /// Renews the session, joining a renewal already under way.
+    ///
+    /// - Parameter presented: the refresh token the caller believes is current.
+    ///   If the store has moved on, another call already renewed and this one
+    ///   takes that result instead of spending a second, rotated token.
+    private func renewSession(presented: String) async -> Tokens? {
+        if let existing = renewal {
+            return try? await existing.value
+        }
+        if let current = tokens.tokens(), current.refreshToken != presented {
+            // Renewed while this call was in flight.
+            return current
+        }
+
+        let task = Task { [sessions] () throws -> Tokens in
+            try await sessions.refresh(refreshToken: presented)
+        }
+        renewal = task
+        defer { renewal = nil }
+
+        guard let renewed = try? await task.value else {
+            tokens.clear()
+            onSessionLost?()
+            return nil
+        }
+        tokens.save(renewed)
+        return renewed
+    }
+
+    /// Whether a failed call is worth retrying after a renewal, and with what.
+    ///
+    /// Only `.unauthorised`, and only once — a retry that is refused again
+    /// means the fresh token was rejected too, and renewing a second time
+    /// cannot change that.
+    private func renewedSession(after failure: APIFailure) async -> Tokens? {
+        guard case .unauthorised = failure, let current = tokens.tokens() else { return nil }
+        return await renewSession(presented: current.refreshToken)
     }
 
     // MARK: - Profile
@@ -151,27 +211,41 @@ actor WatchGuruClient {
 
     // MARK: - Failure mapping
 
+    /// Runs one call, renewing the session once if the API says the access
+    /// token is no longer good.
+    ///
+    /// Acting on the server's 401 rather than on this device's clock is
+    /// deliberate: the server decides when a token is dead, and a device with a
+    /// wrong clock would otherwise renew constantly or never.
     private func run<T>(
         _ operation: (WatchGuruAPIAPIConfiguration) async throws -> T
     ) async throws(APIFailure) -> T {
-        applyAuthorization()
         do {
-            return try await operation(configuration)
-        } catch let error as ErrorResponse {
-            throw WatchGuruClient.failure(for: error)
-        } catch let error as URLError {
-            throw WatchGuruClient.failure(for: error)
-        } catch {
-            throw .unexpected(status: nil, message: error.localizedDescription)
+            return try await attempt(operation)
+        } catch let failure {
+            guard await renewedSession(after: failure) != nil else { throw failure }
+            return try await attempt(operation)
         }
     }
 
     private func runVoid(
         _ operation: (WatchGuruAPIAPIConfiguration) async throws -> Void
     ) async throws(APIFailure) {
+        do {
+            try await attempt(operation)
+        } catch let failure {
+            guard await renewedSession(after: failure) != nil else { throw failure }
+            try await attempt(operation)
+        }
+    }
+
+    @discardableResult
+    private func attempt<T>(
+        _ operation: (WatchGuruAPIAPIConfiguration) async throws -> T
+    ) async throws(APIFailure) -> T {
         applyAuthorization()
         do {
-            try await operation(configuration)
+            return try await operation(configuration)
         } catch let error as ErrorResponse {
             throw WatchGuruClient.failure(for: error)
         } catch let error as URLError {

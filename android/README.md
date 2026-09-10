@@ -30,7 +30,7 @@ single Gradle build**.
 | Layer | State |
 |---|---|
 | `api-client/` | **Compiled.** 108 classes, generated from the committed spec and built with kotlinc against Retrofit, OkHttp, coroutines and kotlinx.serialization. |
-| `data/` | **Compiled and tested**, except `EncryptedTokenStore` and `CoilDataCleaner` — 9 unit tests pass against the real generated client on a plain JVM. Those two touch AndroidX Keystore and Coil respectively and could not be compiled here. |
+| `data/` | **Compiled and tested**, except `EncryptedTokenStore` and `CoilDataCleaner` — 24 unit tests pass against the real generated client on a plain JVM, including the session authenticator (rotation, refusal, no-loop, and eight threads racing to prove one refresh). Those two touch AndroidX Keystore and Coil respectively and could not be compiled here. |
 | `ui/` | **Not compiled.** Compose needs the Compose compiler plugin and the Android SDK. Field and enum names were checked against the generated models by hand, and every `R.string` reference was checked against `strings.xml`, but the first `./gradlew` run is where this is really tested. |
 | Sign-in | **Not compiled at all.** `data/GoogleSignIn.kt` and `ui/signin/` depend on Credential Manager and AndroidX Lifecycle, which live on Google's Maven. Nothing here has ever run. |
 | Gradle setup | **Not resolved.** Plugin and library versions are pinned to known-compatible pairings (AGP 8.7.3 with Kotlin 2.1.21), but no build has confirmed them. |
@@ -92,13 +92,25 @@ the same Google Cloud project:
 Getting step 4 wrong gives a token the API correctly rejects with 401, which
 looks like a sign-in failure but is not.
 
-### Known limitation
+### How the session is kept alive
 
-The Google ID token is used directly as the bearer token and expires after
-about an hour. There is no refresh, so a long-lived session eventually returns
-401s; recovering means signing out and back in. Fixing that properly needs
-a token-exchange endpoint on the backend, tracked as #26, rather than a
-client-side retry that cannot succeed.
+The Google ID token is never stored. It is exchanged at
+`POST /api/v1/auth/session` for an access token (15 minutes) and a refresh
+token (30 days), and `SessionAuthenticator` renews on the server's 401 — not on
+a clock, because a device whose clock is wrong would otherwise renew constantly
+or never.
+
+Refresh tokens **rotate**: each renewal invalidates the one it presented, and
+the backend treats a token presented twice as theft and revokes the whole
+session. Two calls that 401 at the same moment must therefore cause one
+renewal, not two. That is what the lock in `SessionAuthenticator` is for, and
+what the eight-thread test actually checks — get it wrong and the user is
+signed out precisely when the app is busiest, which is also when it is hardest
+to reproduce.
+
+A refused renewal is final (revoked, expired, or detected as reused), so it
+clears the tokens and pushes the app back to the sign-in screen through
+`SessionEvents` rather than letting every screen 401 in silence.
 
 ## Not built yet
 

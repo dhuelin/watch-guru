@@ -23,10 +23,10 @@ enum AuthState: Equatable {
 /// already presents its own `ASAuthorizationController`, so driving a second
 /// one here would prompt the user twice. It takes the button's result instead.
 ///
-/// Known limitation: Apple's identity token expires in about an hour and is
-/// used directly as the bearer token, so a long session ends in 401s rather
-/// than a silent renewal. Fixing that means a token exchange on the backend —
-/// tracked as #26 — rather than a retry here that cannot succeed.
+/// Apple's identity token is exchanged for a session this app can renew
+/// silently (#26); it is never stored. The renewal itself is not here — it
+/// happens inside ``WatchGuruClient``, on the server's 401, so every call
+/// benefits rather than only the ones a screen remembered to guard.
 @Observable
 @MainActor
 final class SignInModel {
@@ -39,11 +39,13 @@ final class SignInModel {
 
     private let tokens: TokenStore
     private let client: WatchGuruClient
+    private let sessions: SessionClient
 
-    init(tokens: TokenStore, client: WatchGuruClient) {
+    init(tokens: TokenStore, client: WatchGuruClient, sessions: SessionClient) {
         self.tokens = tokens
         self.client = client
-        state = tokens.token() == nil ? .signedOut : .signedIn
+        self.sessions = sessions
+        state = tokens.tokens() == nil ? .signedOut : .signedIn
     }
 
     /// Handles the result handed back by `SignInWithAppleButton`.
@@ -72,7 +74,20 @@ final class SignInModel {
         }
 
         state = .signingIn
-        tokens.save(token)
+
+        // Trade Apple's token for one of ours. Apple's lasts about an hour and
+        // cannot be renewed without putting the sheet in front of the user
+        // again; what this stores refreshes silently for thirty days.
+        do {
+            tokens.save(try await sessions.exchange(providerToken: token))
+        } catch {
+            // Apple accepted the user, we did not. Almost always a
+            // configuration mismatch — the bundle id is not in the backend's
+            // audience list — so the message says the session failed rather
+            // than blaming the sign-in.
+            state = .failed("Signed in with Apple, but Watch Guru couldn't start a session. Please try again.")
+            return
+        }
 
         // Apple returns the user's name ONLY in this first authorisation
         // response, and never in the token or on any later sign-in. If it is
@@ -93,9 +108,17 @@ final class SignInModel {
     /// A shared device must not leak the previous user's watch history, so this
     /// is not only about the token.
     func signOut() {
+        let refreshToken = tokens.tokens()?.refreshToken
         tokens.clear()
         URLCache.shared.removeAllCachedResponses()
         state = .signedOut
+
+        // Revoking server-side is best-effort and deliberately after the local
+        // clear: a user who taps sign out on a plane must still be signed out.
+        // The refresh token expires on its own if this never reaches us.
+        if let refreshToken {
+            Task { [sessions] in await sessions.logout(refreshToken: refreshToken) }
+        }
     }
 
     /// Deletes the account server-side, then signs out.
@@ -109,6 +132,16 @@ final class SignInModel {
         } catch {
             accountError = error.message
         }
+    }
+
+    /// The session ended for a reason the user cannot retry away.
+    ///
+    /// Called from ``WatchGuruClient`` when a renewal is refused: the refresh
+    /// token was revoked, expired, or the server detected it being reused. The
+    /// tokens are already cleared by then; this is what moves the UI.
+    func sessionExpired() {
+        guard state == .signedIn else { return }
+        state = .failed("Your session expired. Please sign in again.")
     }
 
     private static func format(_ name: PersonNameComponents) -> String? {

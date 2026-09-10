@@ -7,6 +7,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.dhuelin.watchguru.data.ApiResult
 import dev.dhuelin.watchguru.data.GoogleSignIn
 import dev.dhuelin.watchguru.data.LocalDataCleaner
+import dev.dhuelin.watchguru.data.SessionEvents
+import dev.dhuelin.watchguru.data.SessionRepository
 import dev.dhuelin.watchguru.data.TokenStore
 import dev.dhuelin.watchguru.data.WatchGuruRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,6 +48,8 @@ class SignInViewModel @Inject constructor(
     private val tokens: TokenStore,
     private val googleSignIn: GoogleSignIn,
     private val repository: WatchGuruRepository,
+    private val sessions: SessionRepository,
+    private val sessionEvents: SessionEvents,
     private val localData: LocalDataCleaner,
 ) : ViewModel() {
 
@@ -63,7 +67,19 @@ class SignInViewModel @Inject constructor(
     val accountError: StateFlow<String?> = _accountError.asStateFlow()
 
     init {
-        _state.value = if (tokens.token() == null) AuthState.SignedOut else AuthState.SignedIn
+        _state.value = if (tokens.tokens() == null) AuthState.SignedOut else AuthState.SignedIn
+
+        // A renewal refused mid-request clears the tokens on a background
+        // thread. Without this the app would stay on the signed-in screens and
+        // 401 quietly on every one of them.
+        viewModelScope.launch {
+            sessionEvents.expired.collect { expired ->
+                if (expired && _state.value == AuthState.SignedIn) {
+                    _state.value = AuthState.Failed("Your session expired. Please sign in again.")
+                    sessionEvents.acknowledge()
+                }
+            }
+        }
     }
 
     /**
@@ -76,10 +92,7 @@ class SignInViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = AuthState.SigningIn
             _state.value = when (val result = googleSignIn.signIn(activityContext)) {
-                is GoogleSignIn.Result.Success -> {
-                    tokens.save(result.idToken)
-                    AuthState.SignedIn
-                }
+                is GoogleSignIn.Result.Success -> exchange(result.idToken)
                 // Dismissing the sheet returns to the sign-in screen rather than
                 // showing an error; the user did not fail at anything.
                 GoogleSignIn.Result.Cancelled -> AuthState.SignedOut
@@ -94,6 +107,28 @@ class SignInViewModel @Inject constructor(
     }
 
     /**
+     * Trades the Google ID token for a session of our own.
+     *
+     * The provider token is not stored: it lasts about an hour and cannot be
+     * renewed without prompting the user again. What is stored is the pair the
+     * backend returns, which refreshes silently for thirty days.
+     */
+    private suspend fun exchange(providerToken: String): AuthState =
+        when (val result = sessions.exchange(providerToken)) {
+            is ApiResult.Success -> {
+                tokens.save(result.value)
+                AuthState.SignedIn
+            }
+            // Google accepted the user, we did not. Almost always a
+            // configuration mismatch -- the web client id the app was built
+            // with is not in the backend's audience list -- so the message says
+            // "couldn't sign you in", not "wrong password".
+            is ApiResult.Failure -> AuthState.Failed(
+                "Signed in with Google, but Watch Guru couldn't start a session. Please try again.",
+            )
+        }
+
+    /**
      * Clears the token and everything derived from it.
      *
      * The token goes first and synchronously, so the very next request is
@@ -104,9 +139,17 @@ class SignInViewModel @Inject constructor(
      * cached poster art alone is enough to do that -- see [LocalDataCleaner].
      */
     fun signOut() {
+        val refreshToken = tokens.tokens()?.refreshToken
         tokens.clear()
         _state.value = AuthState.SignedOut
-        viewModelScope.launch { localData.clear() }
+        viewModelScope.launch {
+            // Revoking server-side is best-effort and deliberately after the
+            // local clear: a user who taps sign out on a plane must still be
+            // signed out. The refresh token expires on its own if this never
+            // reaches the server.
+            refreshToken?.let { sessions.logout(it) }
+            localData.clear()
+        }
     }
 
     /**

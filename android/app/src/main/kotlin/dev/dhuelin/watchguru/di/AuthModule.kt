@@ -10,6 +10,7 @@ import dev.dhuelin.watchguru.BuildConfig
 import dev.dhuelin.watchguru.data.CoilDataCleaner
 import dev.dhuelin.watchguru.data.GoogleSignIn
 import dev.dhuelin.watchguru.data.LocalDataCleaner
+import dev.dhuelin.watchguru.data.SessionEvents
 import javax.inject.Singleton
 
 @Module
@@ -29,4 +30,8 @@ object AuthModule {
     @Singleton
     fun localDataCleaner(@ApplicationContext context: Context): LocalDataCleaner =
         CoilDataCleaner(context)
+
+    @Provides
+    @Singleton
+    fun sessionEvents(): SessionEvents = SessionEvents()
 }

@@ -27,5 +27,9 @@ struct RootView: View {
 
 #Preview {
     RootView()
-        .environment(Session(tokens: InMemoryTokenStore(token: "preview")))
+        .environment(Session(tokens: InMemoryTokenStore(tokens: Tokens(
+            accessToken: "preview",
+            refreshToken: "preview",
+            accessTokenExpiresAt: .distantFuture
+        ))))
 }

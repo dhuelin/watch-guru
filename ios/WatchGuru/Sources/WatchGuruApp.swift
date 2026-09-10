@@ -39,9 +39,19 @@ final class Session {
         tokens: TokenStore = KeychainTokenStore()
     ) {
         self.tokens = tokens
-        let client = WatchGuruClient(baseURL: baseURL, tokens: tokens)
+        let sessions = SessionClient(baseURL: baseURL)
+        let client = WatchGuruClient(baseURL: baseURL, tokens: tokens, sessions: sessions)
         self.client = client
-        self.signIn = SignInModel(tokens: tokens, client: client)
+        let signIn = SignInModel(tokens: tokens, client: client, sessions: sessions)
+        self.signIn = signIn
+
+        // When the refresh token is refused there is nothing left to try, and
+        // the app has to say so rather than 401 quietly on every screen. The
+        // client discovers this deep inside a request, so it needs a way back
+        // out to the state the UI is gated on.
+        Task { await client.setOnSessionLost { @Sendable in
+            Task { @MainActor in signIn.sessionExpired() }
+        } }
     }
 
     /// The simulator reaches a backend on the developer's machine at

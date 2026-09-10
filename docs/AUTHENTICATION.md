@@ -103,11 +103,16 @@ user per app, and is treated like any other verified address.
 
 ## Client responsibilities
 
-- Store the token in the Keychain (iOS) or Keystore-backed encrypted
-  preferences (Android). Never `UserDefaults` or plain `SharedPreferences`.
-- Send it on every request; read it per request rather than capturing once, so
-  sign-out takes effect immediately.
-- On 401, re-authenticate rather than showing an error.
+- Store **both** tokens in the Keychain (iOS) or Keystore-backed encrypted
+  preferences (Android). Never `UserDefaults` or plain `SharedPreferences`. The
+  refresh token especially: it is good for thirty days, not fifteen minutes.
+- Send the access token on every request; read it per request rather than
+  capturing once, so a sign-in, sign-out or renewal takes effect immediately.
+- On 401, refresh once and retry. Refresh tokens rotate, so **serialise
+  renewals** — two concurrent refreshes spend the same token twice, which is
+  indistinguishable from theft and costs the user their session.
+- If the refresh is itself refused, stop. It is not transient, and the user has
+  to sign in again.
 - On sign-out, clear the token **and** the local cache. A shared device must not
   leak the previous user's watch history.
 - Offer account deletion (`DELETE /api/v1/me`) — both app stores require it for
