@@ -93,13 +93,23 @@ open class WatchHistoryControllerAPI {
     }
 
     /**
+     * enum for parameter period
+     */
+    public enum Period_getStats: String, Sendable, CaseIterable {
+        case month = "MONTH"
+        case year = "YEAR"
+        case allTime = "ALL_TIME"
+    }
+
+    /**
 
      - parameter months: (query)  (optional, default to 12)
+     - parameter period: (query)  (optional, default to .allTime)
      - parameter apiConfiguration: The configuration for the http request.
      - returns: WatchStats
      */
-    open class func getStats(months: Int? = nil, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) async throws(ErrorResponse) -> WatchStats {
-        return try await getStatsWithRequestBuilder(months: months, apiConfiguration: apiConfiguration).execute().body
+    open class func getStats(months: Int? = nil, period: Period_getStats? = nil, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) async throws(ErrorResponse) -> WatchStats {
+        return try await getStatsWithRequestBuilder(months: months, period: period, apiConfiguration: apiConfiguration).execute().body
     }
 
     /**
@@ -108,10 +118,11 @@ open class WatchHistoryControllerAPI {
        - type: http
        - name: bearerAuth
      - parameter months: (query)  (optional, default to 12)
+     - parameter period: (query)  (optional, default to .allTime)
      - parameter apiConfiguration: The configuration for the http request.
      - returns: RequestBuilder<WatchStats> 
      */
-    open class func getStatsWithRequestBuilder(months: Int? = nil, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) -> RequestBuilder<WatchStats> {
+    open class func getStatsWithRequestBuilder(months: Int? = nil, period: Period_getStats? = nil, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) -> RequestBuilder<WatchStats> {
         let localVariablePath = "/api/v1/me/stats"
         let localVariableURLString = apiConfiguration.basePath + localVariablePath
         let localVariableParameters: [String: any Sendable]? = nil
@@ -119,6 +130,7 @@ open class WatchHistoryControllerAPI {
         var localVariableUrlComponents = URLComponents(string: localVariableURLString)
         localVariableUrlComponents?.queryItems = APIHelper.mapValuesToQueryItems([
             "months": (wrappedValue: months?.asParameter(codableHelper: apiConfiguration.codableHelper), isExplode: true),
+            "period": (wrappedValue: period?.asParameter(codableHelper: apiConfiguration.codableHelper), isExplode: true),
         ])
 
         let localVariableNillableHeaders: [String: (any Sendable)?] = [

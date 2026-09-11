@@ -53,6 +53,7 @@ import dev.dhuelin.watchguru.ui.signin.SignInViewModel
 @Composable
 fun ProfileScreen(
     onOpenHistory: () -> Unit,
+    onOpenStats: () -> Unit,
     signIn: SignInViewModel,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
@@ -144,6 +145,9 @@ fun ProfileScreen(
                     modifier = Modifier.padding(top = 16.dp),
                 ) {
                     Text(stringResource(R.string.action_view_history))
+                }
+                TextButton(onClick = onOpenStats) {
+                    Text(stringResource(R.string.action_view_stats))
                 }
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))

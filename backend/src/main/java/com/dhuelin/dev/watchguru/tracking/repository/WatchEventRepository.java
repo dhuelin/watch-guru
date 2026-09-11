@@ -41,8 +41,18 @@ public interface WatchEventRepository extends JpaRepository<WatchEvent, Long> {
      */
     List<WatchEvent> findByUserIdAndEpisodeId(Long userId, Long episodeId);
 
-    @Query("select coalesce(sum(e.minutesWatched), 0) from WatchEvent e where e.user.id = :userId")
-    long totalMinutesWatched(@Param("userId") Long userId);
+    /**
+     * Aggregates below take a {@code from} instant, and null means all time.
+     *
+     * <p>Written as {@code (cast(:from as Instant) is null or e.watchedAt >= :from)} rather
+     * than as two queries each: the alternative is a second copy of every
+     * aggregate in this file, and the copies drift.
+     */
+    @Query("""
+            select coalesce(sum(e.minutesWatched), 0) from WatchEvent e
+            where e.user.id = :userId and (cast(:from as Instant) is null or e.watchedAt >= :from)
+            """)
+    long totalMinutesWatched(@Param("userId") Long userId, @Param("from") Instant from);
 
     @Query("""
             select coalesce(sum(e.minutesWatched), 0) from WatchEvent e
@@ -50,14 +60,25 @@ public interface WatchEventRepository extends JpaRepository<WatchEvent, Long> {
             """)
     long minutesWatchedSince(@Param("userId") Long userId, @Param("from") Instant from);
 
-    @Query("select count(e) from WatchEvent e where e.user.id = :userId and e.episode is null")
-    long countMovieViewings(@Param("userId") Long userId);
+    @Query("""
+            select count(e) from WatchEvent e
+            where e.user.id = :userId and e.episode is null
+              and (cast(:from as Instant) is null or e.watchedAt >= :from)
+            """)
+    long countMovieViewings(@Param("userId") Long userId, @Param("from") Instant from);
 
-    @Query("select count(e) from WatchEvent e where e.user.id = :userId and e.episode is not null")
-    long countEpisodeViewings(@Param("userId") Long userId);
+    @Query("""
+            select count(e) from WatchEvent e
+            where e.user.id = :userId and e.episode is not null
+              and (cast(:from as Instant) is null or e.watchedAt >= :from)
+            """)
+    long countEpisodeViewings(@Param("userId") Long userId, @Param("from") Instant from);
 
-    @Query("select count(distinct e.title.id) from WatchEvent e where e.user.id = :userId")
-    long countDistinctTitles(@Param("userId") Long userId);
+    @Query("""
+            select count(distinct e.title.id) from WatchEvent e
+            where e.user.id = :userId and (cast(:from as Instant) is null or e.watchedAt >= :from)
+            """)
+    long countDistinctTitles(@Param("userId") Long userId, @Param("from") Instant from);
 
     @Query("select min(e.watchedAt) from WatchEvent e where e.user.id = :userId")
     Instant firstWatchedAt(@Param("userId") Long userId);
@@ -79,33 +100,39 @@ public interface WatchEventRepository extends JpaRepository<WatchEvent, Long> {
     @Query("""
             select g.name, count(e), coalesce(sum(e.minutesWatched), 0)
             from WatchEvent e join e.title t join t.genres g
-            where e.user.id = :userId
+            where e.user.id = :userId and (cast(:from as Instant) is null or e.watchedAt >= :from)
             group by g.name
             order by coalesce(sum(e.minutesWatched), 0) desc
             """)
-    List<Object[]> totalsByGenre(@Param("userId") Long userId);
+    List<Object[]> totalsByGenre(@Param("userId") Long userId, @Param("from") Instant from);
 
     /** Rows of {@code [serviceName, viewings, minutes]} for events with a known service. */
     @Query("""
             select s.name, count(e), coalesce(sum(e.minutesWatched), 0)
             from WatchEvent e join e.streamingService s
-            where e.user.id = :userId
+            where e.user.id = :userId and (cast(:from as Instant) is null or e.watchedAt >= :from)
             group by s.name
             order by coalesce(sum(e.minutesWatched), 0) desc
             """)
-    List<Object[]> totalsByService(@Param("userId") Long userId);
+    List<Object[]> totalsByService(@Param("userId") Long userId, @Param("from") Instant from);
 
     /** Rows of {@code [titleId, primaryTitle, viewings, minutes]} for the heaviest-watched titles. */
     @Query("""
             select t.id, t.primaryTitle, count(e), coalesce(sum(e.minutesWatched), 0)
             from WatchEvent e join e.title t
-            where e.user.id = :userId
+            where e.user.id = :userId and (cast(:from as Instant) is null or e.watchedAt >= :from)
             group by t.id, t.primaryTitle
             order by coalesce(sum(e.minutesWatched), 0) desc
             """)
-    List<Object[]> topTitles(@Param("userId") Long userId, Pageable pageable);
+    List<Object[]> topTitles(@Param("userId") Long userId, @Param("from") Instant from, Pageable pageable);
 
-    /** Distinct local dates on which the user watched something, newest first, for streak calculation. */
+    /**
+     * Distinct local dates on which the user watched something, newest first.
+     *
+     * <p>Never scoped to a period: a streak is a fact about the whole history,
+     * and "your longest streak this month" is a different and much less
+     * interesting number than the one people mean.
+     */
     @Query(value = """
             select distinct cast(e.watched_at at time zone :zone as date) as day
             from watch_event e

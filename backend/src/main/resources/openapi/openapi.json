@@ -382,6 +382,15 @@
             "format" : "int32",
             "default" : 12
           }
+        }, {
+          "in" : "query",
+          "name" : "period",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "ALL_TIME",
+            "enum" : [ "MONTH", "YEAR", "ALL_TIME" ]
+          }
         } ],
         "responses" : {
           "200" : {

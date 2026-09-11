@@ -117,7 +117,16 @@ class WatchGuruRepository(
     suspend fun upNext(limit: Int = 20): ApiResult<List<UpNextResponse>> =
         call { history.getUpNext(limit) }
 
-    suspend fun stats(months: Int = 12): ApiResult<WatchStats> = call { history.getStats(months) }
+    /**
+     * Aggregates over the viewing history.
+     *
+     * @param period which slice of the history every figure is about; streaks
+     *   are always whole-history, whatever this says
+     */
+    suspend fun stats(
+        months: Int = 12,
+        period: WatchHistoryControllerApi.PeriodGetStats = WatchHistoryControllerApi.PeriodGetStats.ALL_TIME,
+    ): ApiResult<WatchStats> = call { history.getStats(months, period) }
 
     suspend fun history(page: Int = 0, size: Int = 50): ApiResult<List<WatchEventResponse>> =
         call { history.getHistory(page = page, size = size) }

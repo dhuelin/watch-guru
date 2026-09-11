@@ -25,6 +25,7 @@ enum class TopLevelDestination(
 object Routes {
     const val TITLE_DETAIL = "title/{titleId}"
     const val HISTORY = "history"
+    const val STATS = "stats"
 
     fun titleDetail(titleId: Long) = "title/$titleId"
 

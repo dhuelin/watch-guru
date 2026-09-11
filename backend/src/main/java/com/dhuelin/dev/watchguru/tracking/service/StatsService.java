@@ -42,20 +42,43 @@ public class StatsService {
 
     @Transactional(readOnly = true)
     public WatchStats forUser(Long userId, int monthsOfHistory) {
+        return forUser(userId, monthsOfHistory, StatsPeriod.ALL_TIME);
+    }
+
+    /**
+     * @param monthsOfHistory how far back the monthly series runs, when the
+     *                        period does not already decide it
+     * @param period          which slice of the history every other figure is
+     *                        about. Scoping the totals but not the breakdowns
+     *                        would produce a screen whose parts do not add up
+     *                        -- "4 hours this month" above a genre list of the
+     *                        last decade
+     */
+    @Transactional(readOnly = true)
+    public WatchStats forUser(Long userId, int monthsOfHistory, StatsPeriod period) {
         AppUser user = users.findById(userId).orElseThrow(() -> NotFoundException.of("User", userId));
         Instant now = Instant.now();
+        Instant from = period.from(user.zone(), LocalDate.now(user.zone()));
 
         Map<WatchStatus, Long> byStatus = new EnumMap<>(WatchStatus.class);
         items.countByStatus(userId).forEach(row -> byStatus.put(row.getStatus(), row.getCount()));
 
-        Instant monthlyFrom = now.minus(Duration.ofDays(31L * Math.max(monthsOfHistory, 1)));
+        // The monthly series follows the period where the period is shorter
+        // than the requested window: asking for twelve months of bars under a
+        // "this month" heading would draw eleven bars the figures above
+        // exclude.
+        Instant monthlyFrom = from != null
+                ? from
+                : now.minus(Duration.ofDays(31L * Math.max(monthsOfHistory, 1)));
+
+        // Streaks are deliberately whole-history: see distinctWatchDays.
         List<LocalDate> watchDays = events.distinctWatchDays(userId, user.getTimeZone());
 
         return new WatchStats(
-                events.totalMinutesWatched(userId),
-                events.countMovieViewings(userId),
-                events.countEpisodeViewings(userId),
-                events.countDistinctTitles(userId),
+                events.totalMinutesWatched(userId, from),
+                events.countMovieViewings(userId, from),
+                events.countEpisodeViewings(userId, from),
+                events.countDistinctTitles(userId, from),
                 events.minutesWatchedSince(userId, now.minus(THIRTY_DAYS)),
                 events.minutesWatchedSince(userId, now.minus(ONE_YEAR)),
                 currentStreak(watchDays, LocalDate.now(user.zone())),
@@ -63,9 +86,9 @@ public class StatsService {
                 events.firstWatchedAt(userId),
                 events.lastWatchedAt(userId),
                 byStatus,
-                toBuckets(events.totalsByGenre(userId)),
-                toBuckets(events.totalsByService(userId)),
-                toTitleBuckets(events.topTitles(userId, PageRequest.of(0, TOP_TITLE_LIMIT))),
+                toBuckets(events.totalsByGenre(userId, from)),
+                toBuckets(events.totalsByService(userId, from)),
+                toTitleBuckets(events.topTitles(userId, from, PageRequest.of(0, TOP_TITLE_LIMIT))),
                 toMonthBuckets(events.monthlyTotals(userId, monthlyFrom)));
     }
 
