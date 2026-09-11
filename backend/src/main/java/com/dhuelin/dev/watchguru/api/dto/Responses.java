@@ -1,6 +1,8 @@
 package com.dhuelin.dev.watchguru.api.dto;
 
 import com.dhuelin.dev.watchguru.catalog.domain.TitleType;
+import com.dhuelin.dev.watchguru.imports.domain.ImportSource;
+import com.dhuelin.dev.watchguru.imports.domain.MatchStatus;
 import com.dhuelin.dev.watchguru.streaming.domain.LinkStatus;
 import com.dhuelin.dev.watchguru.streaming.domain.OfferType;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchStatus;
@@ -115,7 +117,27 @@ public final class Responses {
             BigDecimal imdbRating,
             String imdbUrl,
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<GenreResponse> genres,
-            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<AvailabilityResponse> availability
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<AvailabilityResponse> availability,
+
+            /*
+             * When the availability above was confirmed with the provider, or
+             * null if it never has been.
+             *
+             * A timestamp rather than a boolean, for two reasons. An empty
+             * list with a timestamp means the title is on no service in that
+             * country, which is worth saying, while an empty list without one
+             * means the provider could not be reached -- a different claim
+             * that must not be shown as the first. And availability is cached
+             * for a day, so the apps need the age anyway; the offers carry
+             * their own timestamps, but a confirmed-empty result has no offers
+             * to carry one.
+             *
+             * Optional, deliberately: a required field added to a response
+             * both apps cache offline would make every snapshot written by a
+             * previous version undecodable, and an undecodable snapshot is
+             * deleted -- costing an offline user their library on upgrade.
+             */
+            Instant availabilityCheckedAt
     ) {
     }
 
@@ -270,6 +292,89 @@ public final class Responses {
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean syncEnabled,
             Instant lastSyncAt,
             String lastSyncError
+    ) {
+    }
+
+    /**
+     * What one series' notification setting is.
+     *
+     * <p>Only series the user has said something explicit about are listed.
+     * Absence means notify, so a client renders every followed series as on
+     * unless it appears here.
+     */
+    public record SeriesNotificationResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long titleId,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String titleName,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean newEpisodes
+    ) {
+    }
+
+    /** The notification settings screen, in one response. */
+    public record NotificationSettingsResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean enabled,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<SeriesNotificationResponse> series,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int registeredDevices
+    ) {
+    }
+
+    /** One title the user could mean, where the file was ambiguous. */
+    public record ImportCandidateResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long titleId,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String titleName,
+            Integer year
+    ) {
+    }
+
+    /**
+     * One row of the file, and what the catalogue made of it.
+     *
+     * <p>Unmatched rows are in here too. A row that vanished quietly is a row
+     * nobody knows to re-enter.
+     */
+    public record ImportRowResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String sourceRef,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String titleText,
+            Integer year,
+            String imdbId,
+            Integer seasonNumber,
+            Integer episodeNumber,
+            String episodeName,
+            LocalDate watchedAt,
+            BigDecimal rating,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) MatchStatus status,
+            Long titleId,
+            String titleName,
+            Long episodeId,
+            String episodeCode,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<ImportCandidateResponse> candidates,
+            String note
+    ) {
+    }
+
+    /**
+     * What a file would do, before it does anything.
+     *
+     * @param problems       lines that could not be read at all
+     * @param warnings       where this source does not mean quite what it looks
+     *                       like -- an IMDb rating date is not a watch date
+     * @param alreadyImported rows this user has imported before, which a second
+     *                       run will skip rather than duplicate
+     */
+    public record ImportPreviewResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) ImportSource source,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<ImportRowResponse> rows,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<String> problems,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<String> warnings,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int alreadyImported
+    ) {
+    }
+
+    /** What a commit actually did. */
+    public record ImportResultResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int imported,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int skipped,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int failed,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<String> problems
     ) {
     }
 }

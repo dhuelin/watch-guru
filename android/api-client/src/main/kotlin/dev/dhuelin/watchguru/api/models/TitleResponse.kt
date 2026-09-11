@@ -39,6 +39,7 @@ import kotlinx.serialization.Contextual
  * @param primaryTitle 
  * @param providerId 
  * @param titleType 
+ * @param availabilityCheckedAt 
  * @param backdropUrl 
  * @param imdbId 
  * @param imdbRating 
@@ -77,6 +78,9 @@ data class TitleResponse (
 
     @SerialName(value = "titleType")
     val titleType: TitleResponse.TitleType,
+
+    @Contextual @SerialName(value = "availabilityCheckedAt")
+    val availabilityCheckedAt: java.time.OffsetDateTime? = null,
 
     @SerialName(value = "backdropUrl")
     val backdropUrl: kotlin.String? = null,

@@ -64,6 +64,23 @@ the repository.
 | `WATCH_GURU_AUTH_AUDIENCES` | **Required.** The OAuth client ids of the apps. Startup fails without it: an empty list would accept any token from Apple or Google, including one minted for a different application. |
 | `WATCH_GURU_AUTH_SESSION_SECRET` | **Required.** At least 32 random bytes, the HMAC key for the access tokens this service signs. Startup fails without it. There is no generated fallback on purpose — one would appear to work, then sign every user out on each restart and reject its own tokens across instances behind a load balancer. Rotating it invalidates every live access token, which is the intended emergency lever; refresh tokens survive, so clients recover on their next refresh. |
 | `WATCH_GURU_IMDB_ENABLED` | Off by default, for licensing reasons — see the roadmap. |
+| `WATCH_GURU_NOTIFICATIONS_ENABLED` | On by default, but nothing is delivered — see below. |
+| `WATCH_GURU_PUSH_PROVIDER` | `log` is the only value that exists today. |
+
+### Notifications deliver nothing yet
+
+The new-episode scan is complete and running: it finds newly aired episodes of
+series a user follows, respects their global switch, their per-series mutes,
+their time zone and a daily cap, and records what it has announced so nothing
+is announced twice. What it does not have is a way to reach a phone. APNs and
+FCM both need credentials this project has never had, so the only sender that
+ships logs the message and writes **NOT DELIVERED** in the line.
+
+That is deliberate rather than unfinished-and-quiet: an empty implementation
+that reported success silently would leave a deployment looking like it was
+notifying people. Registering the credentials is tracked as a manual-setup
+issue, and until it is done the honest description of this feature is that it
+decides correctly and sends nothing.
 
 ## Android signing
 

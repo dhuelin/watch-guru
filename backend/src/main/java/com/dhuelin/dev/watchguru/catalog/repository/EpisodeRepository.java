@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.dhuelin.dev.watchguru.tracking.service.SeriesProgressCounts;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -88,4 +89,62 @@ public interface EpisodeRepository extends JpaRepository<Episode, Long> {
     List<Episode> findAiredUpTo(@Param("titleId") Long titleId,
                                 @Param("seasonNumber") Integer seasonNumber,
                                 @Param("episodeNumber") Integer episodeNumber);
+
+    /**
+     * Episodes of these series that aired within a window, in broadcast order.
+     *
+     * <p>Backs the new-episode scan. The window has a floor rather than being
+     * "since yesterday" so that a scan which did not run -- a deploy, an
+     * outage, a user who was asleep through their whole quiet-hours window --
+     * still catches what it missed, and the delivery log rather than the query
+     * is what stops a repeat.
+     *
+     * <p>Season 0 is excluded: a special appearing in the catalogue is not the
+     * event somebody asked to be told about.
+     *
+     * <p>Ordered by air date first. The caller announces one series at a time
+     * and stops at the daily cap, so ordering by title id would mean the cap
+     * is spent on whichever series has the lowest id rather than on whatever
+     * actually aired first.
+     */
+    @Query("""
+            select e from Episode e
+            where e.title.id in :titleIds
+              and e.seasonNumber > 0
+              and e.airDate is not null
+              and e.airDate >= :from
+              and e.airDate <= :to
+            order by e.airDate asc, e.title.id asc, e.seasonNumber asc, e.episodeNumber asc
+            """)
+    List<Episode> findAiredBetween(@Param("titleIds") Collection<Long> titleIds,
+                                   @Param("from") LocalDate from,
+                                   @Param("to") LocalDate to);
+
+    /**
+     * An episode of a season, found by the name the user's export gave.
+     *
+     * <p>Netflix identifies an episode by its name and nothing else -- there is
+     * no number anywhere in their export -- so an import has this or it has
+     * nothing. Case-insensitive because export capitalisation is its own
+     * dialect.
+     */
+    @Query("""
+            select e from Episode e
+            where e.title.id = :titleId
+              and e.seasonNumber = :seasonNumber
+              and lower(e.name) = lower(:name)
+            """)
+    List<Episode> findBySeasonAndName(@Param("titleId") Long titleId,
+                                      @Param("seasonNumber") Integer seasonNumber,
+                                      @Param("name") String name);
+
+    @Query("""
+            select e from Episode e
+            where e.title.id = :titleId
+              and e.seasonNumber = :seasonNumber
+              and e.episodeNumber = :episodeNumber
+            """)
+    Optional<Episode> findByTitleSeasonAndNumber(@Param("titleId") Long titleId,
+                                                 @Param("seasonNumber") Integer seasonNumber,
+                                                 @Param("episodeNumber") Integer episodeNumber);
 }

@@ -33,6 +33,17 @@ struct TitleDetailView: View {
                 await created.load()
             }
         }
+        // The offers on this screen are for one country. Changing it in
+        // Profile has to reach the screens already loaded, not only the next
+        // one opened.
+        //
+        // .task(id:) rather than .onChange: it cancels the previous load
+        // before starting the next, so a request sent before the region
+        // changed cannot answer last and put the old country's offers back.
+        .task(id: session.profileRevision) {
+            guard session.profileRevision > 0, let model else { return }
+            await model.load()
+        }
     }
 
     private func detail(title: TitleResponse, model: TitleDetailModel) -> some View {
@@ -79,6 +90,11 @@ struct TitleDetailView: View {
                 if let overview = title.overview {
                     Text(overview).font(.body)
                 }
+
+                // Above the episode list: for a film this is the only action
+                // the screen can offer, and for a series it is what someone
+                // does before they start rather than after.
+                WhereToWatchView(offers: title.availability, checkedAt: title.availabilityCheckedAt)
 
                 // The episode list. For a series this is the screen's real
                 // content; everything above it is context.

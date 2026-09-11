@@ -6,6 +6,6 @@ import org.springframework.context.annotation.Configuration;
 /** Activates binding for the application's own configuration records. */
 @Configuration
 @EnableConfigurationProperties({TmdbProperties.class, CatalogProperties.class, AuthProperties.class,
-        ImdbProperties.class})
+        ImdbProperties.class, NotificationProperties.class, ImportProperties.class})
 public class WatchGuruProperties {
 }

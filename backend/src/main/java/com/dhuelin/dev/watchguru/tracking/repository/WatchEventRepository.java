@@ -1,6 +1,7 @@
 package com.dhuelin.dev.watchguru.tracking.repository;
 
 import com.dhuelin.dev.watchguru.tracking.domain.WatchEvent;
+import com.dhuelin.dev.watchguru.tracking.domain.WatchOrigin;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -9,7 +10,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Queries over the append-only viewing history.
@@ -110,4 +113,20 @@ public interface WatchEventRepository extends JpaRepository<WatchEvent, Long> {
             order by day desc
             """, nativeQuery = true)
     List<java.time.LocalDate> distinctWatchDays(@Param("userId") Long userId, @Param("zone") String zone);
+
+    /**
+     * Which of these import references this user already has.
+     *
+     * <p>Asked once for a whole file rather than per row: an import is
+     * thousands of rows, and the unique index makes the second write a failure
+     * rather than a duplicate, so knowing up front turns "error" into
+     * "already imported" in the summary the user reads.
+     */
+    @Query("""
+            select e.originRef from WatchEvent e
+            where e.user.id = :userId and e.origin = :origin and e.originRef in :refs
+            """)
+    Set<String> findExistingOriginRefs(@Param("userId") Long userId,
+                                       @Param("origin") WatchOrigin origin,
+                                       @Param("refs") Collection<String> refs);
 }

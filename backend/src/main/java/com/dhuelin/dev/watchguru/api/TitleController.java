@@ -11,8 +11,9 @@ import com.dhuelin.dev.watchguru.config.TmdbProperties;
 import com.dhuelin.dev.watchguru.security.CurrentUserService;
 import com.dhuelin.dev.watchguru.tracking.service.EpisodeListService;
 import com.dhuelin.dev.watchguru.streaming.service.AvailabilityService;
-import jakarta.validation.constraints.NotBlank;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.constraints.NotBlank;
+import java.util.Locale;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -92,9 +93,23 @@ public class TitleController {
         return mapper.toSeasons(episodeList.seasonsFor(currentUser.require().getId(), titleId));
     }
 
+    /**
+     * Which country's streaming offers to show.
+     *
+     * <p>An explicit query parameter wins; otherwise the signed-in user's own
+     * region, and only then the configured default. Falling straight through to
+     * the default was a real bug: it told everyone outside that one country
+     * where to watch something on a service that does not carry it there, which
+     * is worse than showing nothing. {@code AppUser.region} has always carried
+     * the comment "decides which streaming offers are shown"; now it does.
+     */
     private String region(String requested) {
-        return requested == null || requested.isBlank()
+        if (requested != null && !requested.isBlank()) {
+            return requested.toUpperCase(Locale.ROOT);
+        }
+        String userRegion = currentUser.require().getRegion();
+        return userRegion == null || userRegion.isBlank()
                 ? tmdbProperties.defaultRegion()
-                : requested.toUpperCase();
+                : userRegion.toUpperCase(Locale.ROOT);
     }
 }

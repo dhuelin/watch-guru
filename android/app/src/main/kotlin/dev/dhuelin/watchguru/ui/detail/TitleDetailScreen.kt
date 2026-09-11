@@ -162,6 +162,15 @@ private fun TitleDetailContent(
             )
         }
 
+        // Above the episode list: for a film this is the only action the
+        // screen can offer, and for a series it is what someone does before
+        // they start rather than after.
+        WhereToWatch(
+            offers = title.availability,
+            checkedAt = title.availabilityCheckedAt,
+            modifier = Modifier.padding(top = 24.dp),
+        )
+
         // The episode list. This is the screen's real content for a series --
         // everything above it is context.
         seasons?.seasons?.takeIf { it.isNotEmpty() }?.let { list ->

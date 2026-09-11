@@ -153,6 +153,46 @@
         "tags" : [ "me-controller" ]
       }
     },
+    "/api/v1/me/devices" : {
+      "post" : {
+        "operationId" : "registerDevice",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RegisterDevice"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [ "notification-controller" ]
+      }
+    },
+    "/api/v1/me/devices/{token}" : {
+      "delete" : {
+        "operationId" : "unregisterDevice",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "token",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        },
+        "tags" : [ "notification-controller" ]
+      }
+    },
     "/api/v1/me/history" : {
       "get" : {
         "operationId" : "getHistory",
@@ -191,6 +231,143 @@
           }
         },
         "tags" : [ "watch-history-controller" ]
+      }
+    },
+    "/api/v1/me/imports" : {
+      "post" : {
+        "operationId" : "commitImport",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CommitImport"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ImportResultResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "import-controller" ]
+      }
+    },
+    "/api/v1/me/imports/preview" : {
+      "post" : {
+        "operationId" : "previewImport",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PreviewImport"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ImportPreviewResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "import-controller" ]
+      }
+    },
+    "/api/v1/me/notifications" : {
+      "get" : {
+        "operationId" : "getNotificationSettings",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NotificationSettingsResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "notification-controller" ]
+      },
+      "patch" : {
+        "operationId" : "updateNotificationSettings",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateNotificationSettings"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NotificationSettingsResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "notification-controller" ]
+      }
+    },
+    "/api/v1/me/notifications/titles/{titleId}" : {
+      "put" : {
+        "operationId" : "updateSeriesNotification",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "titleId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateSeriesNotification"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NotificationSettingsResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "notification-controller" ]
       }
     },
     "/api/v1/me/stats" : {
@@ -839,6 +1016,20 @@
         },
         "required" : [ "airedEpisodes", "alreadyWatched", "newlyMarked", "titleId", "watchedEpisodes" ]
       },
+      "CommitImport" : {
+        "type" : "object",
+        "properties" : {
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ImportSelection"
+            },
+            "maxItems" : 10000,
+            "minItems" : 0
+          }
+        },
+        "required" : [ "rows" ]
+      },
       "EpisodeResponse" : {
         "type" : "object",
         "properties" : {
@@ -910,6 +1101,176 @@
           }
         },
         "required" : [ "id", "name" ]
+      },
+      "ImportCandidateResponse" : {
+        "type" : "object",
+        "properties" : {
+          "titleId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "titleName" : {
+            "type" : "string"
+          },
+          "year" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "titleId", "titleName" ]
+      },
+      "ImportPreviewResponse" : {
+        "type" : "object",
+        "properties" : {
+          "alreadyImported" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "problems" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "rows" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ImportRowResponse"
+            }
+          },
+          "source" : {
+            "type" : "string",
+            "enum" : [ "WATCH_GURU", "IMDB", "LETTERBOXD", "NETFLIX", "UNKNOWN" ]
+          },
+          "warnings" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "alreadyImported", "problems", "rows", "source", "warnings" ]
+      },
+      "ImportResultResponse" : {
+        "type" : "object",
+        "properties" : {
+          "failed" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "imported" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "problems" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "skipped" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "failed", "imported", "problems", "skipped" ]
+      },
+      "ImportRowResponse" : {
+        "type" : "object",
+        "properties" : {
+          "candidates" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ImportCandidateResponse"
+            }
+          },
+          "episodeCode" : {
+            "type" : "string"
+          },
+          "episodeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "episodeName" : {
+            "type" : "string"
+          },
+          "episodeNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "imdbId" : {
+            "type" : "string"
+          },
+          "note" : {
+            "type" : "string"
+          },
+          "rating" : {
+            "type" : "number"
+          },
+          "seasonNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sourceRef" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "MATCHED", "AMBIGUOUS", "UNMATCHED" ]
+          },
+          "titleId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "titleName" : {
+            "type" : "string"
+          },
+          "titleText" : {
+            "type" : "string"
+          },
+          "watchedAt" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "year" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "candidates", "sourceRef", "status", "titleText" ]
+      },
+      "ImportSelection" : {
+        "type" : "object",
+        "properties" : {
+          "episodeId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "rating" : {
+            "type" : "number",
+            "maximum" : 10.0,
+            "minimum" : 0.0
+          },
+          "sourceRef" : {
+            "type" : "string",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "titleId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "titleText" : {
+            "type" : "string",
+            "maxLength" : 512,
+            "minLength" : 0
+          },
+          "watchedAt" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "sourceRef", "titleId" ]
       },
       "LinkedAccountResponse" : {
         "type" : "object",
@@ -1013,6 +1374,36 @@
         },
         "required" : [ "minutes", "month", "viewings", "year" ]
       },
+      "NotificationSettingsResponse" : {
+        "type" : "object",
+        "properties" : {
+          "enabled" : {
+            "type" : "boolean"
+          },
+          "registeredDevices" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "series" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SeriesNotificationResponse"
+            }
+          }
+        },
+        "required" : [ "enabled", "registeredDevices", "series" ]
+      },
+      "PreviewImport" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "string",
+            "maxLength" : 5000000,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "content" ]
+      },
       "RefreshSession" : {
         "type" : "object",
         "properties" : {
@@ -1023,6 +1414,26 @@
           }
         },
         "required" : [ "refreshToken" ]
+      },
+      "RegisterDevice" : {
+        "type" : "object",
+        "properties" : {
+          "platform" : {
+            "type" : "string",
+            "enum" : [ "IOS", "ANDROID" ]
+          },
+          "timeZone" : {
+            "type" : "string",
+            "maxLength" : 64,
+            "minLength" : 0
+          },
+          "token" : {
+            "type" : "string",
+            "maxLength" : 512,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "platform", "token" ]
       },
       "SearchHit" : {
         "type" : "object",
@@ -1145,6 +1556,22 @@
         },
         "required" : [ "primaryTitle", "seasons", "titleId" ]
       },
+      "SeriesNotificationResponse" : {
+        "type" : "object",
+        "properties" : {
+          "newEpisodes" : {
+            "type" : "boolean"
+          },
+          "titleId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "titleName" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "newEpisodes", "titleId", "titleName" ]
+      },
       "SeriesProgress" : {
         "type" : "object",
         "properties" : {
@@ -1255,6 +1682,10 @@
             "items" : {
               "$ref" : "#/components/schemas/AvailabilityResponse"
             }
+          },
+          "availabilityCheckedAt" : {
+            "type" : "string",
+            "format" : "date-time"
           },
           "backdropUrl" : {
             "type" : "string"
@@ -1375,6 +1806,15 @@
         },
         "required" : [ "airedEpisodes", "nextEpisodeCode", "nextEpisodeId", "primaryTitle", "titleId", "watchedEpisodes" ]
       },
+      "UpdateNotificationSettings" : {
+        "type" : "object",
+        "properties" : {
+          "enabled" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "enabled" ]
+      },
       "UpdateProfile" : {
         "type" : "object",
         "properties" : {
@@ -1399,6 +1839,15 @@
             "minLength" : 0
           }
         }
+      },
+      "UpdateSeriesNotification" : {
+        "type" : "object",
+        "properties" : {
+          "newEpisodes" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "newEpisodes" ]
       },
       "UpdateWatchlistItem" : {
         "type" : "object",

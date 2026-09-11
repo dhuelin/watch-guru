@@ -9,12 +9,15 @@ import dev.dhuelin.watchguru.api.models.TitleProgress
 import dev.dhuelin.watchguru.api.models.TitleResponse
 import dev.dhuelin.watchguru.data.ApiResult
 import dev.dhuelin.watchguru.data.OfflineRepository
+import dev.dhuelin.watchguru.data.ProfileEvents
 import dev.dhuelin.watchguru.data.WatchGuruRepository
 import dev.dhuelin.watchguru.ui.components.UiState
 import dev.dhuelin.watchguru.ui.navigation.Routes
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,6 +25,7 @@ import javax.inject.Inject
 class TitleDetailViewModel @Inject constructor(
     private val repository: WatchGuruRepository,
     private val offline: OfflineRepository,
+    profileEvents: ProfileEvents,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -45,12 +49,33 @@ class TitleDetailViewModel @Inject constructor(
     private val _expandedSeason = MutableStateFlow<Int?>(null)
     val expandedSeason: StateFlow<Int?> = _expandedSeason.asStateFlow()
 
+    /**
+     * The load in flight, so a newer one can cancel it.
+     *
+     * Without this, a reload started by a region change races the load already
+     * running: the older request can answer last and put the previous
+     * country's offers back on screen, which is the exact bug the reload
+     * exists to fix.
+     */
+    private var loading: Job? = null
+
     init {
         load()
+
+        // Offers are per country and are loaded once. This screen stays on the
+        // back stack while the user changes their region in Profile, so
+        // without this they would come back to the offers for the country they
+        // just left. drop(1) because the first value is the state at
+        // subscription, not a change -- and a change that happened before this
+        // screen existed is already in the load above.
+        viewModelScope.launch {
+            profileEvents.changes.drop(1).collect { load() }
+        }
     }
 
     fun load() {
-        viewModelScope.launch {
+        loading?.cancel()
+        loading = viewModelScope.launch {
             _title.value = when (val result = repository.title(titleId)) {
                 is ApiResult.Success -> UiState.Content(result.value)
                 is ApiResult.Failure -> UiState.Error(result)

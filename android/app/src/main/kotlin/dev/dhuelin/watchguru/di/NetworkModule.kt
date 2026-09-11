@@ -14,6 +14,7 @@ import dev.dhuelin.watchguru.api.apis.WatchHistoryControllerApi
 import dev.dhuelin.watchguru.api.apis.WatchlistControllerApi
 import dev.dhuelin.watchguru.data.AuthInterceptor
 import dev.dhuelin.watchguru.data.EncryptedTokenStore
+import dev.dhuelin.watchguru.data.ProfileEvents
 import dev.dhuelin.watchguru.data.SessionAuthenticator
 import dev.dhuelin.watchguru.data.SessionEvents
 import dev.dhuelin.watchguru.data.SessionRepository
@@ -96,6 +97,14 @@ object NetworkModule {
     @Singleton
     fun sessionRepository(auth: AuthenticationApi): SessionRepository =
         SessionRepository(auth, Dispatchers.IO)
+
+    /**
+     * Shared, because the screen that changes the profile and the screens that
+     * have to reload afterwards never meet.
+     */
+    @Provides
+    @Singleton
+    fun profileEvents(): ProfileEvents = ProfileEvents()
 
     /**
      * The client every other call goes through.

@@ -12,6 +12,7 @@ import com.dhuelin.dev.watchguru.streaming.repository.StreamingServiceRepository
 import com.dhuelin.dev.watchguru.tracking.domain.AppUser;
 import com.dhuelin.dev.watchguru.tracking.domain.EpisodeWatch;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchEvent;
+import com.dhuelin.dev.watchguru.tracking.domain.WatchOrigin;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchStatus;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchlistItem;
 import com.dhuelin.dev.watchguru.tracking.repository.AppUserRepository;
@@ -118,6 +119,20 @@ public class WatchlistService {
      */
     @Transactional
     public WatchEvent logMovieWatched(Long userId, Long titleId, Instant watchedAt, Long serviceId) {
+        return logMovieWatched(userId, titleId, watchedAt, serviceId, WatchOrigin.MANUAL, null);
+    }
+
+    /**
+     * As above, but recording where the record came from.
+     *
+     * <p>The pair matters for imports and only for imports: {@code origin_ref}
+     * is covered by a unique index, so re-importing the same export writes
+     * nothing the second time however carefully or carelessly the caller
+     * checked first.
+     */
+    @Transactional
+    public WatchEvent logMovieWatched(Long userId, Long titleId, Instant watchedAt, Long serviceId,
+                                      WatchOrigin origin, String originRef) {
         AppUser user = requireUser(userId);
         Title title = titles.findById(titleId)
                 .orElseThrow(() -> NotFoundException.of("Title", titleId));
@@ -128,6 +143,8 @@ public class WatchlistService {
         event.setMinutesWatched(title.getRuntimeMinutes());
         event.setRewatch(seenBefore);
         event.setStreamingService(resolveService(serviceId));
+        event.setOrigin(origin);
+        event.setOriginRef(originRef);
         watchEvents.save(event);
 
         items.findByUserIdAndTitleId(userId, titleId).ifPresent(item -> {
@@ -144,6 +161,13 @@ public class WatchlistService {
      */
     @Transactional
     public WatchEvent logEpisodeWatched(Long userId, Long episodeId, Instant watchedAt, Long serviceId) {
+        return logEpisodeWatched(userId, episodeId, watchedAt, serviceId, WatchOrigin.MANUAL, null);
+    }
+
+    /** As above, recording where the record came from; see the movie variant. */
+    @Transactional
+    public WatchEvent logEpisodeWatched(Long userId, Long episodeId, Instant watchedAt, Long serviceId,
+                                        WatchOrigin origin, String originRef) {
         AppUser user = requireUser(userId);
         Episode episode = episodes.findById(episodeId)
                 .orElseThrow(() -> NotFoundException.of("Episode", episodeId));
@@ -161,6 +185,8 @@ public class WatchlistService {
         WatchEvent event = WatchEvent.forEpisode(user, episode, when);
         event.setRewatch(rewatch);
         event.setStreamingService(resolveService(serviceId));
+        event.setOrigin(origin);
+        event.setOriginRef(originRef);
         watchEvents.save(event);
 
         advanceSeriesStatus(userId, episode.getTitle());

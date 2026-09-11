@@ -6,11 +6,14 @@ import com.dhuelin.dev.watchguru.catalog.repository.TitleRepository;
 import com.dhuelin.dev.watchguru.catalog.service.CatalogService;
 import com.dhuelin.dev.watchguru.config.AuthProperties;
 import com.dhuelin.dev.watchguru.config.OpenApiConfig;
+import com.dhuelin.dev.watchguru.config.ImportProperties;
 import com.dhuelin.dev.watchguru.config.TmdbProperties;
 import com.dhuelin.dev.watchguru.security.CurrentUserService;
 import com.dhuelin.dev.watchguru.security.SecurityConfig;
 import com.dhuelin.dev.watchguru.streaming.repository.LinkedStreamingAccountRepository;
 import com.dhuelin.dev.watchguru.streaming.repository.StreamingServiceRepository;
+import com.dhuelin.dev.watchguru.imports.service.ImportService;
+import com.dhuelin.dev.watchguru.notifications.service.NotificationSettingsService;
 import com.dhuelin.dev.watchguru.streaming.service.AvailabilityService;
 import com.dhuelin.dev.watchguru.tracking.repository.AppUserRepository;
 import com.dhuelin.dev.watchguru.tracking.repository.WatchEventRepository;
@@ -67,6 +70,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
         WatchlistController.class,
         WatchHistoryController.class,
         StreamingController.class,
+        NotificationController.class,
+        ImportController.class,
         AuthController.class})
 @Import({SecurityConfig.class, TrustedIssuers.class, AccessTokenIssuer.class,
         OpenApiConfig.class, OpenApiSpecTest.SpecTestConfig.class})
@@ -106,6 +111,12 @@ class OpenApiSpecTest {
                     new TmdbProperties.CircuitBreaker(5, Duration.ofSeconds(30)),
                     new TmdbProperties.Search(Duration.ofSeconds(60), 1000, 2));
         }
+
+        /** Also a record. The value is irrelevant here; the document is not. */
+        @Bean
+        ImportProperties importProperties() {
+            return new ImportProperties(50);
+        }
     }
 
     @Autowired
@@ -126,6 +137,8 @@ class OpenApiSpecTest {
     @MockitoBean private StreamingServiceRepository streamingServiceRepository;
     @MockitoBean private LinkedStreamingAccountRepository linkedStreamingAccountRepository;
     @MockitoBean private AppUserRepository appUserRepository;
+    @MockitoBean private NotificationSettingsService notificationSettingsService;
+    @MockitoBean private ImportService importService;
 
     /**
      * Fetches the document, insisting the endpoint actually served one.

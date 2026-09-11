@@ -1,7 +1,10 @@
 package com.dhuelin.dev.watchguru.api.dto;
 
 import com.dhuelin.dev.watchguru.catalog.domain.TitleType;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.dhuelin.dev.watchguru.notifications.domain.DevicePlatform;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchStatus;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -11,6 +14,8 @@ import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
 
 /** Request bodies for the write endpoints. */
 public final class Requests {
@@ -98,6 +103,92 @@ public final class Requests {
             @NotNull Long episodeId,
             Instant watchedAt,
             Long streamingServiceId
+    ) {
+    }
+
+    /**
+     * Registers this install for push notifications.
+     *
+     * <p>Sent on every launch, not only the first: APNs and FCM both reissue
+     * tokens, and the app cannot tell when they have.
+     *
+     * @param timeZone the device's IANA zone, e.g. {@code Europe/Zurich}.
+     *                 Optional, and the only route by which the server learns
+     *                 it: an account starts on UTC, nothing else sets it, and
+     *                 without it "do not notify anybody at 3am" means 3am in
+     *                 Greenwich for every user on earth
+     */
+    public record RegisterDevice(
+            @NotBlank @Size(max = 512) String token,
+            @NotNull DevicePlatform platform,
+            @Size(max = 64) String timeZone
+    ) {
+    }
+
+    /** The global notification switch. */
+    public record UpdateNotificationSettings(
+            @NotNull Boolean enabled
+    ) {
+    }
+
+    /** Whether one series may produce new-episode notifications. */
+    public record UpdateSeriesNotification(
+            @NotNull Boolean newEpisodes
+    ) {
+    }
+
+    /**
+     * A file to be read, before anything is written.
+     *
+     * <p>The contents rather than a multipart upload: these files are small
+     * text exports, both generated clients handle JSON without extra work, and
+     * a preview that is not stored server-side has nothing to stream.
+     */
+    public record PreviewImport(
+            @NotBlank @Size(max = 5_000_000) String content
+    ) {
+    }
+
+    /**
+     * The rows a user agreed to after seeing the preview.
+     *
+     * <p>Sent back rather than held server-side between the two calls: a parked
+     * import would be one more thing to expire and clean up, and the file
+     * belongs to the user anyway.
+     */
+    public record CommitImport(
+            // @Valid on the element, not only the list: without it the
+            // constraints below are never checked, and a row with no title id
+            // reaches the writer as a 500 rather than a 400.
+            @NotNull @Size(max = 10_000) List<@Valid ImportSelection> rows
+    ) {
+    }
+
+    /**
+     * One accepted row.
+     *
+     * @param sourceRef  the reference from the preview; it is what makes a
+     *                   repeated import write nothing the second time
+     * @param titleId    the title to record against -- the preview's match, or
+     *                   the one the user picked for an ambiguous row
+     * @param episodeId  the episode, for an episode row
+     * @param titleText  what the file called it, for the failure summary
+     * @param watchedAt  the date from the file; today if absent
+     * @param rating     the rating from the file, 0-10. Sent back rather than
+     *                   remembered server-side for the same reason as the rest
+     *                   of the row -- and without it, an IMDb or Letterboxd
+     *                   import would drop every rating it had just shown the
+     *                   user in the preview
+     */
+    public record ImportSelection(
+            @NotBlank @Size(max = 255) String sourceRef,
+            @NotNull Long titleId,
+            Long episodeId,
+            @Size(max = 512) String titleText,
+            // Date or date-time; see LenientLocalDateDeserializer for why the
+            // server has to take both from its own generated clients.
+            @JsonDeserialize(using = LenientLocalDateDeserializer.class) LocalDate watchedAt,
+            @DecimalMin("0.0") @DecimalMax("10.0") BigDecimal rating
     ) {
     }
 }
