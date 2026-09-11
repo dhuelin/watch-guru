@@ -223,8 +223,16 @@ actor WatchGuruClient {
         }
     }
 
-    func stats(months: Int = 12) async throws(APIFailure) -> WatchStats {
-        try await run { try await WatchHistoryControllerAPI.getStats(months: months, apiConfiguration: $0) }
+    /// - Parameter period: which slice of the history every figure is about.
+    ///   Streaks are always whole-history, whatever this says.
+    func stats(
+        months: Int = 12,
+        period: WatchHistoryControllerAPI.Period_getStats = .allTime
+    ) async throws(APIFailure) -> WatchStats {
+        try await run {
+            try await WatchHistoryControllerAPI.getStats(
+                months: months, period: period, apiConfiguration: $0)
+        }
     }
 
     // MARK: - Failure mapping

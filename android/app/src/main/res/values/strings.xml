@@ -71,6 +71,25 @@
     <string name="where_to_watch_updated">Checked %1$s</string>
     <string name="justwatch_attribution">Streaming availability data provided by JustWatch.</string>
 
+    <!-- Stats. The streak rule is stated in the UI rather than left to be
+         inferred, because an arbitrary-feeling streak is worse than none. -->
+    <string name="title_stats">Statistics</string>
+    <string name="action_view_stats">Statistics</string>
+    <string name="empty_stats">Nothing watched yet. Mark something watched and this fills in.</string>
+    <string name="empty_stats_period">Nothing watched in this period.</string>
+    <string name="stats_period_month">This month</string>
+    <string name="stats_period_year">This year</string>
+    <string name="stats_period_all">All time</string>
+    <string name="stats_hero_detail">%1$d titles · %2$d films · %3$d episodes</string>
+    <string name="stats_current_streak">Day streak</string>
+    <string name="stats_longest_streak">Longest streak</string>
+    <string name="stats_streak_rule">A streak counts consecutive days with at least one viewing. Yesterday still counts, so it does not break before the day is out.</string>
+    <string name="stats_by_month">By month</string>
+    <string name="stats_by_genre">By genre</string>
+    <string name="stats_by_service">By service</string>
+    <string name="stats_top_titles">Most watched</string>
+    <string name="stats_hours">%1$d h</string>
+
     <string name="tmdb_attribution">This product uses the TMDB API but is not endorsed or certified by TMDB.</string>
 
     <!-- Shown when changes made offline have not reached the server yet. Not

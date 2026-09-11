@@ -126,6 +126,41 @@ rather than the newest.
 Availability data comes from JustWatch by way of TMDB, and their attribution
 line goes with it wherever it is shown.
 
+## Statistics
+
+The stats screen is the one place this app draws anything, and the rules it
+follows are narrower than "make a chart".
+
+**The headline is a number, not a plot.** Total time watched is one figure, and
+one figure is a hero number — hours past a day's worth, because nobody can feel
+"12,480 minutes". Streaks are stat tiles for the same reason. A chart of one
+value is a chart pretending to be one.
+
+**One hue for every bar.** The monthly chart colours all its bars the same.
+Colouring them darker-where-bigger double-encodes what the bar length already
+says and spends the only free channel on information the reader already has.
+Months are a sequence, not categories that need telling apart.
+
+**No number above every bar.** A value beside every mark is a wall of digits
+that goes unread. The busiest month is named above the chart, the axis carries
+the rest, and the whole chart is a single accessibility element whose label
+reads every month and value in order — on a phone that sentence *is* the table
+view a chart owes its readers.
+
+**Breakdowns are lists, not palettes.** Genre, service and most-watched are
+ranked lists with a proportion bar. Giving eight genres eight colours would
+spend the categorical palette saying what the order already says, and eight
+hues is exactly where colourblind-safe separation starts to fail.
+
+**One filter row, above everything it scopes.** The period selector sits at the
+top and every figure below moves with it. A period that scoped the headline but
+not the breakdowns would produce a screen whose parts contradict each other —
+"4 hours this month" above a genre list of the last decade.
+
+**Nothing watched is an answer.** A period with no viewing says so in a
+sentence and still shows the streak tiles. A screen full of zeroes reads as
+broken.
+
 ## Imagery
 
 | Asset | Aspect | Notes |

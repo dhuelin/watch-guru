@@ -53,6 +53,9 @@ struct ProfileView: View {
                         NavigationLink("Viewing history") {
                             HistoryView()
                         }
+                        NavigationLink("Statistics") {
+                            StatsView()
+                        }
                     }
                     Section {
                         Button("Sign out") { session.signIn.signOut() }

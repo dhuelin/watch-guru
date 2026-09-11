@@ -69,7 +69,10 @@ class WatchGuruRepositoryTest {
         },
         history = object : WatchHistoryControllerApi {
             override suspend fun getHistory(page: Int?, size: Int?) = fail()
-            override suspend fun getStats(months: Int?) = fail()
+            override suspend fun getStats(
+                months: Int?,
+                period: WatchHistoryControllerApi.PeriodGetStats?,
+            ) = fail()
             override suspend fun logEpisodeWatched(
                 logEpisodeWatched: dev.dhuelin.watchguru.api.models.LogEpisodeWatched,
             ) = fail()

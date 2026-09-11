@@ -43,6 +43,17 @@ interface WatchHistoryControllerApi {
     @GET("api/v1/me/history")
     suspend fun getHistory(@Query("page") page: kotlin.Int? = 0, @Query("size") size: kotlin.Int? = 50): Response<kotlin.collections.List<WatchEventResponse>>
 
+
+    /**
+    * enum for parameter period
+    */
+    @Serializable
+    enum class PeriodGetStats(val value: kotlin.String) {
+        @SerialName(value = "MONTH") MONTH("MONTH"),
+        @SerialName(value = "YEAR") YEAR("YEAR"),
+        @SerialName(value = "ALL_TIME") ALL_TIME("ALL_TIME")
+    }
+
     /**
      * GET api/v1/me/stats
      * 
@@ -51,10 +62,11 @@ interface WatchHistoryControllerApi {
      *  - 200: OK
      *
      * @param months  (optional, default to 12)
+     * @param period  (optional, default to Period.ALL_TIME)
      * @return [WatchStats]
      */
     @GET("api/v1/me/stats")
-    suspend fun getStats(@Query("months") months: kotlin.Int? = 12): Response<WatchStats>
+    suspend fun getStats(@Query("months") months: kotlin.Int? = 12, @Query("period") period: PeriodGetStats? = PeriodGetStats.ALL_TIME): Response<WatchStats>
 
     /**
      * GET api/v1/me/up-next

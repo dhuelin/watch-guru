@@ -6,6 +6,7 @@ import com.dhuelin.dev.watchguru.api.dto.Requests;
 import com.dhuelin.dev.watchguru.api.dto.Responses;
 import com.dhuelin.dev.watchguru.tracking.repository.WatchEventRepository;
 import com.dhuelin.dev.watchguru.tracking.service.WatchStats;
+import com.dhuelin.dev.watchguru.tracking.service.StatsPeriod;
 import com.dhuelin.dev.watchguru.tracking.service.StatsService;
 import com.dhuelin.dev.watchguru.tracking.service.UpNextService;
 import com.dhuelin.dev.watchguru.tracking.service.WatchlistService;
@@ -149,7 +150,8 @@ public class WatchHistoryController {
      */
     @GetMapping("/stats")
     @Operation(operationId = "getStats")
-    public WatchStats stats(@RequestParam(defaultValue = "12") int months) {
-        return stats.forUser(currentUser.require().getId(), months);
+    public WatchStats stats(@RequestParam(defaultValue = "12") int months,
+                            @RequestParam(defaultValue = "ALL_TIME") StatsPeriod period) {
+        return stats.forUser(currentUser.require().getId(), months, period);
     }
 }
