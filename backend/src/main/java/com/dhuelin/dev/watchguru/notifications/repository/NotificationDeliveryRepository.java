@@ -28,10 +28,14 @@ public interface NotificationDeliveryRepository extends JpaRepository<Notificati
      * <p>Distinct batches, not rows. A three-episode announcement is one
      * notification to the person receiving it, and counting its rows would
      * spend three days of allowance on one buzz.
+     *
+     * <p>Inclusive of [since], which is local midnight: a notification sent at
+     * exactly midnight belongs to the day that is starting, and excluding it
+     * would let that day run one over the cap.
      */
     @Query("""
             select count(distinct d.batchId) from NotificationDelivery d
-            where d.user.id = :userId and d.createdAt > :since
+            where d.user.id = :userId and d.createdAt >= :since
             """)
     long countNotificationsSince(@Param("userId") Long userId, @Param("since") Instant since);
 

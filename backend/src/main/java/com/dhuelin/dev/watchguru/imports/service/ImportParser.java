@@ -106,20 +106,28 @@ public final class ImportParser {
 
     static ImportSource detect(List<String> header) {
         List<String> lower = header.stream().map(h -> h.trim().toLowerCase(Locale.ROOT)).toList();
+
         if (lower.contains("letterboxd uri")) {
             return ImportSource.LETTERBOXD;
         }
         if (lower.contains("const") && lower.contains("title type")) {
             return ImportSource.IMDB;
         }
-        if (lower.contains("watched_at") || (lower.contains("title") && lower.contains("imdb_id"))) {
+        // This app's own columns. Any of them is enough: the documented format
+        // says only "title" is required, and demanding a second column means a
+        // perfectly valid one-column export reads as an unknown file.
+        if (lower.contains("watched_at") || lower.contains("imdb_id")
+                || lower.contains("season") || lower.contains("episode")) {
             return ImportSource.WATCH_GURU;
         }
-        // Last, and deliberately the narrowest test: Netflix's export is two
-        // columns with the most generic names imaginable, so anything checked
-        // after this would never be reached.
-        if (lower.size() == 2 && lower.contains("title") && lower.contains("date")) {
+        // Netflix: a title and a date, with whatever else they have added.
+        // Their export usually carries a "Profile Name" column too, so an
+        // exact two-column test reads the real file as unrecognised.
+        if (lower.contains("title") && lower.contains("date")) {
             return ImportSource.NETFLIX;
+        }
+        if (lower.contains("title")) {
+            return ImportSource.WATCH_GURU;
         }
         return ImportSource.UNKNOWN;
     }
@@ -147,6 +155,16 @@ public final class ImportParser {
     private static ImportRow imdb(Map<String, Integer> columns, List<String> row) {
         String constId = blankToNull(value(columns, row, "const"));
         String title = required(columns, row, "title");
+
+        // An IMDb episode row names the episode and nothing else -- no series,
+        // no numbers. Left with an unknown type it would match a film or a
+        // series of the same name and import the wrong thing entirely, so it
+        // is reported rather than guessed at.
+        String titleType = value(columns, row, "title type");
+        if (titleType != null && titleType.toLowerCase(Locale.ROOT).contains("episode")) {
+            throw new IllegalArgumentException(
+                    "\"" + title + "\" is an IMDb episode row, which names the episode but not its series");
+        }
         // "Date Rated" is when they rated it, not when they watched it. It is
         // the closest thing an IMDb export has, and the preview says so rather
         // than presenting it as a watch date the user gave us.
@@ -322,6 +340,14 @@ public final class ImportParser {
         return stars == null ? null : stars.multiply(BigDecimal.valueOf(2));
     }
 
+    /**
+     * A date, or nothing, or a complaint.
+     *
+     * <p>An unreadable date is not a missing one. Collapsing "2024-99-99" to
+     * null would make the row undated, and an undated row is imported as
+     * watched today -- so a typo in a file silently becomes a viewing that
+     * never happened. The row is reported instead.
+     */
     private static LocalDate isoDate(String value) {
         String trimmed = blankToNull(value);
         if (trimmed == null) {
@@ -330,7 +356,7 @@ public final class ImportParser {
         try {
             return LocalDate.parse(trimmed.length() > 10 ? trimmed.substring(0, 10) : trimmed);
         } catch (RuntimeException e) {
-            return null;
+            throw new IllegalArgumentException("unreadable date \"" + trimmed + "\"");
         }
     }
 
@@ -341,7 +367,9 @@ public final class ImportParser {
         }
         try {
             return LocalDate.parse(trimmed, NETFLIX_DATE);
-        } catch (RuntimeException e) {
+        } catch (RuntimeException notTheirFormat) {
+            // Some exports come back ISO; anything else is reported, not
+            // quietly turned into "watched today".
             return isoDate(trimmed);
         }
     }

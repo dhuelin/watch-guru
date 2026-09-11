@@ -98,6 +98,14 @@ public class NewEpisodeNotifier {
         // daily cap and both fill it. The lock is held for the whole scan,
         // sending included: the scan is hourly and per user, so the only
         // thing it ever waits for is another run of itself.
+        //
+        // Hibernate renders PESSIMISTIC_WRITE on Postgres as FOR NO KEY
+        // UPDATE, which is what makes this safe to hold across the nested
+        // claim transaction: that transaction inserts rows referencing this
+        // user, and the foreign-key check takes a KEY SHARE lock on this very
+        // row. FOR UPDATE would block it, and the outer transaction would then
+        // be waiting on a transaction that is waiting on it. FOR NO KEY UPDATE
+        // does not conflict with KEY SHARE, so it does not.
         AppUser user = users.findByIdForUpdate(userId).orElse(null);
         if (user == null || !user.isNotificationsEnabled()) {
             return 0;
@@ -143,7 +151,18 @@ public class NewEpisodeNotifier {
                 continue;
             }
 
-            if (deliver(registered, announcement)) {
+            boolean delivered;
+            try {
+                delivered = deliver(registered, announcement);
+            } catch (RuntimeException e) {
+                // A real APNs or FCM client will throw as readily as it
+                // returns a failure, and an exception here would leave the
+                // claim committed and the episode announced forever.
+                log.warn("Push failed for user {}: {}", userId, e.toString());
+                delivered = false;
+            }
+
+            if (delivered) {
                 sent++;
             } else {
                 // Nothing accepted it. Give the claim back, or this episode is

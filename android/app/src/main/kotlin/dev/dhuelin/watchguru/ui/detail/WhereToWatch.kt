@@ -32,6 +32,7 @@ import coil.compose.AsyncImage
 import dev.dhuelin.watchguru.R
 import dev.dhuelin.watchguru.api.models.AvailabilityResponse
 import dev.dhuelin.watchguru.data.WatchOffers
+import java.time.OffsetDateTime
 
 /**
  * Where the user can actually watch this, in their own country.
@@ -40,8 +41,9 @@ import dev.dhuelin.watchguru.data.WatchOffers
  * confirmed* says so in as many words, because "not on anything here" is
  * useful and true; and no offers that nobody could confirm shows nothing at
  * all, because an empty list from an unreachable provider is not evidence of
- * anything. [checked] is what separates the last two, and without it this
- * section would have to guess.
+ * anything. [checkedAt] is what separates the last two -- and it is a time
+ * rather than a flag because a confirmed-empty answer has no offer rows to
+ * carry one, and the section says how old its answer is.
  *
  * The country is the one on the user's profile -- the backend resolves it from
  * the token -- which the caption says, because offers for the wrong country are
@@ -51,10 +53,10 @@ import dev.dhuelin.watchguru.data.WatchOffers
 @Composable
 fun WhereToWatch(
     offers: List<AvailabilityResponse>,
-    checked: Boolean,
+    checkedAt: OffsetDateTime?,
     modifier: Modifier = Modifier,
 ) {
-    if (offers.isEmpty() && !checked) return
+    if (offers.isEmpty() && checkedAt == null) return
 
     if (offers.isEmpty()) {
         Column(modifier = modifier) {
@@ -74,6 +76,7 @@ fun WhereToWatch(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp),
             )
+            CheckedAt(checkedAt)
         }
         return
     }
@@ -118,23 +121,7 @@ fun WhereToWatch(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp),
         )
-        // Availability is cached for a day. Without saying when it was
-        // checked, a service that dropped the title this morning still looks
-        // like a live answer.
-        WatchOffers.checkedAt(offers)?.let { checkedAt ->
-            Text(
-                text = stringResource(
-                    R.string.where_to_watch_updated,
-                    DateUtils.getRelativeTimeSpanString(
-                        checkedAt.toInstant().toEpochMilli(),
-                        System.currentTimeMillis(),
-                        DateUtils.MINUTE_IN_MILLIS,
-                    ),
-                ),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+        CheckedAt(checkedAt)
         // Required alongside TMDB's own attribution: the availability data is
         // JustWatch's, and TMDB's terms say so.
         Text(
@@ -143,6 +130,29 @@ fun WhereToWatch(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
+}
+
+/**
+ * When this answer was last confirmed with the provider.
+ *
+ * Availability is cached for a day, so without this a service that dropped the
+ * title this morning still reads as a live answer.
+ */
+@Composable
+private fun CheckedAt(checkedAt: OffsetDateTime?) {
+    if (checkedAt == null) return
+    Text(
+        text = stringResource(
+            R.string.where_to_watch_updated,
+            DateUtils.getRelativeTimeSpanString(
+                checkedAt.toInstant().toEpochMilli(),
+                System.currentTimeMillis(),
+                DateUtils.MINUTE_IN_MILLIS,
+            ),
+        ),
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 /**

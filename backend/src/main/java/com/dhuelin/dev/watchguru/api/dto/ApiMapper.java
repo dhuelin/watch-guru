@@ -17,6 +17,7 @@ import com.dhuelin.dev.watchguru.tracking.domain.WatchEvent;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchlistItem;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.List;
 
 /** Entity-to-response conversion, kept out of the controllers. */
@@ -47,16 +48,17 @@ public class ApiMapper {
     }
 
     public Responses.TitleResponse toTitle(Title title, AvailabilityService.Offers availability) {
-        return toTitle(title, availability.offers(), availability.checked());
+        return toTitle(title, availability.offers(), availability.checkedAt());
     }
 
     /**
-     * @param checked whether the offers were confirmed against the provider;
-     *                see {@code TitleResponse.availabilityChecked}. Callers
-     *                with no availability at all pass false, because "we did
-     *                not look" is exactly what they mean
+     * @param checkedAt when the offers were confirmed against the provider, or
+     *                  null if never; see
+     *                  {@code TitleResponse.availabilityCheckedAt}. Callers
+     *                  with no availability at all pass null, because "we did
+     *                  not look" is exactly what they mean
      */
-    public Responses.TitleResponse toTitle(Title title, List<TitleAvailability> availability, boolean checked) {
+    public Responses.TitleResponse toTitle(Title title, List<TitleAvailability> availability, Instant checkedAt) {
         List<Responses.GenreResponse> genres = title.getGenres().stream()
                 .map(g -> new Responses.GenreResponse(g.getId(), g.getName()))
                 .toList();
@@ -95,7 +97,15 @@ public class ApiMapper {
                 title.getImdbId() == null ? null : IMDB_TITLE_URL + title.getImdbId(),
                 genres,
                 offers,
-                checked);
+                checkedAt);
+    }
+
+    private static Instant oldestFetch(List<TitleAvailability> availability) {
+        return availability == null ? null : availability.stream()
+                .map(TitleAvailability::getFetchedAt)
+                .filter(java.util.Objects::nonNull)
+                .min(Instant::compareTo)
+                .orElse(null);
     }
 
     public Responses.WatchlistItemResponse toWatchlistItem(WatchlistItem item, List<TitleAvailability> availability) {
@@ -119,7 +129,10 @@ public class ApiMapper {
                 item.getAddedAt(),
                 item.getStartedAt(),
                 item.getCompletedAt(),
-                toTitle(item.getTitle(), availability, availability != null && !availability.isEmpty()),
+                // A watchlist row carries whatever offers were passed in and
+                // no record of when they were fetched, so the oldest of them
+                // is the honest answer, and no offers means no claim at all.
+                toTitle(item.getTitle(), availability, oldestFetch(availability)),
                 progress);
     }
 

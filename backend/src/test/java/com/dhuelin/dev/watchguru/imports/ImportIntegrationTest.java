@@ -303,6 +303,60 @@ class ImportIntegrationTest {
     }
 
     @Test
+    @DisplayName("an episode row whose episode was never found leaves the library alone")
+    void unresolvedEpisodeRowWritesNothing() {
+        // It used to create the library entry and apply the rating on its way
+        // to reporting the row as skipped, so a row the summary said was not
+        // imported had still changed the library.
+        MatchedRow unresolved = MatchedRow.matched(
+                new com.dhuelin.dev.watchguru.imports.domain.ImportRow(
+                        "unresolved", seriesName, null, null, null, 5, null, "An Episode", null,
+                        new java.math.BigDecimal("9")),
+                series.getId(), seriesName, null, null, null);
+
+        ImportService.Result result = imports.commit(user, List.of(unresolved));
+
+        assertThat(result.imported()).isZero();
+        assertThat(result.skipped()).isEqualTo(1);
+        assertThat(items.findByUserIdAndTitleId(user.getId(), series.getId())).isEmpty();
+        assertThat(eventCount()).isZero();
+    }
+
+    @Test
+    @DisplayName("a row with no date is watched today, where the user is, at the same hour as the rest")
+    void undatedRowsUseTheUsersToday() {
+        // Left to WatchlistService the fallback is the current instant, which
+        // is a different day across a date boundary and a different time of
+        // day from every dated row in the same file.
+        user.setTimeZone("Pacific/Auckland");
+        user = users.save(user);
+
+        String csv = "title,year,type\n" + filmName + ",1996,movie\n";
+        imports.commit(user, accepted(imports.preview(user, csv, 0)));
+
+        var events = watchEvents.findByUserIdOrderByWatchedAtDesc(
+                user.getId(), org.springframework.data.domain.PageRequest.of(0, 10));
+        assertThat(events.getContent()).singleElement().satisfies(event -> {
+            var local = event.getWatchedAt().atZone(java.time.ZoneId.of("Pacific/Auckland"));
+            assertThat(local.toLocalDate())
+                    .isEqualTo(java.time.LocalDate.now(java.time.ZoneId.of("Pacific/Auckland")));
+            assertThat(local.getHour()).isEqualTo(12);
+        });
+    }
+
+    @Test
+    @DisplayName("a local title whose year disagrees is not the title in the file")
+    void yearMustAgreeEvenForASoleCandidate() {
+        // The catalogue holds one Fargo, from 1996. A row for the 2019 one is
+        // a different film, and matching it to the only candidate on the shelf
+        // is how a remake ends up in somebody's history.
+        String csv = "title,year,type,watched_at\n" + filmName + ",2019,movie,2024-01-15\n";
+
+        assertThat(imports.preview(user, csv, 0).rows()).singleElement()
+                .satisfies(row -> assertThat(row.status()).isEqualTo(MatchStatus.UNMATCHED));
+    }
+
+    @Test
     @DisplayName("only the rows the user sent are written, whatever the preview matched")
     void commitWritesOnlyWhatWasAccepted() {
         String csv = """

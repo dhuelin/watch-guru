@@ -34,11 +34,12 @@ class WatchOffersTest {
                 offer(2, "Amazon", OfferType.RENT),
                 offer(3, "Netflix", OfferType.FLATRATE),
                 offer(4, "Pluto TV", OfferType.ADS),
+                offer(5, "Tubi", OfferType.FREE),
             ),
         )
 
         assertEquals(
-            listOf(OfferType.FLATRATE, OfferType.ADS, OfferType.RENT, OfferType.BUY),
+            listOf(OfferType.FREE, OfferType.ADS, OfferType.FLATRATE, OfferType.RENT, OfferType.BUY),
             groups.map { it.offerType },
         )
     }

@@ -7,7 +7,9 @@ import WatchGuruAPI
 /// confirmed* says so in as many words, because "not on anything here" is
 /// useful and true; and no offers that nobody could confirm shows nothing at
 /// all, because an empty list from an unreachable provider is not evidence of
-/// anything. `checked` is what separates the last two.
+/// anything. `checkedAt` is what separates the last two — and it is a time
+/// rather than a flag because a confirmed-empty answer has no offer rows to
+/// carry one, and the section says how old its answer is.
 ///
 /// The country is the one on the user's profile — the backend resolves it from
 /// the token — which the caption says, because offers for the wrong country are
@@ -15,13 +17,13 @@ import WatchGuruAPI
 struct WhereToWatchView: View {
 
     let offers: [AvailabilityResponse]
-    let checked: Bool
+    let checkedAt: Date?
 
     private var groups: [WatchOffers.Group] { WatchOffers.group(offers) }
 
     var body: some View {
         if offers.isEmpty {
-            if checked {
+            if let checkedAt {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Where to watch").font(.headline)
                     Text("Not on any streaming service in your region.")
@@ -30,6 +32,7 @@ struct WhereToWatchView: View {
                     Text("Offers for the country set in your profile.")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
+                    CheckedAtLabel(checkedAt: checkedAt)
                 }
             }
         } else {
@@ -62,20 +65,29 @@ struct WhereToWatchView: View {
                 Text("Offers for the country set in your profile.")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
-                // Availability is cached for a day. Without saying when it was
-                // checked, a service that dropped the title this morning still
-                // looks like a live answer.
-                if let checkedAt = WatchOffers.checkedAt(offers) {
-                    Text("Checked \(checkedAt.formatted(.relative(presentation: .named)))")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                }
+                CheckedAtLabel(checkedAt: checkedAt)
                 // Required alongside TMDB's own attribution: the availability
                 // data is JustWatch's, and TMDB's terms say so.
                 Text("Streaming availability data provided by JustWatch.")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
+        }
+    }
+}
+
+/// When this answer was last confirmed with the provider.
+///
+/// Availability is cached for a day, so without this a service that dropped
+/// the title this morning still reads as a live answer.
+private struct CheckedAtLabel: View {
+    let checkedAt: Date?
+
+    var body: some View {
+        if let checkedAt {
+            Text("Checked \(checkedAt.formatted(.relative(presentation: .named)))")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
         }
     }
 }

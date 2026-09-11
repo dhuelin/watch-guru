@@ -29,10 +29,11 @@ struct WatchOffersTests {
             offer(1, "Apple TV", .buy),
             offer(2, "Amazon", .rent),
             offer(3, "Netflix", .flatrate),
-            offer(4, "Pluto TV", .ads)
+            offer(4, "Pluto TV", .ads),
+            offer(5, "Tubi", .free)
         ])
 
-        #expect(groups.map(\.offerType) == [.flatrate, .ads, .rent, .buy])
+        #expect(groups.map(\.offerType) == [.free, .ads, .flatrate, .rent, .buy])
     }
 
     @Test("a group with nothing in it is not shown at all")

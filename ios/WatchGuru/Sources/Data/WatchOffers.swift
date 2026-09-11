@@ -10,10 +10,15 @@ enum WatchOffers {
 
     /// Ways of watching, in the order they are offered to the user.
     ///
-    /// Free before paid, subscription before transactional: the cheapest way
-    /// to watch something tonight goes first, and rent before buy for the same
-    /// reason. This is not the order the API returns.
-    static let order: [AvailabilityResponse.OfferType] = [.flatrate, .free, .ads, .rent, .buy]
+    /// Cheapest first, which is what the app can honestly rank by: free, then
+    /// free with ads, then a subscription, then rent, then buy. It does not
+    /// know which services the user already pays for — when it does, a
+    /// subscription they hold belongs above a free service they have never
+    /// heard of, and this order should change with it.
+    ///
+    /// Free was previously listed after subscriptions, which contradicted this
+    /// comment; the comment was the one making the promise.
+    static let order: [AvailabilityResponse.OfferType] = [.free, .ads, .flatrate, .rent, .buy]
 
     struct Group: Identifiable, Sendable {
         let offerType: AvailabilityResponse.OfferType

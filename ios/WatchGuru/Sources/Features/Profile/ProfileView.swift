@@ -13,6 +13,7 @@ struct ProfileView: View {
     @State private var state: ViewState<UserResponse> = .loading
     @State private var confirmingDelete = false
     @State private var regionFailed = false
+    @State private var isSavingRegion = false
 
     var body: some View {
         Group {
@@ -36,6 +37,11 @@ struct ProfileView: View {
                         } label: {
                             LabeledContent("Region", value: Regions.displayName(user.region))
                         }
+                        // Closed while a change is in flight. Two picks in a
+                        // row would be two PATCHes that can answer out of
+                        // order, leaving the server, this screen and the
+                        // reload counter disagreeing about the country.
+                        .disabled(isSavingRegion)
                         LabeledContent("Language", value: user.language)
                         LabeledContent("Time zone", value: user.timeZone)
                     } header: {
@@ -114,8 +120,12 @@ struct ProfileView: View {
     /// symptom, offers for the wrong country, is exactly what they were trying
     /// to fix. What lands in the state is the server's own answer.
     private func setRegion(_ code: String) async {
-        guard let user = state.value,
+        guard !isSavingRegion,
+              let user = state.value,
               user.region.caseInsensitiveCompare(code) != .orderedSame else { return }
+
+        isSavingRegion = true
+        defer { isSavingRegion = false }
 
         state = .refreshing(user)
         do {

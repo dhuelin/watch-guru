@@ -16,7 +16,9 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 /**
@@ -47,15 +49,18 @@ public class ImportWriter {
     private final WatchlistItemRepository items;
     private final TitleRepository titles;
     private final EpisodeRepository episodes;
+    private final Clock clock;
 
     public ImportWriter(WatchlistService watchlist,
                         WatchlistItemRepository items,
                         TitleRepository titles,
-                        EpisodeRepository episodes) {
+                        EpisodeRepository episodes,
+                        Clock clock) {
         this.watchlist = watchlist;
         this.items = items;
         this.titles = titles;
         this.episodes = episodes;
+        this.clock = clock;
     }
 
     /**
@@ -68,6 +73,14 @@ public class ImportWriter {
     public boolean write(AppUser user, MatchedRow row) {
         Title title = titles.findById(row.titleId()).orElse(null);
         if (title == null) {
+            return false;
+        }
+
+        // Checked before anything is written. An episode row whose episode
+        // was never resolved used to create the library entry and apply its
+        // rating on the way to returning false, so a row the import reported
+        // as skipped had still changed the library.
+        if (row.episodeId() == null && row.row().isEpisode()) {
             return false;
         }
 
@@ -96,20 +109,20 @@ public class ImportWriter {
 
         applyRating(item, row.row().rating());
 
-        Instant watchedAt = row.row().watchedAt() == null
-                ? null
-                : row.row().watchedAt().atTime(IMPORTED_TIME_OF_DAY).atZone(user.zone()).toInstant();
+        // A row with no date is "watched today" -- today where the user is,
+        // at the same midday every other imported row gets. Passing null would
+        // hand the decision to WatchlistService, whose fallback is the current
+        // instant, which is a different day across a date boundary and a
+        // different time of day from every dated row in the same file.
+        LocalDate watchedOn = row.row().watchedAt() == null
+                ? LocalDate.now(clock.withZone(user.zone()))
+                : row.row().watchedAt();
+        Instant watchedAt = watchedOn.atTime(IMPORTED_TIME_OF_DAY).atZone(user.zone()).toInstant();
 
         if (episode != null) {
             watchlist.logEpisodeWatched(user.getId(), episode.getId(), watchedAt, null,
                     WatchOrigin.FILE_IMPORT, row.row().sourceRef());
             return true;
-        }
-
-        if (row.row().isEpisode()) {
-            // An episode row whose episode was never resolved. Recording it
-            // against the series would claim something the file did not say.
-            return false;
         }
 
         watchlist.logMovieWatched(user.getId(), title.getId(), watchedAt, null,

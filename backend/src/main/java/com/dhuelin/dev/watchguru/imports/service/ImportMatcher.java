@@ -17,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -41,6 +43,15 @@ public class ImportMatcher {
     private final EpisodeRepository episodes;
     private final CatalogService catalog;
 
+    /**
+     * Catalogue searches already made while matching the file in hand.
+     *
+     * <p>Held for the duration of one {@link #match} call and cleared at its
+     * start: within a file the catalogue does not move, and across files it
+     * might.
+     */
+    private final Map<String, List<Title>> searchCache = new HashMap<>();
+
     public ImportMatcher(TitleRepository titles, EpisodeRepository episodes, CatalogService catalog) {
         this.titles = titles;
         this.episodes = episodes;
@@ -63,6 +74,10 @@ public class ImportMatcher {
     public List<MatchedRow> match(List<ImportRow> rows, int providerLookups) {
         List<MatchedRow> matched = new ArrayList<>(rows.size());
         int budget = providerLookups;
+        // A Netflix history is one row per episode, so the same series name
+        // arrives hundreds of times. Without this, a file of ten thousand rows
+        // is ten thousand catalogue searches for a few hundred distinct names.
+        searchCache.clear();
 
         for (ImportRow row : rows) {
             Title local = byImdbId(row).orElse(null);
@@ -92,10 +107,17 @@ public class ImportMatcher {
                 }
                 budget--;
                 ProviderMatch provider = fromProvider(row);
+                if (provider.unavailable()) {
+                    matched.add(MatchedRow.unmatched(row,
+                            "The catalogue provider could not be reached for \"" + row.titleText()
+                                    + "\". Nothing is wrong with this row -- try the file again later."));
+                    continue;
+                }
                 if (provider.ambiguous()) {
                     matched.add(MatchedRow.unmatched(row,
-                            "Several titles are called \"" + row.titleText() + "\". Add it to your "
-                                    + "library once, and this file will match it next time."));
+                            "Several titles are called \"" + row.titleText() + "\". Candidates are "
+                                    + "offered for titles already in your catalogue; for one that is "
+                                    + "not, add it once and this file will match it next time."));
                     continue;
                 }
                 local = provider.title();
@@ -158,23 +180,27 @@ public class ImportMatcher {
     /** Exact name matches in the local catalogue, narrowed by type and year. */
 
     private List<Title> exactLocalMatches(ImportRow row) {
-        List<Title> candidates = titles.searchCached(row.titleText(), PageRequest.of(0, 25)).getContent().stream()
+        List<Title> candidates = searchCache
+                .computeIfAbsent(row.titleText().trim().toLowerCase(Locale.ROOT),
+                        term -> titles.searchCached(term, PageRequest.of(0, 25)).getContent())
+                .stream()
                 .filter(t -> equalsIgnoreCase(t.getPrimaryTitle(), row.titleText())
                         || equalsIgnoreCase(t.getOriginalTitle(), row.titleText()))
                 .filter(t -> row.titleType() == null || t.getTitleType() == row.titleType())
                 .toList();
 
-        if (row.year() == null || candidates.size() <= 1) {
+        if (row.year() == null) {
             return candidates;
         }
-        // The year is what separates a remake from what it remade, so it only
-        // narrows when it has to -- a title whose year we do not hold should
-        // not be discarded for failing to match one.
-        List<Title> sameYear = candidates.stream()
-                .filter(t -> t.primaryReleaseDate() != null
-                        && t.primaryReleaseDate().getYear() == row.year())
+        // The year is what separates a remake from what it remade. A candidate
+        // whose year we hold and which disagrees is out -- including when it
+        // is the only one, which is how a 1996 Fargo used to match a 2019 one.
+        // A candidate whose year we do not hold survives: an unknown year is
+        // not a contradiction.
+        return candidates.stream()
+                .filter(t -> t.primaryReleaseDate() == null
+                        || t.primaryReleaseDate().getYear() == row.year())
                 .toList();
-        return sameYear.isEmpty() ? candidates : sameYear;
     }
 
     /**
@@ -217,18 +243,25 @@ public class ImportMatcher {
         }
     }
 
-    /** What the provider had to say: one title, several, or nothing usable. */
-    private record ProviderMatch(Title title, boolean ambiguous) {
+    /**
+     * What the provider had to say: one title, several, nothing -- or nothing
+     * because it could not be asked, which is a different row entirely.
+     */
+    private record ProviderMatch(Title title, boolean ambiguous, boolean unavailable) {
         static ProviderMatch one(Title title) {
-            return new ProviderMatch(title, false);
+            return new ProviderMatch(title, false, false);
         }
 
         static ProviderMatch nothing() {
-            return new ProviderMatch(null, false);
+            return new ProviderMatch(null, false, false);
         }
 
         static ProviderMatch several() {
-            return new ProviderMatch(null, true);
+            return new ProviderMatch(null, true, false);
+        }
+
+        static ProviderMatch couldNotAsk() {
+            return new ProviderMatch(null, false, true);
         }
     }
 

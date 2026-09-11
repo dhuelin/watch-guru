@@ -15,14 +15,19 @@ object WatchOffers {
     /**
      * Ways of watching, in the order they are offered to the user.
      *
-     * Included is free before paid, and subscription before transactional: the
-     * cheapest way to watch something tonight goes first. Rent before buy for
-     * the same reason. This is not the order the API returns.
+     * Cheapest first, which is what the app can honestly rank by: free, then
+     * free with ads, then a subscription, then rent, then buy. It does not
+     * know which services the user already pays for -- when it does, a
+     * subscription they hold belongs above a free service they have never
+     * heard of, and this order should change with it.
+     *
+     * Free was previously listed after subscriptions, which contradicted this
+     * comment; the comment was the one making the promise.
      */
     val order: List<AvailabilityResponse.OfferType> = listOf(
-        AvailabilityResponse.OfferType.FLATRATE,
         AvailabilityResponse.OfferType.FREE,
         AvailabilityResponse.OfferType.ADS,
+        AvailabilityResponse.OfferType.FLATRATE,
         AvailabilityResponse.OfferType.RENT,
         AvailabilityResponse.OfferType.BUY,
     )

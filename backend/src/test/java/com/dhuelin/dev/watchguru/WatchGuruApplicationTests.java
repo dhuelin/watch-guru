@@ -39,6 +39,7 @@ class WatchGuruApplicationTests {
         // 15 is not 14.
         assertThat(tables).containsExactly(
                 "app_user",
+                "availability_check",
                 "device_token",
                 "episode",
                 "episode_watch",

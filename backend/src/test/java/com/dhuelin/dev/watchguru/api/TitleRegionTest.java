@@ -26,6 +26,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -96,7 +97,7 @@ class TitleRegionTest {
         title.setId(7L);
         when(titles.findById(7L)).thenReturn(Optional.of(title));
         when(availability.offersFor(any(), any()))
-                .thenReturn(new AvailabilityService.Offers(List.of(), true));
+                .thenReturn(new AvailabilityService.Offers(List.of(), Instant.now()));
         return title;
     }
 

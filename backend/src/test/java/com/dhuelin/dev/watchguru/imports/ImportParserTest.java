@@ -40,19 +40,6 @@ class ImportParserTest {
     }
 
     @Test
-    @DisplayName("an IMDb episode row is left untyped rather than guessed at")
-    void imdbEpisodeRow() {
-        // An episode row names the episode, not the series, so calling it
-        // either a film or a series matches the wrong thing outright.
-        String csv = """
-                Const,Title,Title Type,Year,Your Rating,Date Rated
-                tt2301451,Ozymandias,TV Episode,2013,10,2021-03-04
-                """;
-
-        assertThat(ImportParser.parse(csv).rows().getFirst().titleType()).isNull();
-    }
-
-    @Test
     @DisplayName("a Letterboxd diary keeps the watch date, not the date the entry was made")
     void letterboxdDiary() {
         String csv = """
@@ -248,6 +235,62 @@ class ImportParserTest {
     }
 
     @Test
+    @DisplayName("the real Netflix export has a profile column, and is still recognised")
+    void netflixWithProfileColumn() {
+        // Their download is "Profile Name,Title,Date". Demanding exactly two
+        // columns read the documented file as an unknown format and imported
+        // nothing at all.
+        String csv = """
+                Profile Name,Title,Date
+                Denis,"Breaking Bad: Season 5: Ozymandias",3/4/21
+                """;
+
+        ImportParser.Parsed parsed = ImportParser.parse(csv);
+
+        assertThat(parsed.source()).isEqualTo(ImportSource.NETFLIX);
+        assertThat(parsed.rows()).singleElement()
+                .satisfies(row -> assertThat(row.episodeName()).isEqualTo("Ozymandias"));
+    }
+
+    @Test
+    @DisplayName("a file with only the required column is this app's own format")
+    void watchGuruTitleOnly() {
+        // docs/IMPORT.md says title is the only required column, so a file
+        // with just that has to be readable -- it said so.
+        ImportParser.Parsed parsed = ImportParser.parse("title\nFargo\nHeat\n");
+
+        assertThat(parsed.source()).isEqualTo(ImportSource.WATCH_GURU);
+        assertThat(parsed.rows()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("an unreadable date is reported, not turned into a viewing today")
+    void unreadableDateIsReported() {
+        // Collapsing it to null would make the row undated, and an undated row
+        // imports as watched today: a typo becomes a viewing that never was.
+        ImportParser.Parsed parsed = ImportParser.parse("title,watched_at\nFargo,2024-99-99\n");
+
+        assertThat(parsed.rows()).isEmpty();
+        assertThat(parsed.problems()).singleElement().asString().contains("2024-99-99");
+    }
+
+    @Test
+    @DisplayName("an IMDb episode row is reported rather than matched against the wrong thing")
+    void imdbEpisodeRowIsReported() {
+        // It names the episode and nothing else. Left untyped it would match a
+        // film or series of the same name and import that instead.
+        String csv = """
+                Const,Title,Title Type,Year,Your Rating,Date Rated
+                tt2301451,Ozymandias,TV Episode,2013,10,2021-03-04
+                """;
+
+        ImportParser.Parsed parsed = ImportParser.parse(csv);
+
+        assertThat(parsed.rows()).isEmpty();
+        assertThat(parsed.problems()).singleElement().asString().contains("Ozymandias");
+    }
+
+    @Test
     @DisplayName("an unrecognised file says so, and says what it saw")
     void unknownFormat() {
         ImportParser.Parsed parsed = ImportParser.parse("Foo,Bar\n1,2\n");
@@ -274,11 +317,13 @@ class ImportParserTest {
     }
 
     @Test
-    @DisplayName("an unparseable date is left empty rather than made up")
-    void unparseableDate() {
+    @DisplayName("a row with no date at all is fine; it means today")
+    void missingDateIsAllowed() {
+        // Absent is not the same as unreadable: one is a file that did not
+        // record a date, the other is a file that recorded a wrong one.
         String csv = """
                 title,watched_at
-                Fargo,not-a-date
+                Fargo,
                 """;
 
         assertThat(ImportParser.parse(csv).rows().getFirst().watchedAt()).isNull();

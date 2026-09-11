@@ -120,13 +120,24 @@ public final class Responses {
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<AvailabilityResponse> availability,
 
             /*
-             * Whether the availability above is something the server can vouch
-             * for. An empty list with this true means the title is on no
-             * service in that country, which is worth saying; an empty list
-             * with it false means the provider could not be reached, which is
-             * not the same claim and must not be shown as one.
+             * When the availability above was confirmed with the provider, or
+             * null if it never has been.
+             *
+             * A timestamp rather than a boolean, for two reasons. An empty
+             * list with a timestamp means the title is on no service in that
+             * country, which is worth saying, while an empty list without one
+             * means the provider could not be reached -- a different claim
+             * that must not be shown as the first. And availability is cached
+             * for a day, so the apps need the age anyway; the offers carry
+             * their own timestamps, but a confirmed-empty result has no offers
+             * to carry one.
+             *
+             * Optional, deliberately: a required field added to a response
+             * both apps cache offline would make every snapshot written by a
+             * previous version undecodable, and an undecodable snapshot is
+             * deleted -- costing an offline user their library on upgrade.
              */
-            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean availabilityChecked
+            Instant availabilityCheckedAt
     ) {
     }
 

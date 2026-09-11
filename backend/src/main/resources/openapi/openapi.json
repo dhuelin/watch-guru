@@ -1683,8 +1683,9 @@
               "$ref" : "#/components/schemas/AvailabilityResponse"
             }
           },
-          "availabilityChecked" : {
-            "type" : "boolean"
+          "availabilityCheckedAt" : {
+            "type" : "string",
+            "format" : "date-time"
           },
           "backdropUrl" : {
             "type" : "string"
@@ -1762,7 +1763,7 @@
             "enum" : [ "MOVIE", "TV_SERIES" ]
           }
         },
-        "required" : [ "availability", "availabilityChecked", "genres", "id", "primaryTitle", "providerId", "titleType" ]
+        "required" : [ "availability", "genres", "id", "primaryTitle", "providerId", "titleType" ]
       },
       "UpNextResponse" : {
         "type" : "object",

@@ -14,7 +14,7 @@ public struct TitleResponse: Sendable, Codable, Hashable {
         case tvSeries = "TV_SERIES"
     }
     public var availability: [AvailabilityResponse]
-    public var availabilityChecked: Bool
+    public var availabilityCheckedAt: Date?
     public var backdropUrl: String?
     public var genres: [GenreResponse]
     public var id: Int64
@@ -37,9 +37,9 @@ public struct TitleResponse: Sendable, Codable, Hashable {
     public var tagline: String?
     public var titleType: TitleType
 
-    public init(availability: [AvailabilityResponse], availabilityChecked: Bool, backdropUrl: String? = nil, genres: [GenreResponse], id: Int64, imdbId: String? = nil, imdbRating: Double? = nil, imdbUrl: String? = nil, lastAirDate: Date? = nil, numberOfEpisodes: Int? = nil, numberOfSeasons: Int? = nil, originalTitle: String? = nil, overview: String? = nil, posterUrl: String? = nil, primaryTitle: String, productionStatus: String? = nil, providerId: Int64, providerRating: Double? = nil, providerVoteCount: Int? = nil, releaseDate: Date? = nil, runtimeMinutes: Int? = nil, tagline: String? = nil, titleType: TitleType) {
+    public init(availability: [AvailabilityResponse], availabilityCheckedAt: Date? = nil, backdropUrl: String? = nil, genres: [GenreResponse], id: Int64, imdbId: String? = nil, imdbRating: Double? = nil, imdbUrl: String? = nil, lastAirDate: Date? = nil, numberOfEpisodes: Int? = nil, numberOfSeasons: Int? = nil, originalTitle: String? = nil, overview: String? = nil, posterUrl: String? = nil, primaryTitle: String, productionStatus: String? = nil, providerId: Int64, providerRating: Double? = nil, providerVoteCount: Int? = nil, releaseDate: Date? = nil, runtimeMinutes: Int? = nil, tagline: String? = nil, titleType: TitleType) {
         self.availability = availability
-        self.availabilityChecked = availabilityChecked
+        self.availabilityCheckedAt = availabilityCheckedAt
         self.backdropUrl = backdropUrl
         self.genres = genres
         self.id = id
@@ -65,7 +65,7 @@ public struct TitleResponse: Sendable, Codable, Hashable {
 
     public enum CodingKeys: String, CodingKey, CaseIterable {
         case availability
-        case availabilityChecked
+        case availabilityCheckedAt
         case backdropUrl
         case genres
         case id
@@ -94,7 +94,7 @@ public struct TitleResponse: Sendable, Codable, Hashable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(availability, forKey: .availability)
-        try container.encode(availabilityChecked, forKey: .availabilityChecked)
+        try container.encodeIfPresent(availabilityCheckedAt, forKey: .availabilityCheckedAt)
         try container.encodeIfPresent(backdropUrl, forKey: .backdropUrl)
         try container.encode(genres, forKey: .genres)
         try container.encode(id, forKey: .id)

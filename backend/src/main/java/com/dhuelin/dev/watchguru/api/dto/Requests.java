@@ -4,6 +4,7 @@ import com.dhuelin.dev.watchguru.catalog.domain.TitleType;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.dhuelin.dev.watchguru.notifications.domain.DevicePlatform;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchStatus;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -156,7 +157,10 @@ public final class Requests {
      * belongs to the user anyway.
      */
     public record CommitImport(
-            @NotNull @Size(max = 10_000) List<ImportSelection> rows
+            // @Valid on the element, not only the list: without it the
+            // constraints below are never checked, and a row with no title id
+            // reaches the writer as a 500 rather than a 400.
+            @NotNull @Size(max = 10_000) List<@Valid ImportSelection> rows
     ) {
     }
 
