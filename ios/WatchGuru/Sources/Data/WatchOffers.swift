@@ -50,6 +50,15 @@ enum WatchOffers {
             .flatMap(URL.init(string:))
     }
 
+    /// When this data was last confirmed with the provider.
+    ///
+    /// The oldest of the rows rather than the newest: a section is only as
+    /// current as its stalest row, and claiming otherwise would round in the
+    /// flattering direction.
+    static func checkedAt(_ offers: [AvailabilityResponse]) -> Date? {
+        offers.map(\.fetchedAt).min()
+    }
+
     /// The heading for a group. Shared with the Android app verbatim.
     static func label(for type: AvailabilityResponse.OfferType) -> String {
         switch type {

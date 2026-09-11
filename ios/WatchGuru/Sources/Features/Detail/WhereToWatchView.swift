@@ -3,10 +3,11 @@ import WatchGuruAPI
 
 /// Where the user can actually watch this, in their own country.
 ///
-/// The section is absent rather than empty when there are no offers: an empty
-/// list means either "on no service here" or "we could not ask the provider",
-/// and the two are indistinguishable from the response, so claiming the first
-/// would sometimes be a lie.
+/// Three states, not two. Offers are listed; no offers *that the server
+/// confirmed* says so in as many words, because "not on anything here" is
+/// useful and true; and no offers that nobody could confirm shows nothing at
+/// all, because an empty list from an unreachable provider is not evidence of
+/// anything. `checked` is what separates the last two.
 ///
 /// The country is the one on the user's profile — the backend resolves it from
 /// the token — which the caption says, because offers for the wrong country are
@@ -14,11 +15,24 @@ import WatchGuruAPI
 struct WhereToWatchView: View {
 
     let offers: [AvailabilityResponse]
+    let checked: Bool
 
     private var groups: [WatchOffers.Group] { WatchOffers.group(offers) }
 
     var body: some View {
-        if !offers.isEmpty {
+        if offers.isEmpty {
+            if checked {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Where to watch").font(.headline)
+                    Text("Not on any streaming service in your region.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text("Offers for the country set in your profile.")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        } else {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Where to watch").font(.headline)
 
@@ -48,6 +62,14 @@ struct WhereToWatchView: View {
                 Text("Offers for the country set in your profile.")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+                // Availability is cached for a day. Without saying when it was
+                // checked, a service that dropped the title this morning still
+                // looks like a live answer.
+                if let checkedAt = WatchOffers.checkedAt(offers) {
+                    Text("Checked \(checkedAt.formatted(.relative(presentation: .named)))")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
                 // Required alongside TMDB's own attribution: the availability
                 // data is JustWatch's, and TMDB's terms say so.
                 Text("Streaming availability data provided by JustWatch.")

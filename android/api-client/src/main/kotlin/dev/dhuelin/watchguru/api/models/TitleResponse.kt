@@ -34,6 +34,7 @@ import kotlinx.serialization.Contextual
  * 
  *
  * @param availability 
+ * @param availabilityChecked 
  * @param genres 
  * @param id 
  * @param primaryTitle 
@@ -62,6 +63,9 @@ data class TitleResponse (
 
     @SerialName(value = "availability")
     val availability: kotlin.collections.List<AvailabilityResponse>,
+
+    @SerialName(value = "availabilityChecked")
+    val availabilityChecked: kotlin.Boolean,
 
     @SerialName(value = "genres")
     val genres: kotlin.collections.List<GenreResponse>,

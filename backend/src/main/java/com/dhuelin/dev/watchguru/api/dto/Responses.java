@@ -117,7 +117,16 @@ public final class Responses {
             BigDecimal imdbRating,
             String imdbUrl,
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<GenreResponse> genres,
-            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<AvailabilityResponse> availability
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<AvailabilityResponse> availability,
+
+            /*
+             * Whether the availability above is something the server can vouch
+             * for. An empty list with this true means the title is on no
+             * service in that country, which is worth saying; an empty list
+             * with it false means the provider could not be reached, which is
+             * not the same claim and must not be shown as one.
+             */
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean availabilityChecked
     ) {
     }
 

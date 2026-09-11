@@ -122,6 +122,9 @@ struct ProfileView: View {
             // Hoisted rather than inlined into the case, as in load() below.
             let updated = try await session.client.updateProfile(UpdateProfile(region: code))
             state = .content(updated)
+            // Any title screen still on a navigation stack is now showing
+            // offers for the country the user just left.
+            session.profileRevision += 1
         } catch {
             // The profile itself is still valid, so the screen keeps it: a
             // rejected PATCH is no reason to replace the sign-out button with

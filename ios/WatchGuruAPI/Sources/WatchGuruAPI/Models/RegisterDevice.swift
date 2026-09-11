@@ -13,17 +13,21 @@ public struct RegisterDevice: Sendable, Codable, Hashable {
         case ios = "IOS"
         case android = "ANDROID"
     }
+    public static let timeZoneRule = StringRule(minLength: 0, maxLength: 64, pattern: nil)
     public static let tokenRule = StringRule(minLength: 0, maxLength: 512, pattern: nil)
     public var platform: Platform
+    public var timeZone: String?
     public var token: String
 
-    public init(platform: Platform, token: String) {
+    public init(platform: Platform, timeZone: String? = nil, token: String) {
         self.platform = platform
+        self.timeZone = timeZone
         self.token = token
     }
 
     public enum CodingKeys: String, CodingKey, CaseIterable {
         case platform
+        case timeZone
         case token
     }
 
@@ -32,6 +36,7 @@ public struct RegisterDevice: Sendable, Codable, Hashable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(platform, forKey: .platform)
+        try container.encodeIfPresent(timeZone, forKey: .timeZone)
         try container.encode(token, forKey: .token)
     }
 }

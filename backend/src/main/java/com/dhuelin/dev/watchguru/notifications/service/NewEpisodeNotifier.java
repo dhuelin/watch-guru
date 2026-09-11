@@ -28,6 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Tells people about episodes of series they follow.
@@ -88,12 +89,16 @@ public class NewEpisodeNotifier {
      *
      * @return how many notifications were sent
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public int scanUser(Long userId) {
         if (!properties.enabled()) {
             return 0;
         }
-        AppUser user = users.findById(userId).orElse(null);
+        // Locked, so two workers cannot both find the same room under the
+        // daily cap and both fill it. The lock is held for the whole scan,
+        // sending included: the scan is hourly and per user, so the only
+        // thing it ever waits for is another run of itself.
+        AppUser user = users.findByIdForUpdate(userId).orElse(null);
         if (user == null || !user.isNotificationsEnabled()) {
             return 0;
         }
@@ -104,7 +109,7 @@ public class NewEpisodeNotifier {
         }
 
         int remaining = properties.dailyCap()
-                - (int) deliveries.countByUserIdAndCreatedAtAfter(
+                - (int) deliveries.countNotificationsSince(
                         userId, local.toLocalDate().atStartOfDay(user.zone()).toInstant());
         if (remaining <= 0) {
             return 0;
@@ -129,29 +134,52 @@ public class NewEpisodeNotifier {
                 // is for.
                 break;
             }
+            UUID batch;
             try {
-                recorder.claim(user, announcement.episodes());
+                batch = recorder.claim(user, announcement.episodes());
             } catch (DataIntegrityViolationException e) {
                 // Another scan claimed these first: already announced.
                 log.debug("Already announced {} to user {}", announcement.titleName(), userId);
                 continue;
             }
-            deliver(registered, announcement);
-            sent++;
+
+            if (deliver(registered, announcement)) {
+                sent++;
+            } else {
+                // Nothing accepted it. Give the claim back, or this episode is
+                // marked announced forever and the user never hears about it.
+                recorder.release(batch);
+            }
         }
         return sent;
     }
 
-    private void deliver(List<DeviceToken> registered, EpisodeAnnouncement announcement) {
+    /**
+     * Sends to every device, and says whether any of them took it.
+     *
+     * <p>A dead token is not a failure to deliver -- that device is gone, and
+     * the announcement is not owed to it. Only a transient failure on every
+     * remaining device means nobody was told.
+     */
+    private boolean deliver(List<DeviceToken> registered, EpisodeAnnouncement announcement) {
         PushMessage message = announcement.toMessage();
+        boolean delivered = false;
+
         for (DeviceToken device : registered) {
             PushSender.Result result = push.send(device, message);
-            if (result == PushSender.Result.TOKEN_INVALID) {
-                // The app is gone from that device. Keeping the row would mean
-                // calling the push service about it forever.
-                recorder.forget(device);
+            switch (result) {
+                case DELIVERED -> delivered = true;
+                case TOKEN_INVALID ->
+                    // The app is gone from that device. Keeping the row would
+                    // mean calling the push service about it forever.
+                        recorder.forget(device);
+                case TEMPORARY_FAILURE -> {
+                    // Nothing to do per device; the caller decides once it
+                    // knows whether any other device took it.
+                }
             }
         }
+        return delivered;
     }
 
     /** What this user should be told about today, one entry per series. */
@@ -183,8 +211,9 @@ public class NewEpisodeNotifier {
         Set<Long> alreadyTold = deliveries.findNotifiedEpisodeIds(
                 user.getId(), aired.stream().map(Episode::getId).toList());
 
-        // LinkedHashMap: the repository returns broadcast order, and the first
-        // series to have aired should be the first one announced.
+        // LinkedHashMap: the repository returns air-date order, so the series
+        // whose episode landed first is the first one announced -- which is
+        // what the daily cap should be spent on.
         Map<Long, List<Episode>> byTitle = new LinkedHashMap<>();
         for (Episode episode : aired) {
             if (!alreadyTold.contains(episode.getId())) {

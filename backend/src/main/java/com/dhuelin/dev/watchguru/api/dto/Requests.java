@@ -1,6 +1,7 @@
 package com.dhuelin.dev.watchguru.api.dto;
 
 import com.dhuelin.dev.watchguru.catalog.domain.TitleType;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.dhuelin.dev.watchguru.notifications.domain.DevicePlatform;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchStatus;
 import jakarta.validation.constraints.DecimalMax;
@@ -109,10 +110,17 @@ public final class Requests {
      *
      * <p>Sent on every launch, not only the first: APNs and FCM both reissue
      * tokens, and the app cannot tell when they have.
+     *
+     * @param timeZone the device's IANA zone, e.g. {@code Europe/Zurich}.
+     *                 Optional, and the only route by which the server learns
+     *                 it: an account starts on UTC, nothing else sets it, and
+     *                 without it "do not notify anybody at 3am" means 3am in
+     *                 Greenwich for every user on earth
      */
     public record RegisterDevice(
             @NotBlank @Size(max = 512) String token,
-            @NotNull DevicePlatform platform
+            @NotNull DevicePlatform platform,
+            @Size(max = 64) String timeZone
     ) {
     }
 
@@ -162,13 +170,21 @@ public final class Requests {
      * @param episodeId  the episode, for an episode row
      * @param titleText  what the file called it, for the failure summary
      * @param watchedAt  the date from the file; today if absent
+     * @param rating     the rating from the file, 0-10. Sent back rather than
+     *                   remembered server-side for the same reason as the rest
+     *                   of the row -- and without it, an IMDb or Letterboxd
+     *                   import would drop every rating it had just shown the
+     *                   user in the preview
      */
     public record ImportSelection(
             @NotBlank @Size(max = 255) String sourceRef,
             @NotNull Long titleId,
             Long episodeId,
             @Size(max = 512) String titleText,
-            LocalDate watchedAt
+            // Date or date-time; see LenientLocalDateDeserializer for why the
+            // server has to take both from its own generated clients.
+            @JsonDeserialize(using = LenientLocalDateDeserializer.class) LocalDate watchedAt,
+            @DecimalMin("0.0") @DecimalMax("10.0") BigDecimal rating
     ) {
     }
 }

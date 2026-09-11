@@ -40,6 +40,16 @@ final class Session {
     let tokens: TokenStore
     let signIn: SignInModel
 
+    /// Bumped whenever the profile changes in a way open screens must reflect.
+    ///
+    /// Streaming offers are per country and a title screen loads them once.
+    /// Each tab keeps its own navigation stack, so without this, changing
+    /// region in Profile and going back to an open title still shows the
+    /// offers for the country the user just left — which is exactly what they
+    /// went to Profile to fix. A counter rather than the region itself: what a
+    /// screen needs is "reload", not a value it might mistake for the truth.
+    var profileRevision = 0
+
     init(
         baseURL: URL = Session.defaultBaseURL,
         tokens: TokenStore = KeychainTokenStore()

@@ -306,6 +306,74 @@ class NewEpisodeNotifierIntegrationTest {
     }
 
     @Test
+    @DisplayName("a three-episode announcement costs one of the day's notifications, not three")
+    void capCountsNotificationsNotEpisodes() {
+        // The delivery log has a row per episode; the person has one buzz.
+        // Counting rows would spend three days of allowance on it.
+        episode(series, 1, 1, today().minusDays(2));
+        episode(series, 1, 2, today().minusDays(1));
+        episode(series, 1, 3, today());
+        Title second = followedSeries("Second Series");
+        episode(second, 1, 1, today());
+        Title third = followedSeries("Third Series");
+        episode(third, 1, 1, today());
+
+        assertThat(notifier.scanUser(user.getId())).isEqualTo(3);
+        assertThat(sender.sent).hasSize(3);
+    }
+
+    @Test
+    @DisplayName("a push nobody accepted is announced again, not lost")
+    void transientFailureReleasesTheClaim() {
+        episode(series, 1, 1, today());
+        sender.nextResult = PushSender.Result.TEMPORARY_FAILURE;
+
+        assertThat(notifier.scanUser(user.getId())).isZero();
+
+        // Without releasing the claim, the delivery row would say "already
+        // announced" forever and this episode would never be mentioned again.
+        sender.reset();
+        assertThat(notifier.scanUser(user.getId())).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("the cap goes to whatever aired first, not to the lowest title id")
+    void capFollowsAirDate() {
+        // series was created first, so it has the lower id; its episode airs
+        // last. Ordering by id would announce it and drop the older one.
+        Title second = followedSeries("Second Series");
+        Title third = followedSeries("Third Series");
+        Title fourth = followedSeries("Fourth Series");
+        episode(series, 1, 1, today());
+        episode(second, 1, 1, today().minusDays(3));
+        episode(third, 1, 1, today().minusDays(2));
+        episode(fourth, 1, 1, today().minusDays(1));
+
+        assertThat(notifier.scanUser(user.getId())).isEqualTo(3);
+        assertThat(sender.sent.stream().map(PushMessage::title))
+                .containsExactly("Second Series", "Third Series", "Fourth Series");
+    }
+
+    @Test
+    @DisplayName("registering a device is how the server learns what time it is where the user is")
+    void deviceRegistrationCarriesTheTimeZone() {
+        settings.register(user, "device-zoned-" + user.getId(), DevicePlatform.ANDROID, "Pacific/Auckland");
+
+        assertThat(users.findById(user.getId()).orElseThrow().getTimeZone()).isEqualTo("Pacific/Auckland");
+    }
+
+    @Test
+    @DisplayName("a time zone the platform does not know is ignored, not fatal")
+    void unknownTimeZoneIsIgnored() {
+        // The registration is the point of the call; a bad zone leaves the
+        // previous one, which is no worse than not having called at all.
+        settings.register(user, "device-odd-" + user.getId(), DevicePlatform.ANDROID, "Mars/Olympus_Mons");
+
+        assertThat(users.findById(user.getId()).orElseThrow().getTimeZone()).isEqualTo("UTC");
+        assertThat(devices.findByToken("device-odd-" + user.getId())).isPresent();
+    }
+
+    @Test
     @DisplayName("a device the push service rejects is forgotten")
     void deadTokensAreCleanedUp() {
         episode(series, 1, 1, today());

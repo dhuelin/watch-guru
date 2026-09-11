@@ -186,6 +186,68 @@ class ImportParserTest {
     }
 
     @Test
+    @DisplayName("a series whose own name contains a colon is still an episode row")
+    void netflixSeriesNameWithColon() {
+        // Taking the second segment as the season reads "Strange New Worlds"
+        // as a season number, finds none, and files the episode as a film.
+        String csv = """
+                Title,Date
+                "Star Trek: Strange New Worlds: Season 1: Children of the Comet",5/12/22
+                """;
+
+        ImportRow row = ImportParser.parse(csv).rows().getFirst();
+
+        assertThat(row.titleText()).isEqualTo("Star Trek: Strange New Worlds");
+        assertThat(row.seasonNumber()).isEqualTo(1);
+        assertThat(row.episodeName()).isEqualTo("Children of the Comet");
+    }
+
+    @Test
+    @DisplayName("a series named after a year is not its own season")
+    void netflixSeriesNamedAfterAYear() {
+        // "1923: Season 1: Nostos" -- searching for the season from the right
+        // is what keeps the series name from matching first.
+        String csv = """
+                Title,Date
+                "1923: Season 1: Nostos",2/5/23
+                """;
+
+        ImportRow row = ImportParser.parse(csv).rows().getFirst();
+
+        assertThat(row.titleText()).isEqualTo("1923");
+        assertThat(row.seasonNumber()).isEqualTo(1);
+        assertThat(row.episodeName()).isEqualTo("Nostos");
+    }
+
+    @Test
+    @DisplayName("two viewings of the same film are two rows, not one")
+    void letterboxdRewatchIsNotADuplicate() {
+        // A Letterboxd URI names the film, not the diary entry. Using it alone
+        // as the reference makes a rewatch collide with the original and
+        // vanish on import.
+        String csv = """
+                Date,Name,Year,Letterboxd URI,Rating,Rewatch,Tags,Watched Date
+                2024-02-02,Heat,1995,https://boxd.it/9z8y,4.5,No,,2024-01-30
+                2024-06-02,Heat,1995,https://boxd.it/9z8y,5,Yes,,2024-06-01
+                """;
+
+        List<ImportRow> rows = ImportParser.parse(csv).rows();
+
+        assertThat(rows).hasSize(2);
+        assertThat(rows.getFirst().sourceRef()).isNotEqualTo(rows.get(1).sourceRef());
+    }
+
+    @Test
+    @DisplayName("the same diary row in two exports keeps one reference")
+    void letterboxdSameRowIsStillIdempotent() {
+        String row = "2024-02-02,Heat,1995,https://boxd.it/9z8y,4.5,No,,2024-01-30\n";
+        String header = "Date,Name,Year,Letterboxd URI,Rating,Rewatch,Tags,Watched Date\n";
+
+        assertThat(ImportParser.parse(header + row).rows().getFirst().sourceRef())
+                .isEqualTo(ImportParser.parse(header + row).rows().getFirst().sourceRef());
+    }
+
+    @Test
     @DisplayName("an unrecognised file says so, and says what it saw")
     void unknownFormat() {
         ImportParser.Parsed parsed = ImportParser.parse("Foo,Bar\n1,2\n");

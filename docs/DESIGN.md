@@ -114,8 +114,14 @@ the wrong country are worse than no offers at all.
 
 **It must not claim "not available" when it means "we do not know".** An empty
 offer list means either *on no service in this country* or *we could not reach
-the provider*, and the response cannot tell them apart. So an empty list
-renders nothing at all rather than an unavailability the app cannot vouch for.
+the provider*. The response now says which: `availabilityChecked` is true when
+the server confirmed the answer. Checked and empty is worth saying — "not on
+any streaming service in your region" — and unchecked and empty renders
+nothing at all, because it is not evidence of anything.
+
+**It must not present day-old data as live.** Availability is cached, so the
+section says when it was last checked, taken from the oldest row it is showing
+rather than the newest.
 
 Availability data comes from JustWatch by way of TMDB, and their attribution
 line goes with it wherever it is shown.

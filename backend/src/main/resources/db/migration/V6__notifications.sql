@@ -53,10 +53,17 @@ CREATE TABLE notification_delivery (
     id         BIGSERIAL   PRIMARY KEY,
     user_id    BIGINT      NOT NULL REFERENCES app_user (id) ON DELETE CASCADE,
     episode_id BIGINT      NOT NULL REFERENCES episode (id) ON DELETE CASCADE,
+
+    -- The notification these episodes went out in. Three episodes of one
+    -- series arriving at once is one push, and the daily cap counts pushes --
+    -- counting rows would let a six-episode drop eat two days of somebody's
+    -- allowance for a single buzz.
+    batch_id   UUID        NOT NULL,
+
     created_at TIMESTAMPTZ NOT NULL,
 
     UNIQUE (user_id, episode_id)
 );
 
--- The daily cap counts rows per user per day.
+-- The daily cap counts distinct batches per user per day.
 CREATE INDEX idx_notification_delivery_user_created ON notification_delivery (user_id, created_at);

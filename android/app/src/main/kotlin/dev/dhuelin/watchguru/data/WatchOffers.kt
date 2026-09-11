@@ -1,6 +1,7 @@
 package dev.dhuelin.watchguru.data
 
 import dev.dhuelin.watchguru.api.models.AvailabilityResponse
+import java.time.OffsetDateTime
 
 /**
  * How the offers on a title are turned into the "Where to watch" section.
@@ -50,6 +51,16 @@ object WatchOffers {
      */
     fun link(offers: List<AvailabilityResponse>): String? =
         offers.firstNotNullOfOrNull { it.link?.takeIf(String::isNotBlank) }
+
+    /**
+     * When this data was last confirmed with the provider.
+     *
+     * The oldest of the rows rather than the newest: a section is only as
+     * current as its stalest row, and claiming otherwise would round in the
+     * flattering direction.
+     */
+    fun checkedAt(offers: List<AvailabilityResponse>): OffsetDateTime? =
+        offers.minByOrNull { it.fetchedAt }?.fetchedAt
 
     data class Group(
         val offerType: AvailabilityResponse.OfferType,

@@ -1,7 +1,9 @@
 package com.dhuelin.dev.watchguru.tracking.repository;
 
 import com.dhuelin.dev.watchguru.tracking.domain.AppUser;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -30,4 +32,16 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
     @Modifying
     @Query("delete from AppUser u where u.id = :id")
     int deleteAppUserById(@Param("id") Long id);
+
+    /**
+     * The user, with their row locked for the duration of the transaction.
+     *
+     * <p>Used by the new-episode scan so two workers cannot both read "two
+     * notifications left today" and then send two each. The lock is per user
+     * and the scan is hourly, so contention is between a scan and a retry of
+     * itself rather than between users.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select u from AppUser u where u.id = :id")
+    Optional<AppUser> findByIdForUpdate(@Param("id") Long id);
 }

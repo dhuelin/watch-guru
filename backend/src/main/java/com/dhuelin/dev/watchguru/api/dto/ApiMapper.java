@@ -11,6 +11,7 @@ import com.dhuelin.dev.watchguru.provider.model.ProviderSearchPage;
 import com.dhuelin.dev.watchguru.streaming.domain.LinkedStreamingAccount;
 import com.dhuelin.dev.watchguru.streaming.domain.StreamingService;
 import com.dhuelin.dev.watchguru.streaming.domain.TitleAvailability;
+import com.dhuelin.dev.watchguru.streaming.service.AvailabilityService;
 import com.dhuelin.dev.watchguru.tracking.domain.AppUser;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchEvent;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchlistItem;
@@ -45,7 +46,17 @@ public class ApiMapper {
         return new Responses.SearchResponse(hits, page.page(), page.totalPages(), page.totalResults());
     }
 
-    public Responses.TitleResponse toTitle(Title title, List<TitleAvailability> availability) {
+    public Responses.TitleResponse toTitle(Title title, AvailabilityService.Offers availability) {
+        return toTitle(title, availability.offers(), availability.checked());
+    }
+
+    /**
+     * @param checked whether the offers were confirmed against the provider;
+     *                see {@code TitleResponse.availabilityChecked}. Callers
+     *                with no availability at all pass false, because "we did
+     *                not look" is exactly what they mean
+     */
+    public Responses.TitleResponse toTitle(Title title, List<TitleAvailability> availability, boolean checked) {
         List<Responses.GenreResponse> genres = title.getGenres().stream()
                 .map(g -> new Responses.GenreResponse(g.getId(), g.getName()))
                 .toList();
@@ -83,7 +94,8 @@ public class ApiMapper {
                 title.getImdbRating(),
                 title.getImdbId() == null ? null : IMDB_TITLE_URL + title.getImdbId(),
                 genres,
-                offers);
+                offers,
+                checked);
     }
 
     public Responses.WatchlistItemResponse toWatchlistItem(WatchlistItem item, List<TitleAvailability> availability) {
@@ -107,7 +119,7 @@ public class ApiMapper {
                 item.getAddedAt(),
                 item.getStartedAt(),
                 item.getCompletedAt(),
-                toTitle(item.getTitle(), availability),
+                toTitle(item.getTitle(), availability, availability != null && !availability.isEmpty()),
                 progress);
     }
 

@@ -34,6 +34,7 @@ import kotlinx.serialization.Contextual
  * @param sourceRef 
  * @param titleId 
  * @param episodeId 
+ * @param rating 
  * @param titleText 
  * @param watchedAt 
  */
@@ -49,6 +50,9 @@ data class ImportSelection (
 
     @SerialName(value = "episodeId")
     val episodeId: kotlin.Long? = null,
+
+    @Contextual @SerialName(value = "rating")
+    val rating: java.math.BigDecimal? = null,
 
     @SerialName(value = "titleText")
     val titleText: kotlin.String? = null,

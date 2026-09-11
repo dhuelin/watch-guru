@@ -167,6 +167,7 @@ private fun TitleDetailContent(
         // they start rather than after.
         WhereToWatch(
             offers = title.availability,
+            checked = title.availabilityChecked,
             modifier = Modifier.padding(top = 24.dp),
         )
 

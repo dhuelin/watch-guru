@@ -11,15 +11,21 @@ import com.dhuelin.dev.watchguru.notifications.repository.DeviceTokenRepository;
 import com.dhuelin.dev.watchguru.notifications.repository.NotificationPreferenceRepository;
 import com.dhuelin.dev.watchguru.tracking.domain.AppUser;
 import com.dhuelin.dev.watchguru.tracking.repository.AppUserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DateTimeException;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.List;
 
 /** Device registration and the notification settings screen. */
 @Service
 public class NotificationSettingsService {
+
+    private static final Logger log = LoggerFactory.getLogger(NotificationSettingsService.class);
 
     private final DeviceTokenRepository devices;
     private final NotificationPreferenceRepository preferences;
@@ -47,6 +53,23 @@ public class NotificationSettingsService {
      */
     @Transactional
     public void register(AppUser user, String token, DevicePlatform platform) {
+        register(user, token, platform, null);
+    }
+
+    /**
+     * As above, and takes the device's time zone while it is talking.
+     *
+     * <p>This is the only place the server learns where somebody is. An
+     * account starts on UTC and no other endpoint sets the zone, so without
+     * this every user's quiet hours are Greenwich's -- which is 3am for a good
+     * part of the world. An unparseable zone is ignored rather than rejected:
+     * the registration is what matters, and a bad zone leaves the previous
+     * one, which is no worse than before the call.
+     */
+    @Transactional
+    public void register(AppUser user, String token, DevicePlatform platform, String timeZone) {
+        applyTimeZone(user, timeZone);
+
         DeviceToken existing = devices.findByToken(token).orElse(null);
         if (existing == null) {
             devices.save(new DeviceToken(user, token, platform));
@@ -56,6 +79,18 @@ public class NotificationSettingsService {
         existing.setPlatform(platform);
         existing.setLastSeenAt(Instant.now());
         devices.save(existing);
+    }
+
+    private void applyTimeZone(AppUser user, String timeZone) {
+        if (timeZone == null || timeZone.isBlank() || timeZone.equals(user.getTimeZone())) {
+            return;
+        }
+        try {
+            user.setTimeZone(ZoneId.of(timeZone).getId());
+            users.save(user);
+        } catch (DateTimeException e) {
+            log.debug("Ignoring unknown time zone \"{}\" from a device registration", timeZone);
+        }
     }
 
     /**

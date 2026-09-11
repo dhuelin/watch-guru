@@ -104,4 +104,22 @@ class WatchOffersTest {
         assertNull(WatchOffers.link(listOf(offer(3, "Netflix", OfferType.FLATRATE, link = "  "))))
         assertNull(WatchOffers.link(emptyList()))
     }
+
+    @Test
+    fun `the section is only as current as its stalest row`() {
+        val older = OffsetDateTime.parse("2026-01-01T00:00:00Z")
+        val newer = OffsetDateTime.parse("2026-01-02T00:00:00Z")
+
+        val offers = listOf(
+            AvailabilityResponse(newer, OfferType.FLATRATE, 1, "Netflix"),
+            AvailabilityResponse(older, OfferType.RENT, 2, "Apple TV"),
+        )
+
+        assertEquals(older, WatchOffers.checkedAt(offers))
+    }
+
+    @Test
+    fun `no offers means nothing to date`() {
+        assertNull(WatchOffers.checkedAt(emptyList()))
+    }
 }

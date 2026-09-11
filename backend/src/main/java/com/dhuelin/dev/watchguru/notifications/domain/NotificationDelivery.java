@@ -17,6 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.UUID;
 
 /**
  * A notification that has already gone out.
@@ -45,12 +46,23 @@ public class NotificationDelivery {
     @JoinColumn(name = "episode_id", nullable = false)
     private Episode episode;
 
+    /**
+     * The notification these episodes went out in.
+     *
+     * <p>One per announcement, shared by its episodes, so the daily cap counts
+     * what a person actually experiences -- a buzz -- rather than how many
+     * episodes happened to be behind it.
+     */
+    @Column(name = "batch_id", nullable = false)
+    private UUID batchId;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    public NotificationDelivery(AppUser user, Episode episode) {
+    public NotificationDelivery(AppUser user, Episode episode, UUID batchId) {
         this.user = user;
         this.episode = episode;
+        this.batchId = batchId;
     }
 
     /** Only a fallback: the caller sets this from the application's clock. */

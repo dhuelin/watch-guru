@@ -111,7 +111,7 @@ public class ImportController {
                 selection.titleText() == null ? "" : selection.titleText(),
                 null, null, null, null, null, null,
                 selection.watchedAt(),
-                null);
+                selection.rating());
 
         return MatchedRow.matched(row, selection.titleId(), selection.titleText(),
                 selection.episodeId(), null, null);

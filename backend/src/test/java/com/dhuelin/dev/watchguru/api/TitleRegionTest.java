@@ -95,7 +95,8 @@ class TitleRegionTest {
         Title title = new Title(1396L, TitleType.TV_SERIES, "Breaking Bad");
         title.setId(7L);
         when(titles.findById(7L)).thenReturn(Optional.of(title));
-        when(availability.offersFor(any(), any())).thenReturn(List.of());
+        when(availability.offersFor(any(), any()))
+                .thenReturn(new AvailabilityService.Offers(List.of(), true));
         return title;
     }
 

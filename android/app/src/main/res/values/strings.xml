@@ -67,6 +67,8 @@
     <string name="offer_buy">Buy</string>
     <string name="action_watch_options">See all watch options</string>
     <string name="where_to_watch_region">Offers for the country set in your profile.</string>
+    <string name="where_to_watch_none">Not on any streaming service in your region.</string>
+    <string name="where_to_watch_updated">Checked %1$s</string>
     <string name="justwatch_attribution">Streaming availability data provided by JustWatch.</string>
 
     <string name="tmdb_attribution">This product uses the TMDB API but is not endorsed or certified by TMDB.</string>

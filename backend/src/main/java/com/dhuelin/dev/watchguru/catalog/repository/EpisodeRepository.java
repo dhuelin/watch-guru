@@ -101,6 +101,11 @@ public interface EpisodeRepository extends JpaRepository<Episode, Long> {
      *
      * <p>Season 0 is excluded: a special appearing in the catalogue is not the
      * event somebody asked to be told about.
+     *
+     * <p>Ordered by air date first. The caller announces one series at a time
+     * and stops at the daily cap, so ordering by title id would mean the cap
+     * is spent on whichever series has the lowest id rather than on whatever
+     * actually aired first.
      */
     @Query("""
             select e from Episode e
@@ -109,7 +114,7 @@ public interface EpisodeRepository extends JpaRepository<Episode, Long> {
               and e.airDate is not null
               and e.airDate >= :from
               and e.airDate <= :to
-            order by e.title.id asc, e.seasonNumber asc, e.episodeNumber asc
+            order by e.airDate asc, e.title.id asc, e.seasonNumber asc, e.episodeNumber asc
             """)
     List<Episode> findAiredBetween(@Param("titleIds") Collection<Long> titleIds,
                                    @Param("from") LocalDate from,

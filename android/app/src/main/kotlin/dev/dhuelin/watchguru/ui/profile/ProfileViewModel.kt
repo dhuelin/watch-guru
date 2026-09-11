@@ -6,6 +6,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.dhuelin.watchguru.api.models.UpdateProfile
 import dev.dhuelin.watchguru.api.models.UserResponse
 import dev.dhuelin.watchguru.data.ApiResult
+import dev.dhuelin.watchguru.data.ProfileEvents
 import dev.dhuelin.watchguru.data.WatchGuruRepository
 import dev.dhuelin.watchguru.ui.components.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val repository: WatchGuruRepository,
+    private val profileEvents: ProfileEvents,
 ) : ViewModel() {
 
     private val _profile = MutableStateFlow<UiState<UserResponse>>(UiState.Loading)
@@ -65,7 +67,12 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _savingRegion.value = true
             when (val result = repository.updateProfile(UpdateProfile(region = code))) {
-                is ApiResult.Success -> _profile.value = UiState.Content(result.value)
+                is ApiResult.Success -> {
+                    _profile.value = UiState.Content(result.value)
+                    // Any title screen still on the back stack is now showing
+                    // offers for the country the user just left.
+                    profileEvents.profileChanged()
+                }
                 is ApiResult.Failure -> _regionError.value = true
             }
             _savingRegion.value = false

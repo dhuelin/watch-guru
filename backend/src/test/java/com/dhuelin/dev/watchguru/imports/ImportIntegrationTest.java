@@ -237,6 +237,72 @@ class ImportIntegrationTest {
     }
 
     @Test
+    @DisplayName("an episode is rejected when it does not belong to the title it came with")
+    void mismatchedTitleAndEpisodeIsRejected() {
+        // The two ids arrive from the client independently. Writing the pair
+        // unchecked would put the film in the library and the watch event on
+        // an episode of an unrelated series, advancing that series' progress.
+        MatchedRow crossed = MatchedRow.matched(
+                new com.dhuelin.dev.watchguru.imports.domain.ImportRow(
+                        "crossed", filmName, null, null, null, null, null, null, null, null),
+                film.getId(), filmName, ozymandias.getId(), "S05E14", null);
+
+        ImportService.Result result = imports.commit(user, List.of(crossed));
+
+        assertThat(result.failed()).isEqualTo(1);
+        assertThat(result.imported()).isZero();
+        assertThat(eventCount()).isZero();
+    }
+
+    @Test
+    @DisplayName("an imported date lands on that date where the user is, not where the server is")
+    void importedDatesUseTheUsersZone() {
+        // Noon UTC is already the next day at UTC+13, so a row dated the 15th
+        // would show as the 16th for a user in Auckland.
+        user.setTimeZone("Pacific/Auckland");
+        user = users.save(user);
+
+        String csv = "title,year,type,watched_at\n" + filmName + ",1996,movie,2024-01-15\n";
+        imports.commit(user, accepted(imports.preview(user, csv, 0)));
+
+        var events = watchEvents.findByUserIdOrderByWatchedAtDesc(
+                user.getId(), org.springframework.data.domain.PageRequest.of(0, 10));
+        assertThat(events.getContent()).singleElement().satisfies(event ->
+                assertThat(event.getWatchedAt().atZone(java.time.ZoneId.of("Pacific/Auckland")).toLocalDate())
+                        .isEqualTo(java.time.LocalDate.of(2024, 1, 15)));
+    }
+
+    @Test
+    @DisplayName("a rating from the file lands on the library item")
+    void ratingsAreImported() {
+        String csv = "title,year,type,watched_at,rating\n" + filmName + ",1996,movie,2024-01-15,8.5\n";
+
+        imports.commit(user, accepted(imports.preview(user, csv, 0)));
+
+        assertThat(items.findByUserIdAndTitleId(user.getId(), film.getId()))
+                .get()
+                .satisfies(item -> assertThat(item.getUserRating()).isEqualByComparingTo("8.5"));
+    }
+
+    @Test
+    @DisplayName("an imported rating never overwrites one the user typed")
+    void ratingsDoNotClobberTheUsersOwn() {
+        String csv = "title,year,type,watched_at,rating\n" + filmName + ",1996,movie,2024-01-15,8.5\n";
+        imports.commit(user, accepted(imports.preview(user, csv, 0)));
+
+        var item = items.findByUserIdAndTitleId(user.getId(), film.getId()).orElseThrow();
+        item.setUserRating(new java.math.BigDecimal("10.0"));
+        items.save(item);
+
+        String second = "title,year,type,watched_at,rating\n" + filmName + ",1996,movie,2024-02-20,3\n";
+        imports.commit(user, accepted(imports.preview(user, second, 0)));
+
+        assertThat(items.findByUserIdAndTitleId(user.getId(), film.getId()))
+                .get()
+                .satisfies(saved -> assertThat(saved.getUserRating()).isEqualByComparingTo("10.0"));
+    }
+
+    @Test
     @DisplayName("only the rows the user sent are written, whatever the preview matched")
     void commitWritesOnlyWhatWasAccepted() {
         String csv = """

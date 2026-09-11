@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * The two writes the scan makes, each in a transaction of its own.
@@ -48,17 +49,21 @@ public class NotificationDeliveryRecorder {
      *
      * <p>Written first, not after. A push that goes out without its row would
      * be sent again on the next scan; a row written for a push that then fails
-     * costs one missed announcement. Of the two, users punish the duplicate.
+     * is released again by {@link #release}. Of the two orders, the one that
+     * can duplicate a push is the one users punish.
      *
+     * @return the batch id shared by these rows, which is what the daily cap
+     *         counts and what releases them again if nothing was delivered
      * @throws org.springframework.dao.DataIntegrityViolationException if
      *         another scan claimed any of these first -- meaning the
      *         announcement has already gone out and must not be repeated
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void claim(AppUser user, List<Episode> episodes) {
+    public UUID claim(AppUser user, List<Episode> episodes) {
         Instant now = Instant.now(clock);
+        UUID batchId = UUID.randomUUID();
         for (Episode episode : episodes) {
-            NotificationDelivery delivery = new NotificationDelivery(user, episode);
+            NotificationDelivery delivery = new NotificationDelivery(user, episode, batchId);
             // From the clock rather than from wall-clock time, because this
             // timestamp is what the daily cap counts: a row stamped by
             // Instant.now() while everything else reasons about the injected
@@ -70,6 +75,20 @@ public class NotificationDeliveryRecorder {
         // Forces the constraint to speak now, inside this transaction, rather
         // than at some later commit the caller cannot attribute.
         deliveries.flush();
+        return batchId;
+    }
+
+    /**
+     * Gives back a claim whose push reached nobody.
+     *
+     * <p>Without this, one transient failure from APNs would mean the episode
+     * is marked announced forever and the user simply never hears about it --
+     * the delivery log cannot tell "already sent" from "tried once and the
+     * network was down".
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void release(UUID batchId) {
+        deliveries.deleteByBatchId(batchId);
     }
 
     /** Drops a device the push service says no longer exists. */

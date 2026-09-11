@@ -91,7 +91,14 @@ public class ImportMatcher {
                     continue;
                 }
                 budget--;
-                local = fromProvider(row).orElse(null);
+                ProviderMatch provider = fromProvider(row);
+                if (provider.ambiguous()) {
+                    matched.add(MatchedRow.unmatched(row,
+                            "Several titles are called \"" + row.titleText() + "\". Add it to your "
+                                    + "library once, and this file will match it next time."));
+                    continue;
+                }
+                local = provider.title();
             }
 
             if (local == null) {
@@ -170,23 +177,58 @@ public class ImportMatcher {
         return sameYear.isEmpty() ? candidates : sameYear;
     }
 
-    /** Last resort: ask the metadata provider and import the best answer. */
-    private Optional<Title> fromProvider(ImportRow row) {
+    /**
+     * Last resort: ask the metadata provider.
+     *
+     * <p>Only an exact name match counts. The provider searches loosely and
+     * returns its results by popularity, so taking the first hit would file
+     * "Heat" under whatever is popular this month whenever the real title is
+     * missing -- and a wrong match imported silently is the failure this whole
+     * feature is built to avoid.
+     *
+     * <p>Several exact matches means the answer is genuinely unclear, and the
+     * row is left for the user rather than decided for them.
+     */
+    private ProviderMatch fromProvider(ImportRow row) {
         try {
-            List<ProviderTitleSummary> hits = catalog.search(row.titleText(), 1, null).results();
-            Optional<ProviderTitleSummary> best = hits.stream()
+            List<ProviderTitleSummary> hits = catalog.search(row.titleText(), 1, null).results().stream()
                     .filter(hit -> row.titleType() == null || hit.titleType() == row.titleType())
                     .filter(hit -> row.year() == null || hit.releaseDate() == null
                             || hit.releaseDate().getYear() == row.year())
-                    .findFirst();
+                    .filter(hit -> equalsIgnoreCase(hit.title(), row.titleText())
+                            || equalsIgnoreCase(hit.originalTitle(), row.titleText()))
+                    .toList();
 
-            return best.map(hit -> catalog.importTitle(
+            if (hits.isEmpty()) {
+                return ProviderMatch.nothing();
+            }
+            if (hits.size() > 1) {
+                return ProviderMatch.several();
+            }
+
+            ProviderTitleSummary hit = hits.getFirst();
+            return ProviderMatch.one(catalog.importTitle(
                     hit.titleType() == null ? TitleType.MOVIE : hit.titleType(), hit.providerId(), null));
         } catch (MetadataProviderException e) {
             // An upstream that is down must not turn into "this title does not
             // exist", which is what a caught-and-ignored exception would say.
             log.warn("Provider lookup failed while importing \"{}\": {}", row.titleText(), e.getMessage());
-            return Optional.empty();
+            return ProviderMatch.nothing();
+        }
+    }
+
+    /** What the provider had to say: one title, several, or nothing usable. */
+    private record ProviderMatch(Title title, boolean ambiguous) {
+        static ProviderMatch one(Title title) {
+            return new ProviderMatch(title, false);
+        }
+
+        static ProviderMatch nothing() {
+            return new ProviderMatch(null, false);
+        }
+
+        static ProviderMatch several() {
+            return new ProviderMatch(null, true);
         }
     }
 

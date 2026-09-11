@@ -1246,6 +1246,11 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "rating" : {
+            "type" : "number",
+            "maximum" : 10.0,
+            "minimum" : 0.0
+          },
           "sourceRef" : {
             "type" : "string",
             "maxLength" : 255,
@@ -1416,6 +1421,11 @@
           "platform" : {
             "type" : "string",
             "enum" : [ "IOS", "ANDROID" ]
+          },
+          "timeZone" : {
+            "type" : "string",
+            "maxLength" : 64,
+            "minLength" : 0
           },
           "token" : {
             "type" : "string",
@@ -1673,6 +1683,9 @@
               "$ref" : "#/components/schemas/AvailabilityResponse"
             }
           },
+          "availabilityChecked" : {
+            "type" : "boolean"
+          },
           "backdropUrl" : {
             "type" : "string"
           },
@@ -1749,7 +1762,7 @@
             "enum" : [ "MOVIE", "TV_SERIES" ]
           }
         },
-        "required" : [ "availability", "genres", "id", "primaryTitle", "providerId", "titleType" ]
+        "required" : [ "availability", "availabilityChecked", "genres", "id", "primaryTitle", "providerId", "titleType" ]
       },
       "UpNextResponse" : {
         "type" : "object",

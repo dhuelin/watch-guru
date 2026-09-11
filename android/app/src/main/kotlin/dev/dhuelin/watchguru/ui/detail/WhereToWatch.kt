@@ -1,5 +1,6 @@
 package dev.dhuelin.watchguru.ui.detail
 
+import android.text.format.DateUtils
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -35,10 +36,12 @@ import dev.dhuelin.watchguru.data.WatchOffers
 /**
  * Where the user can actually watch this, in their own country.
  *
- * The section is absent rather than empty when there are no offers: an empty
- * list means either "on no service here" or "we have not been able to ask the
- * provider", and the two are indistinguishable from the response, so claiming
- * the first would sometimes be a lie.
+ * Three states, not two. Offers are listed; no offers *that the server
+ * confirmed* says so in as many words, because "not on anything here" is
+ * useful and true; and no offers that nobody could confirm shows nothing at
+ * all, because an empty list from an unreachable provider is not evidence of
+ * anything. [checked] is what separates the last two, and without it this
+ * section would have to guess.
  *
  * The country is the one on the user's profile -- the backend resolves it from
  * the token -- which the caption says, because offers for the wrong country are
@@ -48,9 +51,32 @@ import dev.dhuelin.watchguru.data.WatchOffers
 @Composable
 fun WhereToWatch(
     offers: List<AvailabilityResponse>,
+    checked: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    if (offers.isEmpty()) return
+    if (offers.isEmpty() && !checked) return
+
+    if (offers.isEmpty()) {
+        Column(modifier = modifier) {
+            Text(
+                text = stringResource(R.string.where_to_watch),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = stringResource(R.string.where_to_watch_none),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+            Text(
+                text = stringResource(R.string.where_to_watch_region),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+        }
+        return
+    }
 
     val groups = remember(offers) { WatchOffers.group(offers) }
     val link = remember(offers) { WatchOffers.link(offers) }
@@ -92,6 +118,23 @@ fun WhereToWatch(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 4.dp),
         )
+        // Availability is cached for a day. Without saying when it was
+        // checked, a service that dropped the title this morning still looks
+        // like a live answer.
+        WatchOffers.checkedAt(offers)?.let { checkedAt ->
+            Text(
+                text = stringResource(
+                    R.string.where_to_watch_updated,
+                    DateUtils.getRelativeTimeSpanString(
+                        checkedAt.toInstant().toEpochMilli(),
+                        System.currentTimeMillis(),
+                        DateUtils.MINUTE_IN_MILLIS,
+                    ),
+                ),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         // Required alongside TMDB's own attribution: the availability data is
         // JustWatch's, and TMDB's terms say so.
         Text(

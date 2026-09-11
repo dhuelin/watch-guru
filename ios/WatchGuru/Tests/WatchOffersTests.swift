@@ -88,4 +88,21 @@ struct WatchOffersTests {
         #expect(WatchOffers.link([offer(3, "Netflix", .flatrate, link: "  ")]) == nil)
         #expect(WatchOffers.link([]) == nil)
     }
+
+    @Test("the section is only as current as its stalest row")
+    func checkedAtIsTheOldest() {
+        let older = Date(timeIntervalSince1970: 1_000)
+        let newer = Date(timeIntervalSince1970: 2_000)
+        let offers = [
+            AvailabilityResponse(fetchedAt: newer, offerType: .flatrate, serviceId: 1, serviceName: "Netflix"),
+            AvailabilityResponse(fetchedAt: older, offerType: .rent, serviceId: 2, serviceName: "Apple TV")
+        ]
+
+        #expect(WatchOffers.checkedAt(offers) == older)
+    }
+
+    @Test("no offers means nothing to date")
+    func checkedAtOfNothing() {
+        #expect(WatchOffers.checkedAt([]) == nil)
+    }
 }

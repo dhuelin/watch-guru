@@ -45,18 +45,66 @@ public class AvailabilityService {
         this.catalogProperties = catalogProperties;
     }
 
-    /** Cached offers for a title in a region, refetched once the TTL expires. */
+    /**
+     * Cached offers for a title in a region, refetched once the TTL expires.
+     *
+     * <p>Freshness is judged per region, from the rows themselves, rather than
+     * from the one timestamp on the title. The title-level stamp says when
+     * some region was last fetched, which is the wrong question the moment a
+     * user changes country: their region has never been fetched, the title
+     * looks fresh, and they are shown an empty list as though nothing carried
+     * it.
+     *
+     * @return the offers, and whether they are something we can vouch for --
+     *         an empty list from a successful fetch means "on no service
+     *         here", and an empty list from an upstream that would not answer
+     *         means nothing at all, which the apps must not present as the
+     *         first
+     */
     @Transactional
-    public List<TitleAvailability> offersFor(Title title, String region) {
-        if (title.needsAvailabilityRefresh(catalogProperties.availabilityTtl())) {
+    public Offers offersFor(Title title, String region) {
+        List<TitleAvailability> cached = availability.findByTitleIdAndRegion(title.getId(), region);
+
+        if (!isFresh(cached)) {
             try {
                 refresh(title, region);
+                return new Offers(availability.findByTitleIdAndRegion(title.getId(), region), true);
             } catch (RuntimeException e) {
                 // Stale availability is better than failing the whole request.
                 log.warn("Could not refresh availability for {}: {}", title.getPrimaryTitle(), e.getMessage());
+                return new Offers(cached, !cached.isEmpty());
             }
         }
-        return availability.findByTitleIdAndRegion(title.getId(), region);
+        return new Offers(cached, true);
+    }
+
+    /**
+     * The offers for one region, and whether they are current.
+     *
+     * @param checked false when the provider could not be reached and there
+     *                was nothing cached to fall back on. The difference
+     *                matters: only a checked empty list means a title is
+     *                genuinely unavailable
+     */
+    public record Offers(List<TitleAvailability> offers, boolean checked) {
+    }
+
+    /**
+     * Whether these rows are current enough to use.
+     *
+     * <p>No rows is not freshness. It is either a region nobody has asked
+     * about yet or a title carried nowhere in it, and the two are told apart
+     * by asking the provider -- once per TTL, not once per request, because
+     * the refresh writes a fetched-at even when it finds nothing.
+     */
+    private boolean isFresh(List<TitleAvailability> cached) {
+        if (cached.isEmpty()) {
+            return false;
+        }
+        Instant cutoff = Instant.now().minus(catalogProperties.availabilityTtl());
+        return cached.stream()
+                .map(TitleAvailability::getFetchedAt)
+                .allMatch(fetchedAt -> fetchedAt != null && fetchedAt.isAfter(cutoff));
     }
 
     @Transactional

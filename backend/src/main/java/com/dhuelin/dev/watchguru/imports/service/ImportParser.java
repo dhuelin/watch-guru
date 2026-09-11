@@ -173,10 +173,12 @@ public final class ImportParser {
         if (watched == null) {
             watched = isoDate(value(columns, row, "date"));
         }
+        // The URI names the film, not the diary entry, so the date goes in
+        // too: two rows for two viewings of the same film would otherwise
+        // share a reference, and the second would be skipped as a duplicate.
         return new ImportRow(
-                uri != null ? "letterboxd:" + uri
-                        : contentRef("letterboxd", title, value(columns, row, "year"),
-                                watched == null ? null : watched.toString()),
+                contentRef("letterboxd", uri, title, value(columns, row, "year"),
+                        watched == null ? null : watched.toString()),
                 title,
                 integer(value(columns, row, "year")),
                 null,
@@ -197,24 +199,26 @@ public final class ImportParser {
         // "Breaking Bad: Season 5: Ozymandias" -- series, season, episode name.
         // Netflix never gives an episode number, which is why matching one
         // means matching its name against the catalogue.
+        //
+        // The season segment is searched for rather than assumed to be the
+        // second one: "Star Trek: Strange New Worlds: Season 1: Children of
+        // the Comet" is a perfectly ordinary Netflix row, and taking part two
+        // as the season reads the series name as a season number, finds none,
+        // and quietly files an episode as a film.
         String[] parts = raw.split(":");
-        if (parts.length >= 3) {
-            Integer season = seasonNumber(parts[1]);
-            if (season != null) {
-                String series = parts[0].trim();
-                String episodeName = String.join(":", java.util.Arrays.copyOfRange(parts, 2, parts.length)).trim();
-                return new ImportRow(
-                        "netflix:" + raw + "@" + date,
-                        series,
-                        null,
-                        null,
-                        TitleType.TV_SERIES,
-                        season,
-                        null,
-                        episodeName,
-                        date,
-                        null);
-            }
+        int seasonAt = seasonSegment(parts);
+        if (seasonAt > 0) {
+            return new ImportRow(
+                    "netflix:" + raw + "@" + date,
+                    join(parts, 0, seasonAt),
+                    null,
+                    null,
+                    TitleType.TV_SERIES,
+                    seasonNumber(parts[seasonAt]),
+                    null,
+                    join(parts, seasonAt + 1, parts.length),
+                    date,
+                    null);
         }
         return new ImportRow(
                 "netflix:" + raw + "@" + date,
@@ -227,6 +231,27 @@ public final class ImportParser {
                 null,
                 date,
                 null);
+    }
+
+    /**
+     * Which segment is the season, or -1 when none of them is.
+     *
+     * <p>Neither the first nor the last: the first is the series and the last
+     * is the episode, and a row with nothing either side of the season is not
+     * an episode row. Searched from the right, because a series named after a
+     * year -- "1923" -- would otherwise be read as its own season number.
+     */
+    static int seasonSegment(String[] parts) {
+        for (int i = parts.length - 2; i >= 1; i--) {
+            if (seasonNumber(parts[i]) != null) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static String join(String[] parts, int from, int to) {
+        return String.join(":", java.util.Arrays.copyOfRange(parts, from, to)).trim();
     }
 
     /** "Season 5", "Staffel 5", "Season 5 - Part 2" -- the digits are the answer. */

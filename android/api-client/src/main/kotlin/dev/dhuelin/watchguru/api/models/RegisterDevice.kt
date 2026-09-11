@@ -33,6 +33,7 @@ import kotlinx.serialization.Contextual
  *
  * @param platform 
  * @param token 
+ * @param timeZone 
  */
 @Serializable
 
@@ -42,7 +43,10 @@ data class RegisterDevice (
     val platform: RegisterDevice.Platform,
 
     @SerialName(value = "token")
-    val token: kotlin.String
+    val token: kotlin.String,
+
+    @SerialName(value = "timeZone")
+    val timeZone: kotlin.String? = null
 
 ) {
 
