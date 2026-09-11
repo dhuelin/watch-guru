@@ -7,10 +7,13 @@ import com.dhuelin.dev.watchguru.catalog.service.CatalogService;
 import com.dhuelin.dev.watchguru.config.AuthProperties;
 import com.dhuelin.dev.watchguru.config.OpenApiConfig;
 import com.dhuelin.dev.watchguru.config.ImportProperties;
+import com.dhuelin.dev.watchguru.config.PlexProperties;
 import com.dhuelin.dev.watchguru.config.TmdbProperties;
 import com.dhuelin.dev.watchguru.security.CurrentUserService;
 import com.dhuelin.dev.watchguru.security.SecurityConfig;
+import com.dhuelin.dev.watchguru.streaming.plex.PlexLinkService;
 import com.dhuelin.dev.watchguru.streaming.repository.LinkedStreamingAccountRepository;
+import com.dhuelin.dev.watchguru.streaming.repository.SyncRunRepository;
 import com.dhuelin.dev.watchguru.streaming.repository.StreamingServiceRepository;
 import com.dhuelin.dev.watchguru.imports.service.ImportService;
 import com.dhuelin.dev.watchguru.notifications.service.NotificationSettingsService;
@@ -72,6 +75,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
         StreamingController.class,
         NotificationController.class,
         ImportController.class,
+        PlexController.class,
         AuthController.class})
 @Import({SecurityConfig.class, TrustedIssuers.class, AccessTokenIssuer.class,
         OpenApiConfig.class, OpenApiSpecTest.SpecTestConfig.class})
@@ -117,6 +121,12 @@ class OpenApiSpecTest {
         ImportProperties importProperties() {
             return new ImportProperties(50);
         }
+
+        /** Also a record. */
+        @Bean
+        PlexProperties plexProperties() {
+            return new PlexProperties("https://api.watch-guru.test");
+        }
     }
 
     @Autowired
@@ -138,6 +148,8 @@ class OpenApiSpecTest {
     @MockitoBean private LinkedStreamingAccountRepository linkedStreamingAccountRepository;
     @MockitoBean private AppUserRepository appUserRepository;
     @MockitoBean private NotificationSettingsService notificationSettingsService;
+    @MockitoBean private PlexLinkService plexLinkService;
+    @MockitoBean private SyncRunRepository syncRunRepository;
     @MockitoBean private ImportService importService;
 
     /**

@@ -428,6 +428,58 @@
         "tags" : [ "streaming-controller" ]
       }
     },
+    "/api/v1/me/streaming-accounts/plex" : {
+      "delete" : {
+        "operationId" : "disconnectPlex",
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "plex-controller" ]
+      },
+      "get" : {
+        "operationId" : "getPlexStatus",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PlexStatusResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "plex-controller" ]
+      },
+      "post" : {
+        "operationId" : "connectPlex",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ConnectPlex"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PlexConnectionResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "plex-controller" ]
+      }
+    },
     "/api/v1/me/up-next" : {
       "get" : {
         "operationId" : "getUpNext",
@@ -1039,6 +1091,16 @@
         },
         "required" : [ "rows" ]
       },
+      "ConnectPlex" : {
+        "type" : "object",
+        "properties" : {
+          "plexUsername" : {
+            "type" : "string",
+            "maxLength" : 128,
+            "minLength" : 0
+          }
+        }
+      },
       "EpisodeResponse" : {
         "type" : "object",
         "properties" : {
@@ -1402,6 +1464,39 @@
         },
         "required" : [ "enabled", "registeredDevices", "series" ]
       },
+      "PlexConnectionResponse" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "$ref" : "#/components/schemas/LinkedAccountResponse"
+          },
+          "setUpHint" : {
+            "type" : "string"
+          },
+          "webhookUrl" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "account", "setUpHint", "webhookUrl" ]
+      },
+      "PlexStatusResponse" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "$ref" : "#/components/schemas/LinkedAccountResponse"
+          },
+          "connected" : {
+            "type" : "boolean"
+          },
+          "recentRuns" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SyncRunResponse"
+            }
+          }
+        },
+        "required" : [ "connected", "recentRuns" ]
+      },
       "PreviewImport" : {
         "type" : "object",
         "properties" : {
@@ -1643,6 +1738,43 @@
           }
         },
         "required" : [ "id", "name", "slug", "supportsSync" ]
+      },
+      "SyncRunResponse" : {
+        "type" : "object",
+        "properties" : {
+          "errorMessage" : {
+            "type" : "string"
+          },
+          "finishedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "itemsFailed" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "itemsImported" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "itemsSkipped" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "startedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "RUNNING", "SUCCESS", "PARTIAL", "FAILED" ]
+          }
+        },
+        "required" : [ "id", "itemsFailed", "itemsImported", "itemsSkipped", "startedAt", "status" ]
       },
       "TitleProgress" : {
         "type" : "object",

@@ -9,6 +9,7 @@ import com.dhuelin.dev.watchguru.tracking.service.WatchlistService;
 import com.dhuelin.dev.watchguru.catalog.domain.Title;
 import com.dhuelin.dev.watchguru.provider.model.ProviderSearchPage;
 import com.dhuelin.dev.watchguru.streaming.domain.LinkedStreamingAccount;
+import com.dhuelin.dev.watchguru.streaming.domain.SyncRun;
 import com.dhuelin.dev.watchguru.streaming.domain.StreamingService;
 import com.dhuelin.dev.watchguru.streaming.domain.TitleAvailability;
 import com.dhuelin.dev.watchguru.streaming.service.AvailabilityService;
@@ -225,6 +226,18 @@ public class ApiMapper {
         return new Responses.StreamingServiceResponse(
                 service.getId(), service.getSlug(), service.getName(),
                 images.logo(service.getLogoPath()), service.isSupportsSync());
+    }
+
+    public Responses.SyncRunResponse toSyncRun(SyncRun run) {
+        return new Responses.SyncRunResponse(
+                run.getId(),
+                run.getStartedAt(),
+                run.getFinishedAt(),
+                run.getStatus(),
+                run.getItemsImported(),
+                run.getItemsSkipped(),
+                run.getItemsFailed(),
+                run.getErrorMessage());
     }
 
     public Responses.LinkedAccountResponse toLinkedAccount(LinkedStreamingAccount account) {

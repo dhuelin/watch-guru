@@ -191,4 +191,19 @@ public final class Requests {
             @DecimalMin("0.0") @DecimalMax("10.0") BigDecimal rating
     ) {
     }
+
+    /**
+     * Connecting a Plex server.
+     *
+     * @param plexUsername the Plex account whose viewing should be recorded.
+     *                     Optional, and it matters on a shared server: a Plex
+     *                     server owner receives webhook deliveries for
+     *                     everybody who watches anything on it, and without a
+     *                     name to match, a housemate's evening would land in
+     *                     this user's history
+     */
+    public record ConnectPlex(
+            @Size(max = 128) String plexUsername
+    ) {
+    }
 }

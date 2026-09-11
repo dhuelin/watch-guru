@@ -89,6 +89,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/auth/session", "/api/v1/auth/refresh", "/api/v1/auth/logout")
                             .permitAll()
+                        // A Plex server holds no account token and cannot be
+                        // taught to send one. Its credential is the secret in
+                        // the webhook URL, which PlexWebhookService checks in
+                        // constant time and rejects with 401 -- so this path is
+                        // unauthenticated to the filter chain and guarded
+                        // inside, exactly as the token endpoints above are.
+                        .requestMatchers(HttpMethod.POST, "/api/v1/webhooks/plex/*").permitAll()
                         // Everything else, including every other /api route, needs a token.
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.authenticationManagerResolver(issuerResolver))

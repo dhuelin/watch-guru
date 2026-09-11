@@ -64,6 +64,20 @@ public class LinkedStreamingAccount {
     @Column(name = "sync_enabled", nullable = false)
     private boolean syncEnabled = true;
 
+    /**
+     * SHA-256 of the token in the webhook URL this link hands out.
+     *
+     * <p>The hash and not the token, because a webhook URL is a bearer
+     * credential: anyone holding it can post a watch into this user's history.
+     * Stored like a password so a database dump does not yield a working URL,
+     * and shown to the user exactly once, when it is issued.
+     */
+    @Column(name = "webhook_token_hash", length = 64)
+    private String webhookTokenHash;
+
+    @Column(name = "webhook_token_issued_at")
+    private Instant webhookTokenIssuedAt;
+
     @Column(name = "last_sync_at")
     private Instant lastSyncAt;
 

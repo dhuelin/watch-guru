@@ -5,6 +5,7 @@ import com.dhuelin.dev.watchguru.imports.domain.ImportSource;
 import com.dhuelin.dev.watchguru.imports.domain.MatchStatus;
 import com.dhuelin.dev.watchguru.streaming.domain.LinkStatus;
 import com.dhuelin.dev.watchguru.streaming.domain.OfferType;
+import com.dhuelin.dev.watchguru.streaming.domain.SyncStatus;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -375,6 +376,53 @@ public final class Responses {
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int skipped,
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int failed,
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<String> problems
+    ) {
+    }
+
+    /**
+     * A Plex connection, and the webhook URL that feeds it.
+     *
+     * <p>{@code webhookUrl} carries the secret and is returned exactly once,
+     * when the connection is made. It is stored only as a hash, so this
+     * service cannot show it again -- a user who loses it reconnects, which
+     * issues a new one and retires the old.
+     *
+     * @param setUpHint what the user has to do with the URL, in one line: the
+     *                  app can show it verbatim next to a copy button
+     */
+    public record PlexConnectionResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) LinkedAccountResponse account,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String webhookUrl,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String setUpHint
+    ) {
+    }
+
+    /**
+     * Whether a connection is working, and what it has done lately.
+     *
+     * @param connected  whether a webhook URL is live for this user
+     * @param recentRuns newest first. An integration that silently stops is
+     *                   worse than one never offered, so the last few
+     *                   deliveries are visible rather than inferred from
+     *                   whether anything showed up in the library
+     */
+    public record PlexStatusResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean connected,
+            LinkedAccountResponse account,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<SyncRunResponse> recentRuns
+    ) {
+    }
+
+    /** One delivery from a linked service, and what it came to. */
+    public record SyncRunResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long id,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Instant startedAt,
+            Instant finishedAt,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) SyncStatus status,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int itemsImported,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int itemsSkipped,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int itemsFailed,
+            String errorMessage
     ) {
     }
 }

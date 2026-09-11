@@ -66,6 +66,17 @@ the repository.
 | `WATCH_GURU_IMDB_ENABLED` | Off by default, for licensing reasons — see the roadmap. |
 | `WATCH_GURU_NOTIFICATIONS_ENABLED` | On by default, but nothing is delivered — see below. |
 | `WATCH_GURU_PUSH_PROVIDER` | `log` is the only value that exists today. |
+| `WATCH_GURU_PUBLIC_BASE_URL` | Where a user's Plex server can reach this API, e.g. `https://api.watch-guru.dev`. The webhook URL handed out on connect is built from it. Unset, it is derived from the incoming request, which is right in development and wrong behind a proxy that does not forward the original host — and a webhook URL that is wrong in that way fails silently, because Plex reports nothing for a URL that resolves to nothing. |
+
+### Webhook URLs are credentials, and they are in the path
+
+A Plex server sends no headers of our choosing and offers no signing secret,
+so the token that identifies a connection is in the URL path. Only its SHA-256
+hash is stored, and holding one lets its bearer write watch events into exactly
+one account and read nothing — but anything that logs full request URLs, a
+proxy or CDN included, is logging a credential. Either scrub
+`/api/v1/webhooks/` from access logs or treat them as sensitive. A user can
+retire theirs at any time from the app, which is also the remedy if one leaks.
 
 ### Notifications deliver nothing yet
 

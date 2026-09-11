@@ -7,6 +7,7 @@ docs/AvailabilityResponse.md
 docs/Bucket.md
 docs/BulkMarkResponse.md
 docs/CommitImport.md
+docs/ConnectPlex.md
 docs/EpisodeResponse.md
 docs/ExchangeToken.md
 docs/GenreResponse.md
@@ -24,6 +25,9 @@ docs/MeControllerApi.md
 docs/MonthBucket.md
 docs/NotificationControllerApi.md
 docs/NotificationSettingsResponse.md
+docs/PlexConnectionResponse.md
+docs/PlexControllerApi.md
+docs/PlexStatusResponse.md
 docs/PreviewImport.md
 docs/RefreshSession.md
 docs/RegisterDevice.md
@@ -36,6 +40,7 @@ docs/SeriesProgress.md
 docs/SessionResponse.md
 docs/StreamingControllerApi.md
 docs/StreamingServiceResponse.md
+docs/SyncRunResponse.md
 docs/TitleControllerApi.md
 docs/TitleProgress.md
 docs/TitleResponse.md
@@ -60,6 +65,7 @@ src/main/kotlin/dev/dhuelin/watchguru/api/apis/AuthenticationApi.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/apis/ImportControllerApi.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/apis/MeControllerApi.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/apis/NotificationControllerApi.kt
+src/main/kotlin/dev/dhuelin/watchguru/api/apis/PlexControllerApi.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/apis/StreamingControllerApi.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/apis/TitleControllerApi.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/apis/WatchHistoryControllerApi.kt
@@ -86,6 +92,7 @@ src/main/kotlin/dev/dhuelin/watchguru/api/models/AvailabilityResponse.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/Bucket.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/BulkMarkResponse.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/CommitImport.kt
+src/main/kotlin/dev/dhuelin/watchguru/api/models/ConnectPlex.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/EpisodeResponse.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/ExchangeToken.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/GenreResponse.kt
@@ -100,6 +107,8 @@ src/main/kotlin/dev/dhuelin/watchguru/api/models/LogMovieWatched.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/MarkWatchedUpTo.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/MonthBucket.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/NotificationSettingsResponse.kt
+src/main/kotlin/dev/dhuelin/watchguru/api/models/PlexConnectionResponse.kt
+src/main/kotlin/dev/dhuelin/watchguru/api/models/PlexStatusResponse.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/PreviewImport.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/RefreshSession.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/RegisterDevice.kt
@@ -111,6 +120,7 @@ src/main/kotlin/dev/dhuelin/watchguru/api/models/SeriesNotificationResponse.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/SeriesProgress.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/SessionResponse.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/StreamingServiceResponse.kt
+src/main/kotlin/dev/dhuelin/watchguru/api/models/SyncRunResponse.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/TitleProgress.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/TitleResponse.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/UpNextResponse.kt
@@ -126,6 +136,7 @@ src/test/kotlin/dev/dhuelin/watchguru/api/apis/AuthenticationApiTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/apis/ImportControllerApiTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/apis/MeControllerApiTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/apis/NotificationControllerApiTest.kt
+src/test/kotlin/dev/dhuelin/watchguru/api/apis/PlexControllerApiTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/apis/StreamingControllerApiTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/apis/TitleControllerApiTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/apis/WatchHistoryControllerApiTest.kt
@@ -135,6 +146,7 @@ src/test/kotlin/dev/dhuelin/watchguru/api/models/AvailabilityResponseTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/BucketTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/BulkMarkResponseTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/CommitImportTest.kt
+src/test/kotlin/dev/dhuelin/watchguru/api/models/ConnectPlexTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/EpisodeResponseTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/ExchangeTokenTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/GenreResponseTest.kt
@@ -149,6 +161,8 @@ src/test/kotlin/dev/dhuelin/watchguru/api/models/LogMovieWatchedTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/MarkWatchedUpToTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/MonthBucketTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/NotificationSettingsResponseTest.kt
+src/test/kotlin/dev/dhuelin/watchguru/api/models/PlexConnectionResponseTest.kt
+src/test/kotlin/dev/dhuelin/watchguru/api/models/PlexStatusResponseTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/PreviewImportTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/RefreshSessionTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/RegisterDeviceTest.kt
@@ -160,6 +174,7 @@ src/test/kotlin/dev/dhuelin/watchguru/api/models/SeriesNotificationResponseTest.
 src/test/kotlin/dev/dhuelin/watchguru/api/models/SeriesProgressTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/SessionResponseTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/StreamingServiceResponseTest.kt
+src/test/kotlin/dev/dhuelin/watchguru/api/models/SyncRunResponseTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/TitleProgressTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/TitleResponseTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/UpNextResponseTest.kt

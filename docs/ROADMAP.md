@@ -164,6 +164,7 @@ library rots.
 | [#22](https://github.com/dhuelin/watch-guru/issues/22) | History timeline and editing | Where mistakes get corrected, and backdated entries get logged |
 | [#23](https://github.com/dhuelin/watch-guru/issues/23) | Accessibility and localisation | Filed separately because that is the only way it does not get skipped |
 | [#24](https://github.com/dhuelin/watch-guru/issues/24) | IMDb licensing decision | Cheap to settle now, a compliance problem after launch |
+| [#39](https://github.com/dhuelin/watch-guru/issues/39) | Connect Plex, Jellyfin, Emby and Trakt | Watching something should record it without anybody marking anything. Plex is connected; see [`PLEX.md`](PLEX.md) |
 
 ---
 
