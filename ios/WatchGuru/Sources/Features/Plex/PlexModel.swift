@@ -32,9 +32,14 @@ final class PlexModel {
             state = .loading
         }
         do {
-            state = .content(try await client.plexStatus())
-        } catch let failure {
-            state = .failed(failure)
+            // Hoisted rather than inlined into the case, as everywhere else
+            // here: inline, the region based isolation checker gives up with
+            // "pattern that the ... checker does not understand how to check".
+            // TitleDetailModel carries the long version of this note.
+            let status = try await client.plexStatus()
+            state = .content(status)
+        } catch {
+            state = .failed(error)
         }
     }
 
