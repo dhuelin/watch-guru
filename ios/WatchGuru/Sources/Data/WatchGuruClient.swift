@@ -235,6 +235,35 @@ actor WatchGuruClient {
         }
     }
 
+    // MARK: - Plex
+
+    /// Whether a Plex server is connected, and what it has sent lately.
+    func plexStatus() async throws(APIFailure) -> PlexStatusResponse {
+        try await run { try await PlexControllerAPI.getPlexStatus(apiConfiguration: $0) }
+    }
+
+    /// Connects, or reconnects, a Plex server.
+    ///
+    /// The webhook URL comes back once and is never recoverable: the server
+    /// keeps only a hash of it. Calling this again issues a new URL and
+    /// retires the previous one, which is also the way out if somebody pasted
+    /// theirs where they should not have.
+    ///
+    /// - Parameter plexUsername: whose viewing counts. Optional, and it
+    ///   matters on a shared server: without it, a housemate's evening could
+    ///   land in this library.
+    func connectPlex(plexUsername: String?) async throws(APIFailure) -> PlexConnectionResponse {
+        let trimmed = plexUsername?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let request = ConnectPlex(plexUsername: (trimmed?.isEmpty ?? true) ? nil : trimmed)
+        return try await run {
+            try await PlexControllerAPI.connectPlex(connectPlex: request, apiConfiguration: $0)
+        }
+    }
+
+    func disconnectPlex() async throws(APIFailure) {
+        try await runVoid { try await PlexControllerAPI.disconnectPlex(apiConfiguration: $0) }
+    }
+
     // MARK: - Failure mapping
 
     /// Runs one call, renewing the session once if the API says the access

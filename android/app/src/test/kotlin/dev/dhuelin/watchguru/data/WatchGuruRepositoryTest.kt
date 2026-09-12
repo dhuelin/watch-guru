@@ -88,6 +88,14 @@ class WatchGuruRepositoryTest {
             private fun fail(): Nothing = throw UnsupportedOperationException()
         },
         me = me,
+        plex = object : dev.dhuelin.watchguru.api.apis.PlexControllerApi {
+            override suspend fun connectPlex(
+                connectPlex: dev.dhuelin.watchguru.api.models.ConnectPlex?,
+            ) = fail()
+            override suspend fun disconnectPlex() = fail()
+            override suspend fun getPlexStatus() = fail()
+            private fun fail(): Nothing = throw UnsupportedOperationException()
+        },
         io = Dispatchers.Unconfined,
     )
 

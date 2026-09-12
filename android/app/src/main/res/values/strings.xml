@@ -90,6 +90,27 @@
     <string name="stats_top_titles">Most watched</string>
     <string name="stats_hours">%1$d h</string>
 
+    <!-- Connecting a Plex server (#39). The explainer says who calls whom,
+         because that is the whole security story and the reason there is no
+         password field on this screen. -->
+    <string name="title_plex">Plex</string>
+    <string name="action_back">Back</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_done">Done</string>
+    <string name="plex_explainer">Watching something on your own Plex server records it here, without marking anything. Plex calls Watch Guru, so there is no Plex password to give: you paste a URL into your Plex settings and your server does the talking. Plex Pass is required for webhooks.</string>
+    <string name="plex_username_label">Plex username (optional)</string>
+    <string name="plex_username_explainer">Only needed if other people watch things on the same server. Without it, only viewing your server marks as yours is recorded.</string>
+    <string name="action_plex_connect">Connect</string>
+    <string name="action_plex_reconnect">Issue a new URL</string>
+    <string name="action_plex_disconnect">Disconnect</string>
+    <string name="plex_reconnect_explainer">A new URL retires the old one, which is the way out if yours ended up somewhere public.</string>
+    <string name="plex_url_heading">Your webhook URL</string>
+    <string name="plex_url_instructions">Copy it now: it is shown once and cannot be shown again. In Plex: Settings, Webhooks, Add Webhook, paste, save.</string>
+    <string name="plex_last_heard">Last heard from your server %1$s</string>
+    <string name="plex_recent_deliveries">Recent deliveries</string>
+    <string name="plex_other_services">Netflix, Prime Video and Apple TV cannot work this way: none of them offers any way to ask what you watched. Import their export instead \u2014 re-importing duplicates nothing.</string>
+    <string name="action_connect_plex">Connect Plex</string>
+
     <string name="tmdb_attribution">This product uses the TMDB API but is not endorsed or certified by TMDB.</string>
 
     <!-- Shown when changes made offline have not reached the server yet. Not

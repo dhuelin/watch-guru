@@ -56,6 +56,9 @@ struct ProfileView: View {
                         NavigationLink("Statistics") {
                             StatsView()
                         }
+                        NavigationLink("Connect Plex") {
+                            PlexView()
+                        }
                     }
                     Section {
                         Button("Sign out") { session.signIn.signOut() }

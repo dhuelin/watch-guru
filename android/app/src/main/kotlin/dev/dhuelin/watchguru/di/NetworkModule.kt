@@ -9,6 +9,7 @@ import dagger.hilt.components.SingletonComponent
 import dev.dhuelin.watchguru.BuildConfig
 import dev.dhuelin.watchguru.api.apis.AuthenticationApi
 import dev.dhuelin.watchguru.api.apis.MeControllerApi
+import dev.dhuelin.watchguru.api.apis.PlexControllerApi
 import dev.dhuelin.watchguru.api.apis.TitleControllerApi
 import dev.dhuelin.watchguru.api.apis.WatchHistoryControllerApi
 import dev.dhuelin.watchguru.api.apis.WatchlistControllerApi
@@ -150,6 +151,7 @@ object NetworkModule {
     @Provides @Singleton fun watchlistApi(retrofit: Retrofit): WatchlistControllerApi = retrofit.create()
     @Provides @Singleton fun historyApi(retrofit: Retrofit): WatchHistoryControllerApi = retrofit.create()
     @Provides @Singleton fun meApi(retrofit: Retrofit): MeControllerApi = retrofit.create()
+    @Provides @Singleton fun plexApi(retrofit: Retrofit): PlexControllerApi = retrofit.create()
 
     @Provides
     @Singleton
@@ -158,7 +160,8 @@ object NetworkModule {
         watchlist: WatchlistControllerApi,
         history: WatchHistoryControllerApi,
         me: MeControllerApi,
-    ): WatchGuruRepository = WatchGuruRepository(titles, watchlist, history, me, ioDispatcher())
+        plex: PlexControllerApi,
+    ): WatchGuruRepository = WatchGuruRepository(titles, watchlist, history, me, plex, ioDispatcher())
 
     private fun ioDispatcher(): CoroutineDispatcher = Dispatchers.IO
 }
