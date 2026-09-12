@@ -66,7 +66,9 @@ the repository.
 | `WATCH_GURU_IMDB_ENABLED` | Off by default, for licensing reasons — see the roadmap. |
 | `WATCH_GURU_NOTIFICATIONS_ENABLED` | On by default, but nothing is delivered — see below. |
 | `WATCH_GURU_PUSH_PROVIDER` | `log` is the only value that exists today. |
-| `WATCH_GURU_PUBLIC_BASE_URL` | Where a user's Plex server can reach this API, e.g. `https://api.watch-guru.dev`. The webhook URL handed out on connect is built from it. Unset, it is derived from the incoming request, which is right in development and wrong behind a proxy that does not forward the original host — and a webhook URL that is wrong in that way fails silently, because Plex reports nothing for a URL that resolves to nothing. |
+| `WATCH_GURU_TRAKT_CLIENT_ID` / `_SECRET` | A free [Trakt application](https://trakt.tv/oauth/applications), whose redirect URI must be `<public base url>/api/v1/streaming/trakt/callback`. Without both, connecting Trakt is refused up front rather than after the user has approved — see [`TRAKT.md`](TRAKT.md). |
+| `WATCH_GURU_CREDENTIALS_SECRET` | Base64 of at least 32 random bytes (`openssl rand -base64 32`): the AES-GCM key that seals third-party access tokens. No generated fallback, for the same reason as the session secret — a key invented at boot would lose every connection on the next restart, and every user would have to reconnect without being told why. Only needed where Trakt is offered. |
+| `WATCH_GURU_PUBLIC_BASE_URL` | Where this service is reachable from outside, e.g. `https://api.watch-guru.dev`. Both the Plex webhook URL and the Trakt OAuth redirect are built from it. Unset, it is derived from the incoming request, which is right in development and wrong behind a proxy that does not forward the original host — and a webhook URL that is wrong in that way fails silently, because Plex reports nothing for a URL that resolves to nothing. |
 
 ### Webhook URLs are credentials, and they are in the path
 

@@ -186,7 +186,9 @@ afternoon, is in [`docs/AUTHENTICATION.md`](docs/AUTHENTICATION.md).
 
 Connecting a Plex server, so watching something there records it here without
 anybody marking anything — and why Netflix, Prime Video and Apple TV cannot
-work the same way — is in [`docs/PLEX.md`](docs/PLEX.md).
+work the same way — is in [`docs/PLEX.md`](docs/PLEX.md). Connecting Trakt, which
+brings in everything already scrobbled from anywhere else, is in
+[`docs/TRAKT.md`](docs/TRAKT.md).
 
 One trap worth knowing about, because the obvious spelling is wrong in a way
 that only shows up in production: `NimbusJwtDecoder.withIssuerLocation(...)

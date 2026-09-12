@@ -96,6 +96,12 @@ public class SecurityConfig {
                         // unauthenticated to the filter chain and guarded
                         // inside, exactly as the token endpoints above are.
                         .requestMatchers(HttpMethod.POST, "/api/v1/webhooks/plex/*").permitAll()
+                        // Trakt redirects a browser here, and a browser coming
+                        // back from trakt.tv carries no token of ours. The
+                        // guard is the single-use state parameter, which names
+                        // the user who started the flow; without a valid one
+                        // the callback connects nothing.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/streaming/trakt/callback").permitAll()
                         // Everything else, including every other /api route, needs a token.
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.authenticationManagerResolver(issuerResolver))

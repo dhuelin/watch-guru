@@ -7,11 +7,13 @@ import com.dhuelin.dev.watchguru.catalog.service.CatalogService;
 import com.dhuelin.dev.watchguru.config.AuthProperties;
 import com.dhuelin.dev.watchguru.config.OpenApiConfig;
 import com.dhuelin.dev.watchguru.config.ImportProperties;
-import com.dhuelin.dev.watchguru.config.PlexProperties;
+import com.dhuelin.dev.watchguru.config.PublicUrlProperties;
 import com.dhuelin.dev.watchguru.config.TmdbProperties;
 import com.dhuelin.dev.watchguru.security.CurrentUserService;
 import com.dhuelin.dev.watchguru.security.SecurityConfig;
 import com.dhuelin.dev.watchguru.streaming.plex.PlexLinkService;
+import com.dhuelin.dev.watchguru.streaming.trakt.TraktConnectionService;
+import com.dhuelin.dev.watchguru.streaming.trakt.TraktSyncService;
 import com.dhuelin.dev.watchguru.streaming.repository.LinkedStreamingAccountRepository;
 import com.dhuelin.dev.watchguru.streaming.repository.SyncRunRepository;
 import com.dhuelin.dev.watchguru.streaming.repository.StreamingServiceRepository;
@@ -76,6 +78,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
         NotificationController.class,
         ImportController.class,
         PlexController.class,
+        TraktController.class,
         AuthController.class})
 @Import({SecurityConfig.class, TrustedIssuers.class, AccessTokenIssuer.class,
         OpenApiConfig.class, OpenApiSpecTest.SpecTestConfig.class})
@@ -124,8 +127,8 @@ class OpenApiSpecTest {
 
         /** Also a record. */
         @Bean
-        PlexProperties plexProperties() {
-            return new PlexProperties("https://api.watch-guru.test");
+        PublicUrlProperties publicUrlProperties() {
+            return new PublicUrlProperties("https://api.watch-guru.test");
         }
     }
 
@@ -149,6 +152,8 @@ class OpenApiSpecTest {
     @MockitoBean private AppUserRepository appUserRepository;
     @MockitoBean private NotificationSettingsService notificationSettingsService;
     @MockitoBean private PlexLinkService plexLinkService;
+    @MockitoBean private TraktConnectionService traktConnectionService;
+    @MockitoBean private TraktSyncService traktSyncService;
     @MockitoBean private SyncRunRepository syncRunRepository;
     @MockitoBean private ImportService importService;
 

@@ -53,6 +53,10 @@ Class | Method | HTTP request | Description
 *TitleControllerAPI* | [**getTitle**](docs/TitleControllerAPI.md#gettitle) | **GET** /api/v1/titles/{titleId} | 
 *TitleControllerAPI* | [**importTitle**](docs/TitleControllerAPI.md#importtitle) | **POST** /api/v1/titles/import | 
 *TitleControllerAPI* | [**searchTitles**](docs/TitleControllerAPI.md#searchtitles) | **GET** /api/v1/titles/search | 
+*TraktControllerAPI* | [**authorizeTrakt**](docs/TraktControllerAPI.md#authorizetrakt) | **POST** /api/v1/me/streaming-accounts/trakt/authorize | 
+*TraktControllerAPI* | [**disconnectTrakt**](docs/TraktControllerAPI.md#disconnecttrakt) | **DELETE** /api/v1/me/streaming-accounts/trakt | 
+*TraktControllerAPI* | [**getTraktStatus**](docs/TraktControllerAPI.md#gettraktstatus) | **GET** /api/v1/me/streaming-accounts/trakt | 
+*TraktControllerAPI* | [**syncTrakt**](docs/TraktControllerAPI.md#synctrakt) | **POST** /api/v1/me/streaming-accounts/trakt/sync | 
 *WatchHistoryControllerAPI* | [**deleteWatchEvent**](docs/WatchHistoryControllerAPI.md#deletewatchevent) | **DELETE** /api/v1/me/watch-events/{eventId} | 
 *WatchHistoryControllerAPI* | [**getHistory**](docs/WatchHistoryControllerAPI.md#gethistory) | **GET** /api/v1/me/history | 
 *WatchHistoryControllerAPI* | [**getStats**](docs/WatchHistoryControllerAPI.md#getstats) | **GET** /api/v1/me/stats | 
@@ -103,9 +107,12 @@ Class | Method | HTTP request | Description
  - [SeriesProgress](docs/SeriesProgress.md)
  - [SessionResponse](docs/SessionResponse.md)
  - [StreamingServiceResponse](docs/StreamingServiceResponse.md)
+ - [SyncResultResponse](docs/SyncResultResponse.md)
  - [SyncRunResponse](docs/SyncRunResponse.md)
  - [TitleProgress](docs/TitleProgress.md)
  - [TitleResponse](docs/TitleResponse.md)
+ - [TraktAuthorizationResponse](docs/TraktAuthorizationResponse.md)
+ - [TraktStatusResponse](docs/TraktStatusResponse.md)
  - [UpNextResponse](docs/UpNextResponse.md)
  - [UpdateNotificationSettings](docs/UpdateNotificationSettings.md)
  - [UpdateProfile](docs/UpdateProfile.md)

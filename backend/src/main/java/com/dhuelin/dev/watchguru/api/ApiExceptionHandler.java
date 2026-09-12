@@ -7,6 +7,8 @@ import com.dhuelin.dev.watchguru.security.AccountConflictException;
 import com.dhuelin.dev.watchguru.security.CurrentUserService;
 import com.dhuelin.dev.watchguru.security.session.SessionService;
 import com.dhuelin.dev.watchguru.streaming.plex.WebhookAuthenticationException;
+import com.dhuelin.dev.watchguru.streaming.trakt.TraktConnectionService;
+import com.dhuelin.dev.watchguru.streaming.trakt.TraktException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -81,6 +83,30 @@ public class ApiExceptionHandler {
         log.debug("Rejected a webhook delivery: {}", e.getMessage());
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED,
                 "That webhook URL is not valid.");
+    }
+
+    /**
+     * Trakt cannot be connected here: no application registered, no key to
+     * seal the token with, or an authorisation link that has expired.
+     *
+     * <p>409 rather than 500, because nothing is broken -- the request cannot
+     * be honoured in this deployment's current state, and the message says
+     * which state that is.
+     */
+    @ExceptionHandler(TraktConnectionService.NotAvailableException.class)
+    ProblemDetail onTraktUnavailable(TraktConnectionService.NotAvailableException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    /** Trakt itself refused or could not be reached. */
+    @ExceptionHandler(TraktException.class)
+    ProblemDetail onTraktFailure(TraktException e) {
+        log.warn("Trakt call failed: {}", e.getMessage());
+        return e.isAuthFailure()
+                ? ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                        "Trakt access has expired. Connect Trakt again.")
+                : ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY,
+                        "Trakt could not be reached. Try again in a few minutes.");
     }
 
     @ExceptionHandler(AccountConflictException.class)

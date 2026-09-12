@@ -3,7 +3,7 @@ package com.dhuelin.dev.watchguru.api;
 import com.dhuelin.dev.watchguru.api.dto.ApiMapper;
 import com.dhuelin.dev.watchguru.api.dto.Requests;
 import com.dhuelin.dev.watchguru.api.dto.Responses;
-import com.dhuelin.dev.watchguru.config.PlexProperties;
+import com.dhuelin.dev.watchguru.config.PublicUrlProperties;
 import com.dhuelin.dev.watchguru.security.CurrentUserService;
 import com.dhuelin.dev.watchguru.streaming.domain.LinkedStreamingAccount;
 import com.dhuelin.dev.watchguru.streaming.plex.PlexLinkService;
@@ -40,18 +40,18 @@ public class PlexController {
     private final SyncRunRepository syncRuns;
     private final CurrentUserService currentUser;
     private final ApiMapper mapper;
-    private final PlexProperties properties;
+    private final PublicUrlProperties urls;
 
     public PlexController(PlexLinkService links,
                           SyncRunRepository syncRuns,
                           CurrentUserService currentUser,
                           ApiMapper mapper,
-                          PlexProperties properties) {
+                          PublicUrlProperties urls) {
         this.links = links;
         this.syncRuns = syncRuns;
         this.currentUser = currentUser;
         this.mapper = mapper;
-        this.properties = properties;
+        this.urls = urls;
     }
 
     /**
@@ -110,12 +110,9 @@ public class PlexController {
      * reports no error for a URL that resolves to nothing.
      */
     private String baseUrl() {
-        String configured = properties.publicBaseUrl();
-        if (configured != null && !configured.isBlank()) {
-            return configured.endsWith("/")
-                    ? configured.substring(0, configured.length() - 1)
-                    : configured;
-        }
-        return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
+        String configured = urls.trimmed();
+        return configured != null
+                ? configured
+                : ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
     }
 }

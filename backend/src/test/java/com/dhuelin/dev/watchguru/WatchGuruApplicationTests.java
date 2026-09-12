@@ -49,8 +49,10 @@ class WatchGuruApplicationTests {
                 "linked_streaming_account",
                 "notification_delivery",
                 "notification_preference",
+                "oauth_state",
                 "refresh_token",
                 "season",
+                "streaming_credential",
                 "streaming_service",
                 "sync_run",
                 "title",
@@ -103,14 +105,14 @@ class WatchGuruApplicationTests {
      *
      * <p>V2 claimed Netflix and Disney+ could be; V8 corrected it. Neither
      * offers any public API for viewing activity, and a flag saying otherwise
-     * puts a dead "Connect" button in front of everybody. Plex can, which is
-     * what #39 built.
+     * puts a dead "Connect" button in front of everybody. Plex and Trakt can,
+     * which is what #39 built.
      */
     @Test
     void onlyServicesThatCanActuallySyncAreMarkedSyncable() {
         var slugs = jdbcTemplate.queryForList(
                 "select slug from streaming_service where supports_sync = true order by slug", String.class);
 
-        assertThat(slugs).containsExactly("plex");
+        assertThat(slugs).containsExactly("plex", "trakt");
     }
 }
