@@ -87,10 +87,30 @@ class WatchGuruApplicationTests {
     }
 
     @Test
-    void seedMigrationMarksServicesThatSupportSync() {
+    void plexColumnsFromV8Exist() {
+        var columns = jdbcTemplate.queryForList("""
+                select column_name from information_schema.columns
+                where table_schema = 'public' and table_name = 'linked_streaming_account'
+                  and column_name in ('webhook_token_hash', 'webhook_token_issued_at')
+                order by column_name
+                """, String.class);
+
+        assertThat(columns).containsExactly("webhook_token_hash", "webhook_token_issued_at");
+    }
+
+    /**
+     * Only services a user can actually connect are marked as syncable.
+     *
+     * <p>V2 claimed Netflix and Disney+ could be; V8 corrected it. Neither
+     * offers any public API for viewing activity, and a flag saying otherwise
+     * puts a dead "Connect" button in front of everybody. Plex can, which is
+     * what #39 built.
+     */
+    @Test
+    void onlyServicesThatCanActuallySyncAreMarkedSyncable() {
         var slugs = jdbcTemplate.queryForList(
                 "select slug from streaming_service where supports_sync = true order by slug", String.class);
 
-        assertThat(slugs).containsExactly("disney-plus", "netflix");
+        assertThat(slugs).containsExactly("plex");
     }
 }

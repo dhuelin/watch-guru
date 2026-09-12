@@ -54,6 +54,7 @@ import dev.dhuelin.watchguru.ui.signin.SignInViewModel
 fun ProfileScreen(
     onOpenHistory: () -> Unit,
     onOpenStats: () -> Unit,
+    onOpenPlex: () -> Unit,
     signIn: SignInViewModel,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
@@ -148,6 +149,9 @@ fun ProfileScreen(
                 }
                 TextButton(onClick = onOpenStats) {
                     Text(stringResource(R.string.action_view_stats))
+                }
+                TextButton(onClick = onOpenPlex) {
+                    Text(stringResource(R.string.action_connect_plex))
                 }
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))

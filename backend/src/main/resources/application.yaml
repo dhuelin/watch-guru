@@ -31,6 +31,15 @@ spring:
   jackson:
     default-property-inclusion: non_null
 
+  servlet:
+    multipart:
+      # Plex posts its webhook as multipart: a small JSON part, and for some
+      # events a thumbnail. Bounded explicitly because this endpoint is
+      # unauthenticated at the filter chain -- anybody who learns the URL could
+      # otherwise post a very large file to it.
+      max-file-size: 2MB
+      max-request-size: 4MB
+
 watch-guru:
   auth:
     # Trusted identity providers. A token signed by anyone else is rejected
@@ -137,6 +146,12 @@ watch-guru:
     # upstream on one button press is how an API key gets suspended. Rows past
     # the budget are reported as not looked up rather than as not found.
     provider-lookups-per-import: 50
+  plex:
+    # Where a user's Plex server can reach this service. The webhook URL handed
+    # out on connect is built from it; left empty it is derived from the
+    # incoming request, which is right in development and wrong behind a proxy
+    # that does not forward the original host.
+    public-base-url: ${WATCH_GURU_PUBLIC_BASE_URL:}
   catalog:
     # How long a cached title detail record is considered fresh.
     detail-ttl: 7d

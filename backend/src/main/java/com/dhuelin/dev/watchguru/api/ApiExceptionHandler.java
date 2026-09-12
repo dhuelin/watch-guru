@@ -6,6 +6,7 @@ import com.dhuelin.dev.watchguru.provider.MetadataProviderNotConfiguredException
 import com.dhuelin.dev.watchguru.security.AccountConflictException;
 import com.dhuelin.dev.watchguru.security.CurrentUserService;
 import com.dhuelin.dev.watchguru.security.session.SessionService;
+import com.dhuelin.dev.watchguru.streaming.plex.WebhookAuthenticationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -65,6 +66,21 @@ public class ApiExceptionHandler {
     @ExceptionHandler(CurrentUserService.SessionUserGoneException.class)
     ProblemDetail onSessionUserGone(CurrentUserService.SessionUserGoneException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, e.getMessage());
+    }
+
+    /**
+     * A webhook delivery whose token opens nothing.
+     *
+     * <p>401 and one flat message for every cause. The caller is somebody's
+     * Plex server, or somebody guessing; neither needs to learn whether the
+     * link exists, whether the secret was close, or whether it was
+     * disconnected.
+     */
+    @ExceptionHandler(WebhookAuthenticationException.class)
+    ProblemDetail onWebhookRejected(WebhookAuthenticationException e) {
+        log.debug("Rejected a webhook delivery: {}", e.getMessage());
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED,
+                "That webhook URL is not valid.");
     }
 
     @ExceptionHandler(AccountConflictException.class)

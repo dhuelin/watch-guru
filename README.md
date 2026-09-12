@@ -184,6 +184,10 @@ things worth knowing before changing any of it:
 Full detail, including the two Apple quirks that will otherwise cost an
 afternoon, is in [`docs/AUTHENTICATION.md`](docs/AUTHENTICATION.md).
 
+Connecting a Plex server, so watching something there records it here without
+anybody marking anything — and why Netflix, Prime Video and Apple TV cannot
+work the same way — is in [`docs/PLEX.md`](docs/PLEX.md).
+
 One trap worth knowing about, because the obvious spelling is wrong in a way
 that only shows up in production: `NimbusJwtDecoder.withIssuerLocation(...)
 .build()` and `JwtDecoders.fromIssuerLocation` both fetch the provider's

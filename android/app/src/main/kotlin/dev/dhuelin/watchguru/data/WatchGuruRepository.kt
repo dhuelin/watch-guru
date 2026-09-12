@@ -1,13 +1,17 @@
 package dev.dhuelin.watchguru.data
 
 import dev.dhuelin.watchguru.api.apis.MeControllerApi
+import dev.dhuelin.watchguru.api.apis.PlexControllerApi
 import dev.dhuelin.watchguru.api.apis.TitleControllerApi
 import dev.dhuelin.watchguru.api.apis.WatchHistoryControllerApi
 import dev.dhuelin.watchguru.api.apis.WatchlistControllerApi
 import dev.dhuelin.watchguru.api.models.AddToWatchlist
 import dev.dhuelin.watchguru.api.models.BulkMarkResponse
 import dev.dhuelin.watchguru.api.models.LogEpisodeWatched
+import dev.dhuelin.watchguru.api.models.ConnectPlex
 import dev.dhuelin.watchguru.api.models.MarkWatchedUpTo
+import dev.dhuelin.watchguru.api.models.PlexConnectionResponse
+import dev.dhuelin.watchguru.api.models.PlexStatusResponse
 import dev.dhuelin.watchguru.api.models.SeasonsResponse
 import dev.dhuelin.watchguru.api.models.UpNextResponse
 import dev.dhuelin.watchguru.api.models.SearchResponse
@@ -40,6 +44,7 @@ class WatchGuruRepository(
     private val watchlist: WatchlistControllerApi,
     private val history: WatchHistoryControllerApi,
     private val me: MeControllerApi,
+    private val plex: PlexControllerApi,
     private val io: CoroutineDispatcher,
 ) {
 
@@ -130,6 +135,25 @@ class WatchGuruRepository(
 
     suspend fun history(page: Int = 0, size: Int = 50): ApiResult<List<WatchEventResponse>> =
         call { history.getHistory(page = page, size = size) }
+
+    /** Whether a Plex server is connected, and what it has sent lately. */
+    suspend fun plexStatus(): ApiResult<PlexStatusResponse> = call { plex.getPlexStatus() }
+
+    /**
+     * Connects, or reconnects, a Plex server.
+     *
+     * The webhook URL comes back once and is never recoverable: the server
+     * keeps only a hash of it. Calling this again issues a new URL and retires
+     * the previous one, which is also the way out if somebody pasted theirs
+     * where they should not have.
+     *
+     * @param plexUsername whose viewing counts. Optional, and it matters on a
+     *   shared server: without it, a housemate's evening could land here.
+     */
+    suspend fun connectPlex(plexUsername: String?): ApiResult<PlexConnectionResponse> =
+        call { plex.connectPlex(ConnectPlex(plexUsername?.trim()?.ifBlank { null })) }
+
+    suspend fun disconnectPlex(): ApiResult<Unit> = call { plex.disconnectPlex() }
 
     /**
      * Runs one call on the IO dispatcher.

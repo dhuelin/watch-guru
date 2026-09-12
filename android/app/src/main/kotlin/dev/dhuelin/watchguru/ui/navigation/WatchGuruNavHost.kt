@@ -12,6 +12,7 @@ import dev.dhuelin.watchguru.ui.history.HistoryScreen
 import dev.dhuelin.watchguru.ui.stats.StatsScreen
 import dev.dhuelin.watchguru.ui.home.HomeScreen
 import dev.dhuelin.watchguru.ui.library.LibraryScreen
+import dev.dhuelin.watchguru.ui.plex.PlexScreen
 import dev.dhuelin.watchguru.ui.profile.ProfileScreen
 import dev.dhuelin.watchguru.ui.search.SearchScreen
 import dev.dhuelin.watchguru.ui.signin.SignInViewModel
@@ -40,6 +41,7 @@ fun WatchGuruNavHost(
             ProfileScreen(
                 onOpenHistory = { navController.navigate(Routes.HISTORY) },
                 onOpenStats = { navController.navigate(Routes.STATS) },
+                onOpenPlex = { navController.navigate(Routes.PLEX) },
                 signIn = signIn,
             )
         }
@@ -49,6 +51,9 @@ fun WatchGuruNavHost(
 
         composable(Routes.STATS) {
             StatsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Routes.PLEX) {
+            PlexScreen(onBack = { navController.popBackStack() })
         }
         composable(
             route = Routes.TITLE_DETAIL,

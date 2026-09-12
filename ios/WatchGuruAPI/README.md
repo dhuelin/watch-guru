@@ -43,6 +43,9 @@ Class | Method | HTTP request | Description
 *NotificationControllerAPI* | [**unregisterDevice**](docs/NotificationControllerAPI.md#unregisterdevice) | **DELETE** /api/v1/me/devices/{token} | 
 *NotificationControllerAPI* | [**updateNotificationSettings**](docs/NotificationControllerAPI.md#updatenotificationsettings) | **PATCH** /api/v1/me/notifications | 
 *NotificationControllerAPI* | [**updateSeriesNotification**](docs/NotificationControllerAPI.md#updateseriesnotification) | **PUT** /api/v1/me/notifications/titles/{titleId} | 
+*PlexControllerAPI* | [**connectPlex**](docs/PlexControllerAPI.md#connectplex) | **POST** /api/v1/me/streaming-accounts/plex | 
+*PlexControllerAPI* | [**disconnectPlex**](docs/PlexControllerAPI.md#disconnectplex) | **DELETE** /api/v1/me/streaming-accounts/plex | 
+*PlexControllerAPI* | [**getPlexStatus**](docs/PlexControllerAPI.md#getplexstatus) | **GET** /api/v1/me/streaming-accounts/plex | 
 *StreamingControllerAPI* | [**listLinkedAccounts**](docs/StreamingControllerAPI.md#listlinkedaccounts) | **GET** /api/v1/me/streaming-accounts | 
 *StreamingControllerAPI* | [**listStreamingServices**](docs/StreamingControllerAPI.md#liststreamingservices) | **GET** /api/v1/streaming-services | 
 *StreamingControllerAPI* | [**reconcileStreamingServices**](docs/StreamingControllerAPI.md#reconcilestreamingservices) | **POST** /api/v1/streaming-services/reconcile | 
@@ -72,6 +75,7 @@ Class | Method | HTTP request | Description
  - [Bucket](docs/Bucket.md)
  - [BulkMarkResponse](docs/BulkMarkResponse.md)
  - [CommitImport](docs/CommitImport.md)
+ - [ConnectPlex](docs/ConnectPlex.md)
  - [EpisodeResponse](docs/EpisodeResponse.md)
  - [ExchangeToken](docs/ExchangeToken.md)
  - [GenreResponse](docs/GenreResponse.md)
@@ -86,6 +90,8 @@ Class | Method | HTTP request | Description
  - [MarkWatchedUpTo](docs/MarkWatchedUpTo.md)
  - [MonthBucket](docs/MonthBucket.md)
  - [NotificationSettingsResponse](docs/NotificationSettingsResponse.md)
+ - [PlexConnectionResponse](docs/PlexConnectionResponse.md)
+ - [PlexStatusResponse](docs/PlexStatusResponse.md)
  - [PreviewImport](docs/PreviewImport.md)
  - [RefreshSession](docs/RefreshSession.md)
  - [RegisterDevice](docs/RegisterDevice.md)
@@ -97,6 +103,7 @@ Class | Method | HTTP request | Description
  - [SeriesProgress](docs/SeriesProgress.md)
  - [SessionResponse](docs/SessionResponse.md)
  - [StreamingServiceResponse](docs/StreamingServiceResponse.md)
+ - [SyncRunResponse](docs/SyncRunResponse.md)
  - [TitleProgress](docs/TitleProgress.md)
  - [TitleResponse](docs/TitleResponse.md)
  - [UpNextResponse](docs/UpNextResponse.md)
