@@ -46,7 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.dhuelin.watchguru.R
 import dev.dhuelin.watchguru.api.models.PlexStatusResponse
 import dev.dhuelin.watchguru.api.models.SyncRunResponse
-import dev.dhuelin.watchguru.data.PlexActivity
+import dev.dhuelin.watchguru.data.ConnectionActivity
 import dev.dhuelin.watchguru.ui.components.ErrorView
 import dev.dhuelin.watchguru.ui.components.UiState
 import dev.dhuelin.watchguru.ui.components.contentOrNull
@@ -224,12 +224,12 @@ private fun PlexContent(
 /** Whether deliveries are arriving, in one sentence and one timestamp. */
 @Composable
 private fun StatusLine(status: PlexStatusResponse, modifier: Modifier = Modifier) {
-    val health = PlexActivity.health(status)
+    val health = ConnectionActivity.health(status.connected, status.account)
     val lastSyncAt = status.account?.lastSyncAt
 
     Surface(
         color = when (health) {
-            PlexActivity.Health.NEEDS_ATTENTION -> MaterialTheme.colorScheme.errorContainer
+            ConnectionActivity.Health.NEEDS_ATTENTION -> MaterialTheme.colorScheme.errorContainer
             else -> MaterialTheme.colorScheme.surfaceVariant
         },
         shape = MaterialTheme.shapes.medium,
@@ -237,7 +237,11 @@ private fun StatusLine(status: PlexStatusResponse, modifier: Modifier = Modifier
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(
-                text = PlexActivity.summary(status),
+                text = ConnectionActivity.summary(
+                    connected = status.connected,
+                    account = status.account,
+                    waiting = stringResource(R.string.plex_waiting),
+                ),
                 style = MaterialTheme.typography.bodyMedium,
             )
             if (lastSyncAt != null) {
@@ -306,7 +310,7 @@ private fun Delivery(run: SyncRunResponse) {
         verticalAlignment = Alignment.Top,
     ) {
         Text(
-            text = PlexActivity.describe(run),
+            text = ConnectionActivity.describe(run),
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.weight(1f),
         )

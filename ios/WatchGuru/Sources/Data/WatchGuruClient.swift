@@ -264,6 +264,30 @@ actor WatchGuruClient {
         try await runVoid { try await PlexControllerAPI.disconnectPlex(apiConfiguration: $0) }
     }
 
+    // MARK: - Trakt
+
+    /// Whether Trakt is connected, and what its last few syncs did.
+    func traktStatus() async throws(APIFailure) -> TraktStatusResponse {
+        try await run { try await TraktControllerAPI.getTraktStatus(apiConfiguration: $0) }
+    }
+
+    /// Starts an authorisation and returns where to send the user.
+    ///
+    /// Nothing is connected until they come back through the callback, so the
+    /// screen asks again afterwards rather than assuming.
+    func authorizeTrakt() async throws(APIFailure) -> TraktAuthorizationResponse {
+        try await run { try await TraktControllerAPI.authorizeTrakt(apiConfiguration: $0) }
+    }
+
+    /// Reads everything watched since the last sync, now.
+    func syncTrakt() async throws(APIFailure) -> SyncResultResponse {
+        try await run { try await TraktControllerAPI.syncTrakt(apiConfiguration: $0) }
+    }
+
+    func disconnectTrakt() async throws(APIFailure) {
+        try await runVoid { try await TraktControllerAPI.disconnectTrakt(apiConfiguration: $0) }
+    }
+
     // MARK: - Failure mapping
 
     /// Runs one call, renewing the session once if the API says the access

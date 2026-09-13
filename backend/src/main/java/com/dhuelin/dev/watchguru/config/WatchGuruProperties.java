@@ -7,6 +7,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableConfigurationProperties({TmdbProperties.class, CatalogProperties.class, AuthProperties.class,
         ImdbProperties.class, NotificationProperties.class, ImportProperties.class,
-        PlexProperties.class})
+        PublicUrlProperties.class, TraktProperties.class, CredentialProperties.class})
 public class WatchGuruProperties {
 }

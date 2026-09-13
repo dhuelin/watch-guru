@@ -480,6 +480,69 @@
         "tags" : [ "plex-controller" ]
       }
     },
+    "/api/v1/me/streaming-accounts/trakt" : {
+      "delete" : {
+        "operationId" : "disconnectTrakt",
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "trakt-controller" ]
+      },
+      "get" : {
+        "operationId" : "getTraktStatus",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TraktStatusResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "trakt-controller" ]
+      }
+    },
+    "/api/v1/me/streaming-accounts/trakt/authorize" : {
+      "post" : {
+        "operationId" : "authorizeTrakt",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TraktAuthorizationResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "trakt-controller" ]
+      }
+    },
+    "/api/v1/me/streaming-accounts/trakt/sync" : {
+      "post" : {
+        "operationId" : "syncTrakt",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncResultResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "trakt-controller" ]
+      }
+    },
     "/api/v1/me/up-next" : {
       "get" : {
         "operationId" : "getUpNext",
@@ -1739,6 +1802,30 @@
         },
         "required" : [ "id", "name", "slug", "supportsSync" ]
       },
+      "SyncResultResponse" : {
+        "type" : "object",
+        "properties" : {
+          "failed" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "imported" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "problems" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "skipped" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "failed", "imported", "problems", "skipped" ]
+      },
       "SyncRunResponse" : {
         "type" : "object",
         "properties" : {
@@ -1905,6 +1992,36 @@
           }
         },
         "required" : [ "availability", "genres", "id", "primaryTitle", "providerId", "titleType" ]
+      },
+      "TraktAuthorizationResponse" : {
+        "type" : "object",
+        "properties" : {
+          "authorizeUrl" : {
+            "type" : "string"
+          },
+          "instructions" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "authorizeUrl", "instructions" ]
+      },
+      "TraktStatusResponse" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "$ref" : "#/components/schemas/LinkedAccountResponse"
+          },
+          "connected" : {
+            "type" : "boolean"
+          },
+          "recentRuns" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SyncRunResponse"
+            }
+          }
+        },
+        "required" : [ "connected", "recentRuns" ]
       },
       "UpNextResponse" : {
         "type" : "object",

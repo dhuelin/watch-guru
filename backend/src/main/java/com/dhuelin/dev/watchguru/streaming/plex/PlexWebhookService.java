@@ -9,6 +9,7 @@ import com.dhuelin.dev.watchguru.streaming.domain.LinkedStreamingAccount;
 import com.dhuelin.dev.watchguru.streaming.domain.SyncRun;
 import com.dhuelin.dev.watchguru.streaming.repository.LinkedStreamingAccountRepository;
 import com.dhuelin.dev.watchguru.streaming.repository.SyncRunRepository;
+import com.dhuelin.dev.watchguru.streaming.service.StreamingWatchWriter;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.json.JsonMapper;
 import org.slf4j.Logger;
@@ -33,7 +34,7 @@ import java.util.Optional;
  * watched for anybody who opened it and changed their mind a minute later.
  *
  * <p>Not transactional as a whole, on purpose. The write runs in a transaction
- * of its own inside {@link PlexWatchWriter}, and a duplicate delivery ends
+ * of its own inside {@link StreamingWatchWriter}, and a duplicate delivery ends
  * there in a unique-index violation; if this method held the enclosing
  * transaction, that violation would mark it rollback-only and take the
  * sync-run record with it -- losing the record of what happened at exactly the
@@ -58,14 +59,14 @@ public class PlexWebhookService {
     private final LinkedStreamingAccountRepository accounts;
     private final SyncRunRepository syncRuns;
     private final ImportMatcher matcher;
-    private final PlexWatchWriter writer;
+    private final StreamingWatchWriter writer;
     private final JsonMapper json;
     private final Clock clock;
 
     public PlexWebhookService(LinkedStreamingAccountRepository accounts,
                               SyncRunRepository syncRuns,
                               ImportMatcher matcher,
-                              PlexWatchWriter writer,
+                              StreamingWatchWriter writer,
                               JsonMapper json,
                               Clock clock) {
         this.accounts = accounts;

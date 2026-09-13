@@ -140,7 +140,11 @@ private struct StatusRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Label {
-                Text(PlexActivity.summary(of: status))
+                Text(ConnectionActivity.summary(
+                    connected: status.connected,
+                    account: status.account,
+                    waiting: "Waiting for your server. Paste the webhook URL into Plex, "
+                        + "then watch something."))
             } icon: {
                 Image(systemName: icon)
                     .foregroundStyle(tint)
@@ -154,7 +158,7 @@ private struct StatusRow: View {
     }
 
     private var icon: String {
-        switch PlexActivity.health(of: status) {
+        switch ConnectionActivity.health(connected: status.connected, account: status.account) {
         case .notConnected: "link.badge.plus"
         case .waiting: "clock"
         case .working: "checkmark.circle"
@@ -163,7 +167,7 @@ private struct StatusRow: View {
     }
 
     private var tint: Color {
-        switch PlexActivity.health(of: status) {
+        switch ConnectionActivity.health(connected: status.connected, account: status.account) {
         case .needsAttention: .orange
         case .working: .green
         default: .secondary
@@ -202,7 +206,7 @@ private struct DeliveryRow: View {
 
     var body: some View {
         HStack(alignment: .top) {
-            Text(PlexActivity.describe(run))
+            Text(ConnectionActivity.describe(run))
                 .font(.subheadline)
             Spacer(minLength: 12)
             Text(run.startedAt.formatted(.relative(presentation: .named)))

@@ -96,6 +96,13 @@ class WatchGuruRepositoryTest {
             override suspend fun getPlexStatus() = fail()
             private fun fail(): Nothing = throw UnsupportedOperationException()
         },
+        trakt = object : dev.dhuelin.watchguru.api.apis.TraktControllerApi {
+            override suspend fun authorizeTrakt() = fail()
+            override suspend fun disconnectTrakt() = fail()
+            override suspend fun getTraktStatus() = fail()
+            override suspend fun syncTrakt() = fail()
+            private fun fail(): Nothing = throw UnsupportedOperationException()
+        },
         io = Dispatchers.Unconfined,
     )
 

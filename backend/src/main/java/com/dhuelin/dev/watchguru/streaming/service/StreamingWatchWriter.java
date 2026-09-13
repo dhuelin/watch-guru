@@ -1,4 +1,4 @@
-package com.dhuelin.dev.watchguru.streaming.plex;
+package com.dhuelin.dev.watchguru.streaming.service;
 
 import com.dhuelin.dev.watchguru.catalog.domain.Episode;
 import com.dhuelin.dev.watchguru.catalog.domain.Title;
@@ -18,24 +18,28 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 
 /**
- * Writes the watch a scrobble means, in a transaction of its own.
+ * Writes the watch a linked service reported, in a transaction of its own.
+ *
+ * <p>Shared by every such service -- a Plex scrobble and a Trakt history entry
+ * are the same claim once matched, and a second copy of this would be a second
+ * place for the library entry, the rewatch flag and the series status to drift.
  *
  * <p>Its own bean for the same mechanical reason as {@code ImportWriter}: a
  * call between two methods of one bean never passes through the proxy, so the
  * new transaction has to start in a different object. It matters here because
- * a duplicate delivery ends in a unique-index violation, and a violation
- * inside the caller's transaction would take the sync-run record down with it
- * -- the record whose whole job is to say what happened.
+ * a duplicate arrival ends in a unique-index violation, and a violation inside
+ * the caller's transaction would take the sync-run record down with it -- the
+ * record whose whole job is to say what happened.
  */
 @Service
-public class PlexWatchWriter {
+public class StreamingWatchWriter {
 
     private final WatchlistService watchlist;
     private final WatchlistItemRepository items;
     private final TitleRepository titles;
     private final EpisodeRepository episodes;
 
-    public PlexWatchWriter(WatchlistService watchlist,
+    public StreamingWatchWriter(WatchlistService watchlist,
                            WatchlistItemRepository items,
                            TitleRepository titles,
                            EpisodeRepository episodes) {
@@ -46,9 +50,9 @@ public class PlexWatchWriter {
     }
 
     /**
-     * @param serviceId the Plex row in {@code streaming_service}, so the event
-     *                  can say where it came from and the statistics screen
-     *                  can count it
+     * @param serviceId the service's row in {@code streaming_service}, so the
+     *                  event can say where it came from and the statistics
+     *                  screen can count it
      * @return whether anything was written
      * @throws org.springframework.dao.DataIntegrityViolationException when this
      *         viewing is already recorded -- the unique index on (user, origin,
@@ -74,7 +78,7 @@ public class PlexWatchWriter {
         }
 
         // A watch event for a title that is not in the library is history with
-        // no home: someone who starts a new series on Plex should find it in
+        // no home: someone who starts a new series elsewhere should find it in
         // their library afterwards, not only in their statistics.
         items.findByUserIdAndTitleId(user.getId(), title.getId())
                 .orElseGet(() -> {

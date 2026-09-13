@@ -425,4 +425,42 @@ public final class Responses {
             String errorMessage
     ) {
     }
+
+    /**
+     * Where to send somebody to authorise Trakt.
+     *
+     * @param instructions what happens next, in one line the app can show
+     *                     verbatim: an OAuth round trip through a browser is
+     *                     the one flow where a user can reasonably wonder
+     *                     whether they are meant to come back
+     */
+    public record TraktAuthorizationResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String authorizeUrl,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String instructions
+    ) {
+    }
+
+    /** Whether Trakt is connected, and what its last few syncs did. */
+    public record TraktStatusResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean connected,
+            LinkedAccountResponse account,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<SyncRunResponse> recentRuns
+    ) {
+    }
+
+    /**
+     * What one sync did.
+     *
+     * @param problems titles that could not be matched, up to a handful. Named
+     *                 rather than counted: "3 items could not be matched" is
+     *                 not something a person can act on, and a title they
+     *                 recognise is
+     */
+    public record SyncResultResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int imported,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int skipped,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) int failed,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<String> problems
+    ) {
+    }
 }

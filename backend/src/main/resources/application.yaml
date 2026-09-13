@@ -146,12 +146,34 @@ watch-guru:
     # upstream on one button press is how an API key gets suspended. Rows past
     # the budget are reported as not looked up rather than as not found.
     provider-lookups-per-import: 50
-  plex:
-    # Where a user's Plex server can reach this service. The webhook URL handed
-    # out on connect is built from it; left empty it is derived from the
-    # incoming request, which is right in development and wrong behind a proxy
-    # that does not forward the original host.
-    public-base-url: ${WATCH_GURU_PUBLIC_BASE_URL:}
+  # Where this service is reachable from outside: the Plex webhook URL a user
+  # pastes into their server, and the OAuth redirect Trakt sends them back to,
+  # are both built from it. Left empty each falls back to the incoming request,
+  # which is right in development and wrong behind a proxy that does not
+  # forward the original host.
+  public-base-url: ${WATCH_GURU_PUBLIC_BASE_URL:}
+  trakt:
+    # A Trakt application registration (free, but a person has to do it).
+    # Without both, connecting Trakt is refused up front rather than after the
+    # user has already authorised -- the worst place to find out.
+    client-id: ${WATCH_GURU_TRAKT_CLIENT_ID:}
+    client-secret: ${WATCH_GURU_TRAKT_CLIENT_SECRET:}
+    # Must match the registration exactly. Empty means public-base-url above
+    # plus /api/v1/streaming/trakt/callback.
+    redirect-uri: ${WATCH_GURU_TRAKT_REDIRECT_URI:}
+    # Trakt allows up to 1000 per page; smaller pages mean a failure loses less
+    # and the cursor advances more often.
+    page-size: 100
+    # Pages one run may read. A first sync of a decade is tens of thousands of
+    # items; the cursor makes the next run continue where this one stopped.
+    max-pages: 20
+    state-ttl: 10m
+  credentials:
+    # Base64 of at least 32 random bytes (`openssl rand -base64 32`), the
+    # AES-GCM key that seals third-party access tokens. No generated fallback:
+    # a key invented at boot would lose every connection on the next restart.
+    secret: ${WATCH_GURU_CREDENTIALS_SECRET:}
+    key-id: ${WATCH_GURU_CREDENTIALS_KEY_ID:primary}
   catalog:
     # How long a cached title detail record is considered fresh.
     detail-ttl: 7d
