@@ -110,6 +110,7 @@ class WatchGuruRepositoryTest {
             private fun fail(): Nothing = throw UnsupportedOperationException()
         },
         streaming = object : dev.dhuelin.watchguru.api.apis.StreamingControllerApi {
+            override suspend fun listLinkedAccounts() = fail()
             override suspend fun listStreamingServices() = fail()
             override suspend fun reconcileStreamingServices(region: String?) = fail()
             private fun fail(): Nothing = throw UnsupportedOperationException()
