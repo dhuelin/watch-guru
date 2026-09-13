@@ -50,14 +50,27 @@ open class WatchHistoryControllerAPI {
     }
 
     /**
+     * enum for parameter type
+     */
+    public enum ModelType_getHistory: String, Sendable, CaseIterable {
+        case movie = "MOVIE"
+        case tvSeries = "TV_SERIES"
+    }
+
+    /**
 
      - parameter page: (query)  (optional, default to 0)
      - parameter size: (query)  (optional, default to 50)
+     - parameter from: (query)  (optional)
+     - parameter to: (query)  (optional)
+     - parameter type: (query)  (optional)
+     - parameter serviceId: (query)  (optional)
+     - parameter query: (query)  (optional)
      - parameter apiConfiguration: The configuration for the http request.
      - returns: [WatchEventResponse]
      */
-    open class func getHistory(page: Int? = nil, size: Int? = nil, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) async throws(ErrorResponse) -> [WatchEventResponse] {
-        return try await getHistoryWithRequestBuilder(page: page, size: size, apiConfiguration: apiConfiguration).execute().body
+    open class func getHistory(page: Int? = nil, size: Int? = nil, from: Date? = nil, to: Date? = nil, type: ModelType_getHistory? = nil, serviceId: Int64? = nil, query: String? = nil, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) async throws(ErrorResponse) -> [WatchEventResponse] {
+        return try await getHistoryWithRequestBuilder(page: page, size: size, from: from, to: to, type: type, serviceId: serviceId, query: query, apiConfiguration: apiConfiguration).execute().body
     }
 
     /**
@@ -67,10 +80,15 @@ open class WatchHistoryControllerAPI {
        - name: bearerAuth
      - parameter page: (query)  (optional, default to 0)
      - parameter size: (query)  (optional, default to 50)
+     - parameter from: (query)  (optional)
+     - parameter to: (query)  (optional)
+     - parameter type: (query)  (optional)
+     - parameter serviceId: (query)  (optional)
+     - parameter query: (query)  (optional)
      - parameter apiConfiguration: The configuration for the http request.
      - returns: RequestBuilder<[WatchEventResponse]> 
      */
-    open class func getHistoryWithRequestBuilder(page: Int? = nil, size: Int? = nil, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) -> RequestBuilder<[WatchEventResponse]> {
+    open class func getHistoryWithRequestBuilder(page: Int? = nil, size: Int? = nil, from: Date? = nil, to: Date? = nil, type: ModelType_getHistory? = nil, serviceId: Int64? = nil, query: String? = nil, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) -> RequestBuilder<[WatchEventResponse]> {
         let localVariablePath = "/api/v1/me/history"
         let localVariableURLString = apiConfiguration.basePath + localVariablePath
         let localVariableParameters: [String: any Sendable]? = nil
@@ -79,6 +97,11 @@ open class WatchHistoryControllerAPI {
         localVariableUrlComponents?.queryItems = APIHelper.mapValuesToQueryItems([
             "page": (wrappedValue: page?.asParameter(codableHelper: apiConfiguration.codableHelper), isExplode: true),
             "size": (wrappedValue: size?.asParameter(codableHelper: apiConfiguration.codableHelper), isExplode: true),
+            "from": (wrappedValue: from?.asParameter(codableHelper: apiConfiguration.codableHelper), isExplode: true),
+            "to": (wrappedValue: to?.asParameter(codableHelper: apiConfiguration.codableHelper), isExplode: true),
+            "type": (wrappedValue: type?.asParameter(codableHelper: apiConfiguration.codableHelper), isExplode: true),
+            "serviceId": (wrappedValue: serviceId?.asParameter(codableHelper: apiConfiguration.codableHelper), isExplode: true),
+            "query": (wrappedValue: query?.asParameter(codableHelper: apiConfiguration.codableHelper), isExplode: true),
         ])
 
         let localVariableNillableHeaders: [String: (any Sendable)?] = [
@@ -333,5 +356,47 @@ open class WatchHistoryControllerAPI {
         let localVariableRequestBuilder: RequestBuilder<Void>.Type = apiConfiguration.requestBuilderFactory.getNonDecodableBuilder()
 
         return localVariableRequestBuilder.init(method: "DELETE", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
+    }
+
+    /**
+
+     - parameter eventId: (path)  
+     - parameter updateWatchEvent: (body)  
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: WatchEventResponse
+     */
+    open class func updateWatchEvent(eventId: Int64, updateWatchEvent: UpdateWatchEvent, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) async throws(ErrorResponse) -> WatchEventResponse {
+        return try await updateWatchEventWithRequestBuilder(eventId: eventId, updateWatchEvent: updateWatchEvent, apiConfiguration: apiConfiguration).execute().body
+    }
+
+    /**
+     - PATCH /api/v1/me/watch-events/{eventId}
+     - Bearer Token:
+       - type: http
+       - name: bearerAuth
+     - parameter eventId: (path)  
+     - parameter updateWatchEvent: (body)  
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: RequestBuilder<WatchEventResponse> 
+     */
+    open class func updateWatchEventWithRequestBuilder(eventId: Int64, updateWatchEvent: UpdateWatchEvent, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) -> RequestBuilder<WatchEventResponse> {
+        var localVariablePath = "/api/v1/me/watch-events/{eventId}"
+        let eventIdPreEscape = "\(APIHelper.mapValueToPathItem(eventId))"
+        let eventIdPostEscape = eventIdPreEscape.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+        localVariablePath = localVariablePath.replacingOccurrences(of: "{eventId}", with: eventIdPostEscape, options: .literal, range: nil)
+        let localVariableURLString = apiConfiguration.basePath + localVariablePath
+        let localVariableParameters = JSONEncodingHelper.encodingParameters(forEncodableObject: updateWatchEvent, codableHelper: apiConfiguration.codableHelper)
+
+        let localVariableUrlComponents = URLComponents(string: localVariableURLString)
+
+        let localVariableNillableHeaders: [String: (any Sendable)?] = [
+            "Content-Type": "application/json",
+        ]
+
+        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
+
+        let localVariableRequestBuilder: RequestBuilder<WatchEventResponse>.Type = apiConfiguration.requestBuilderFactory.getBuilder()
+
+        return localVariableRequestBuilder.init(method: "PATCH", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
     }
 }

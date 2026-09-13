@@ -22,7 +22,7 @@ import com.dhuelin.dev.watchguru.imports.service.ImportService;
 import com.dhuelin.dev.watchguru.notifications.service.NotificationSettingsService;
 import com.dhuelin.dev.watchguru.streaming.service.AvailabilityService;
 import com.dhuelin.dev.watchguru.tracking.repository.AppUserRepository;
-import com.dhuelin.dev.watchguru.tracking.repository.WatchEventRepository;
+import com.dhuelin.dev.watchguru.tracking.service.WatchHistoryService;
 import com.dhuelin.dev.watchguru.tracking.service.EpisodeListService;
 import com.dhuelin.dev.watchguru.tracking.service.StatsService;
 import com.dhuelin.dev.watchguru.tracking.service.UpNextService;
@@ -147,7 +147,7 @@ class OpenApiSpecTest {
     @MockitoBean private WatchlistService watchlistService;
     @MockitoBean private CurrentUserService currentUserService;
     @MockitoBean private StatsService statsService;
-    @MockitoBean private WatchEventRepository watchEventRepository;
+    @MockitoBean private WatchHistoryService watchHistoryService;
     @MockitoBean private StreamingServiceRepository streamingServiceRepository;
     @MockitoBean private LinkedStreamingAccountRepository linkedStreamingAccountRepository;
     @MockitoBean private AppUserRepository appUserRepository;

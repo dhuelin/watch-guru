@@ -4,9 +4,11 @@ import com.dhuelin.dev.watchguru.api.dto.ApiMapper;
 import com.dhuelin.dev.watchguru.security.CurrentUserService;
 import com.dhuelin.dev.watchguru.api.dto.Requests;
 import com.dhuelin.dev.watchguru.api.dto.Responses;
-import com.dhuelin.dev.watchguru.tracking.repository.WatchEventRepository;
 import com.dhuelin.dev.watchguru.tracking.service.WatchStats;
+import com.dhuelin.dev.watchguru.catalog.domain.TitleType;
+import com.dhuelin.dev.watchguru.tracking.domain.AppUser;
 import com.dhuelin.dev.watchguru.tracking.service.StatsPeriod;
+import com.dhuelin.dev.watchguru.tracking.service.WatchHistoryService;
 import com.dhuelin.dev.watchguru.tracking.service.StatsService;
 import com.dhuelin.dev.watchguru.tracking.service.UpNextService;
 import com.dhuelin.dev.watchguru.tracking.service.WatchlistService;
@@ -17,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,6 +27,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 /** Recording what was watched, reading it back, and the aggregate stats. */
@@ -36,20 +41,20 @@ public class WatchHistoryController {
     private final WatchlistService watchlist;
     private final StatsService stats;
     private final UpNextService upNextService;
-    private final WatchEventRepository events;
+    private final WatchHistoryService history;
     private final CurrentUserService currentUser;
     private final ApiMapper mapper;
 
     public WatchHistoryController(WatchlistService watchlist,
                                   StatsService stats,
                                   UpNextService upNextService,
-                                  WatchEventRepository events,
+                                  WatchHistoryService history,
                                   CurrentUserService currentUser,
                                   ApiMapper mapper) {
         this.watchlist = watchlist;
         this.stats = stats;
         this.upNextService = upNextService;
-        this.events = events;
+        this.history = history;
         this.currentUser = currentUser;
         this.mapper = mapper;
     }
@@ -131,16 +136,65 @@ public class WatchHistoryController {
         watchlist.deleteWatchEvent(currentUser.require().getId(), eventId);
     }
 
-    /** Full viewing history, newest first. */
+    /**
+     * The viewing history, newest first, filtered by anything the timeline can
+     * filter on (#22).
+     *
+     * <p>Dates rather than instants, because a person filtering their history
+     * thinks in days, and the day they mean is the day where they are. Both
+     * bounds are inclusive: {@code to=2026-09-13} includes that whole evening,
+     * which the service turns into an exclusive instant at the start of the
+     * next day. Inclusive-looking bounds that silently drop the last day are
+     * the kind of bug nobody reports, because it looks like having watched
+     * nothing.
+     *
+     * @param type      {@code MOVIE} or {@code TV_SERIES}; omitted for both
+     * @param serviceId one streaming service; omitted for all
+     * @param query     a substring of the title or the episode name
+     */
     @GetMapping("/history")
     @Operation(operationId = "getHistory")
-    public List<Responses.WatchEventResponse> history(@RequestParam(defaultValue = "0") int page,
-                                                      @RequestParam(defaultValue = "50") int size) {
-        return events.findByUserIdOrderByWatchedAtDesc(
-                        currentUser.require().getId(), PageRequest.of(Math.max(page, 0), Math.clamp(size, 1, MAX_PAGE_SIZE)))
+    public List<Responses.WatchEventResponse> history(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(required = false) LocalDate from,
+            @RequestParam(required = false) LocalDate to,
+            @RequestParam(required = false) TitleType type,
+            @RequestParam(required = false) Long serviceId,
+            @RequestParam(required = false) String query) {
+
+        AppUser user = currentUser.require();
+        ZoneId zone = user.zone();
+        WatchHistoryService.Filter filter = new WatchHistoryService.Filter(
+                WatchHistoryService.startOf(from, zone),
+                WatchHistoryService.endOf(to, zone),
+                type,
+                serviceId,
+                query);
+
+        return history.list(user.getId(), filter,
+                        PageRequest.of(Math.max(page, 0), Math.clamp(size, 1, MAX_PAGE_SIZE)))
                 .getContent().stream()
                 .map(mapper::toWatchEvent)
                 .toList();
+    }
+
+    /**
+     * Corrects one entry: when it was watched, or where.
+     *
+     * <p>Editing rather than delete-and-relog, because the two are not the
+     * same: relogging loses the event's identity, and with it whatever an
+     * import or a media server recorded against it -- which is what stops the
+     * same viewing arriving twice.
+     */
+    @PatchMapping("/watch-events/{eventId}")
+    @Operation(operationId = "updateWatchEvent")
+    public Responses.WatchEventResponse updateWatchEvent(
+            @PathVariable Long eventId,
+            @Valid @RequestBody Requests.UpdateWatchEvent request) {
+
+        return mapper.toWatchEvent(history.update(currentUser.require().getId(), eventId,
+                request.watchedAt(), request.streamingServiceId()));
     }
 
     /**

@@ -207,4 +207,23 @@ public final class Requests {
             @Size(max = 128) String accountName
     ) {
     }
+
+    /**
+     * Correcting one history entry (#22).
+     *
+     * <p>Both fields optional, and null means "leave it alone" rather than
+     * "clear it": a client that only meant to move the date must not wipe which
+     * service it was watched on by omitting it.
+     *
+     * @param watchedAt          when it was really watched. Moving it puts the
+     *                           derived rows back in step -- the rewatch flags
+     *                           and when the episode was last seen both follow
+     *                           from the order of events
+     * @param streamingServiceId where it was really watched
+     */
+    public record UpdateWatchEvent(
+            Instant watchedAt,
+            Long streamingServiceId
+    ) {
+    }
 }

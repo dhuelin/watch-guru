@@ -2,6 +2,7 @@ package dev.dhuelin.watchguru.data
 
 import dev.dhuelin.watchguru.api.apis.MeControllerApi
 import dev.dhuelin.watchguru.api.apis.MediaServerControllerApi
+import dev.dhuelin.watchguru.api.apis.StreamingControllerApi
 import dev.dhuelin.watchguru.api.apis.TraktControllerApi
 import dev.dhuelin.watchguru.api.apis.TitleControllerApi
 import dev.dhuelin.watchguru.api.apis.WatchHistoryControllerApi
@@ -13,7 +14,9 @@ import dev.dhuelin.watchguru.api.models.ConnectMediaServer
 import dev.dhuelin.watchguru.api.models.MarkWatchedUpTo
 import dev.dhuelin.watchguru.api.models.MediaServerConnectionResponse
 import dev.dhuelin.watchguru.api.models.MediaServerStatusResponse
+import dev.dhuelin.watchguru.api.models.StreamingServiceResponse
 import dev.dhuelin.watchguru.api.models.SyncResultResponse
+import dev.dhuelin.watchguru.api.models.UpdateWatchEvent
 import dev.dhuelin.watchguru.api.models.TraktAuthorizationResponse
 import dev.dhuelin.watchguru.api.models.TraktStatusResponse
 import dev.dhuelin.watchguru.api.models.SeasonsResponse
@@ -27,6 +30,8 @@ import dev.dhuelin.watchguru.api.models.UserResponse
 import dev.dhuelin.watchguru.api.models.WatchEventResponse
 import dev.dhuelin.watchguru.api.models.WatchStats
 import dev.dhuelin.watchguru.api.models.WatchlistItemResponse
+import java.time.LocalDate
+import java.time.OffsetDateTime
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import retrofit2.Response
@@ -49,6 +54,7 @@ class WatchGuruRepository(
     private val history: WatchHistoryControllerApi,
     private val me: MeControllerApi,
     private val servers: MediaServerControllerApi,
+    private val streaming: StreamingControllerApi,
     private val trakt: TraktControllerApi,
     private val io: CoroutineDispatcher,
 ) {
@@ -138,8 +144,50 @@ class WatchGuruRepository(
         period: WatchHistoryControllerApi.PeriodGetStats = WatchHistoryControllerApi.PeriodGetStats.ALL_TIME,
     ): ApiResult<WatchStats> = call { history.getStats(months, period) }
 
-    suspend fun history(page: Int = 0, size: Int = 50): ApiResult<List<WatchEventResponse>> =
-        call { history.getHistory(page = page, size = size) }
+    /**
+     * One page of viewing history, newest first.
+     *
+     * Dates rather than instants for the bounds, and both inclusive: a person
+     * filtering their history thinks in days, and the server turns the upper
+     * bound into the end of that day in their own zone.
+     */
+    suspend fun history(
+        page: Int = 0,
+        size: Int = 50,
+        from: LocalDate? = null,
+        to: LocalDate? = null,
+        type: WatchHistoryControllerApi.TypeGetHistory? = null,
+        serviceId: Long? = null,
+        query: String? = null,
+    ): ApiResult<List<WatchEventResponse>> = call {
+        history.getHistory(
+            page = page,
+            size = size,
+            from = from,
+            to = to,
+            type = type,
+            serviceId = serviceId,
+            query = query?.trim()?.ifBlank { null },
+        )
+    }
+
+    /**
+     * Corrects one entry: when it was watched, or where.
+     *
+     * Null leaves a field alone rather than clearing it, which is what lets a
+     * screen send only the thing the user actually changed.
+     */
+    suspend fun updateWatchEvent(
+        eventId: Long,
+        watchedAt: OffsetDateTime? = null,
+        serviceId: Long? = null,
+    ): ApiResult<WatchEventResponse> = call {
+        history.updateWatchEvent(eventId, UpdateWatchEvent(watchedAt, serviceId))
+    }
+
+    /** Every streaming service the catalogue knows, for the filters and pickers. */
+    suspend fun streamingServices(): ApiResult<List<StreamingServiceResponse>> =
+        call { streaming.listStreamingServices() }
 
     /** Whether a media server is connected, and what it has sent lately. */
     suspend fun mediaServerStatus(service: String): ApiResult<MediaServerStatusResponse> =

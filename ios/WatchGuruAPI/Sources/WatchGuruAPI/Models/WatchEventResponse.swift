@@ -14,20 +14,24 @@ public struct WatchEventResponse: Sendable, Codable, Hashable {
     public var episodeName: String?
     public var id: Int64
     public var minutesWatched: Int?
+    public var posterUrl: String?
     public var primaryTitle: String
     public var rewatch: Bool
+    public var streamingServiceId: Int64?
     public var streamingServiceName: String?
     public var titleId: Int64
     public var watchedAt: Date
 
-    public init(episodeCode: String? = nil, episodeId: Int64? = nil, episodeName: String? = nil, id: Int64, minutesWatched: Int? = nil, primaryTitle: String, rewatch: Bool, streamingServiceName: String? = nil, titleId: Int64, watchedAt: Date) {
+    public init(episodeCode: String? = nil, episodeId: Int64? = nil, episodeName: String? = nil, id: Int64, minutesWatched: Int? = nil, posterUrl: String? = nil, primaryTitle: String, rewatch: Bool, streamingServiceId: Int64? = nil, streamingServiceName: String? = nil, titleId: Int64, watchedAt: Date) {
         self.episodeCode = episodeCode
         self.episodeId = episodeId
         self.episodeName = episodeName
         self.id = id
         self.minutesWatched = minutesWatched
+        self.posterUrl = posterUrl
         self.primaryTitle = primaryTitle
         self.rewatch = rewatch
+        self.streamingServiceId = streamingServiceId
         self.streamingServiceName = streamingServiceName
         self.titleId = titleId
         self.watchedAt = watchedAt
@@ -39,8 +43,10 @@ public struct WatchEventResponse: Sendable, Codable, Hashable {
         case episodeName
         case id
         case minutesWatched
+        case posterUrl
         case primaryTitle
         case rewatch
+        case streamingServiceId
         case streamingServiceName
         case titleId
         case watchedAt
@@ -55,8 +61,10 @@ public struct WatchEventResponse: Sendable, Codable, Hashable {
         try container.encodeIfPresent(episodeName, forKey: .episodeName)
         try container.encode(id, forKey: .id)
         try container.encodeIfPresent(minutesWatched, forKey: .minutesWatched)
+        try container.encodeIfPresent(posterUrl, forKey: .posterUrl)
         try container.encode(primaryTitle, forKey: .primaryTitle)
         try container.encode(rewatch, forKey: .rewatch)
+        try container.encodeIfPresent(streamingServiceId, forKey: .streamingServiceId)
         try container.encodeIfPresent(streamingServiceName, forKey: .streamingServiceName)
         try container.encode(titleId, forKey: .titleId)
         try container.encode(watchedAt, forKey: .watchedAt)

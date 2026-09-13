@@ -12,6 +12,7 @@ import dev.dhuelin.watchguru.api.models.LogEpisodeWatched
 import dev.dhuelin.watchguru.api.models.LogMovieWatched
 import dev.dhuelin.watchguru.api.models.MarkWatchedUpTo
 import dev.dhuelin.watchguru.api.models.UpNextResponse
+import dev.dhuelin.watchguru.api.models.UpdateWatchEvent
 import dev.dhuelin.watchguru.api.models.WatchEventResponse
 import dev.dhuelin.watchguru.api.models.WatchStats
 
@@ -29,6 +30,16 @@ interface WatchHistoryControllerApi {
     @DELETE("api/v1/me/watch-events/{eventId}")
     suspend fun deleteWatchEvent(@Path("eventId") eventId: kotlin.Long): Response<Unit>
 
+
+    /**
+    * enum for parameter type
+    */
+    @Serializable
+    enum class TypeGetHistory(val value: kotlin.String) {
+        @SerialName(value = "MOVIE") MOVIE("MOVIE"),
+        @SerialName(value = "TV_SERIES") TV_SERIES("TV_SERIES")
+    }
+
     /**
      * GET api/v1/me/history
      * 
@@ -38,10 +49,15 @@ interface WatchHistoryControllerApi {
      *
      * @param page  (optional, default to 0)
      * @param size  (optional, default to 50)
+     * @param from  (optional)
+     * @param to  (optional)
+     * @param type  (optional)
+     * @param serviceId  (optional)
+     * @param query  (optional)
      * @return [kotlin.collections.List<WatchEventResponse>]
      */
     @GET("api/v1/me/history")
-    suspend fun getHistory(@Query("page") page: kotlin.Int? = 0, @Query("size") size: kotlin.Int? = 50): Response<kotlin.collections.List<WatchEventResponse>>
+    suspend fun getHistory(@Query("page") page: kotlin.Int? = 0, @Query("size") size: kotlin.Int? = 50, @Query("from") from: java.time.LocalDate? = null, @Query("to") to: java.time.LocalDate? = null, @Query("type") type: TypeGetHistory? = null, @Query("serviceId") serviceId: kotlin.Long? = null, @Query("query") query: kotlin.String? = null): Response<kotlin.collections.List<WatchEventResponse>>
 
 
     /**
@@ -132,5 +148,19 @@ interface WatchHistoryControllerApi {
      */
     @DELETE("api/v1/me/watch-events/episodes/{episodeId}")
     suspend fun unmarkEpisode(@Path("episodeId") episodeId: kotlin.Long): Response<Unit>
+
+    /**
+     * PATCH api/v1/me/watch-events/{eventId}
+     * 
+     * 
+     * Responses:
+     *  - 200: OK
+     *
+     * @param eventId 
+     * @param updateWatchEvent 
+     * @return [WatchEventResponse]
+     */
+    @PATCH("api/v1/me/watch-events/{eventId}")
+    suspend fun updateWatchEvent(@Path("eventId") eventId: kotlin.Long, @Body updateWatchEvent: UpdateWatchEvent): Response<WatchEventResponse>
 
 }

@@ -65,6 +65,7 @@ Class | Method | HTTP request | Description
 *WatchHistoryControllerAPI* | [**logMovieWatched**](docs/WatchHistoryControllerAPI.md#logmoviewatched) | **POST** /api/v1/me/watch-events/movie | 
 *WatchHistoryControllerAPI* | [**markWatchedUpTo**](docs/WatchHistoryControllerAPI.md#markwatchedupto) | **POST** /api/v1/me/watch-events/episodes/up-to | 
 *WatchHistoryControllerAPI* | [**unmarkEpisode**](docs/WatchHistoryControllerAPI.md#unmarkepisode) | **DELETE** /api/v1/me/watch-events/episodes/{episodeId} | 
+*WatchHistoryControllerAPI* | [**updateWatchEvent**](docs/WatchHistoryControllerAPI.md#updatewatchevent) | **PATCH** /api/v1/me/watch-events/{eventId} | 
 *WatchlistControllerAPI* | [**addToWatchlist**](docs/WatchlistControllerAPI.md#addtowatchlist) | **POST** /api/v1/me/watchlist | 
 *WatchlistControllerAPI* | [**getTitleProgress**](docs/WatchlistControllerAPI.md#gettitleprogress) | **GET** /api/v1/me/watchlist/titles/{titleId}/progress | 
 *WatchlistControllerAPI* | [**listWatchlist**](docs/WatchlistControllerAPI.md#listwatchlist) | **GET** /api/v1/me/watchlist | 
@@ -117,6 +118,7 @@ Class | Method | HTTP request | Description
  - [UpdateNotificationSettings](docs/UpdateNotificationSettings.md)
  - [UpdateProfile](docs/UpdateProfile.md)
  - [UpdateSeriesNotification](docs/UpdateSeriesNotification.md)
+ - [UpdateWatchEvent](docs/UpdateWatchEvent.md)
  - [UpdateWatchlistItem](docs/UpdateWatchlistItem.md)
  - [UserResponse](docs/UserResponse.md)
  - [WatchEventResponse](docs/WatchEventResponse.md)

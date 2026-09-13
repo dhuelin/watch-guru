@@ -217,9 +217,54 @@ actor WatchGuruClient {
         try await run { try await WatchHistoryControllerAPI.getUpNext(limit: limit, apiConfiguration: $0) }
     }
 
-    func history(page: Int = 0, size: Int = 50) async throws(APIFailure) -> [WatchEventResponse] {
+    /// One page of viewing history, newest first.
+    ///
+    /// Dates rather than instants for the bounds, and both inclusive: a person
+    /// filtering their history thinks in days, and the server turns the upper
+    /// bound into the end of that day in their own zone.
+    func history(
+        page: Int = 0,
+        size: Int = 50,
+        from: Date? = nil,
+        to: Date? = nil,
+        type: WatchHistoryControllerAPI.ModelType_getHistory? = nil,
+        serviceId: Int64? = nil,
+        query: String? = nil
+    ) async throws(APIFailure) -> [WatchEventResponse] {
+        let trimmed = query?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return try await run {
+            try await WatchHistoryControllerAPI.getHistory(
+                page: page,
+                size: size,
+                from: from,
+                to: to,
+                type: type,
+                serviceId: serviceId,
+                query: (trimmed?.isEmpty ?? true) ? nil : trimmed,
+                apiConfiguration: $0)
+        }
+    }
+
+    /// Corrects one entry: when it was watched, or where.
+    ///
+    /// Nil leaves a field alone rather than clearing it, which is what lets a
+    /// screen send only the thing the user actually changed.
+    func updateWatchEvent(
+        eventId: Int64,
+        watchedAt: Date? = nil,
+        serviceId: Int64? = nil
+    ) async throws(APIFailure) -> WatchEventResponse {
+        let request = UpdateWatchEvent(streamingServiceId: serviceId, watchedAt: watchedAt)
+        return try await run {
+            try await WatchHistoryControllerAPI.updateWatchEvent(
+                eventId: eventId, updateWatchEvent: request, apiConfiguration: $0)
+        }
+    }
+
+    /// Every streaming service the catalogue knows, for the filters and pickers.
+    func streamingServices() async throws(APIFailure) -> [StreamingServiceResponse] {
         try await run {
-            try await WatchHistoryControllerAPI.getHistory(page: page, size: size, apiConfiguration: $0)
+            try await StreamingControllerAPI.listStreamingServices(apiConfiguration: $0)
         }
     }
 
