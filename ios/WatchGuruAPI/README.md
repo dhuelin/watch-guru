@@ -38,14 +38,14 @@ Class | Method | HTTP request | Description
 *MeControllerAPI* | [**deleteAccount**](docs/MeControllerAPI.md#deleteaccount) | **DELETE** /api/v1/me | 
 *MeControllerAPI* | [**getProfile**](docs/MeControllerAPI.md#getprofile) | **GET** /api/v1/me | 
 *MeControllerAPI* | [**updateProfile**](docs/MeControllerAPI.md#updateprofile) | **PATCH** /api/v1/me | 
+*MediaServerControllerAPI* | [**connectMediaServer**](docs/MediaServerControllerAPI.md#connectmediaserver) | **POST** /api/v1/me/streaming-accounts/servers/{service} | 
+*MediaServerControllerAPI* | [**disconnectMediaServer**](docs/MediaServerControllerAPI.md#disconnectmediaserver) | **DELETE** /api/v1/me/streaming-accounts/servers/{service} | 
+*MediaServerControllerAPI* | [**getMediaServerStatus**](docs/MediaServerControllerAPI.md#getmediaserverstatus) | **GET** /api/v1/me/streaming-accounts/servers/{service} | 
 *NotificationControllerAPI* | [**getNotificationSettings**](docs/NotificationControllerAPI.md#getnotificationsettings) | **GET** /api/v1/me/notifications | 
 *NotificationControllerAPI* | [**registerDevice**](docs/NotificationControllerAPI.md#registerdevice) | **POST** /api/v1/me/devices | 
 *NotificationControllerAPI* | [**unregisterDevice**](docs/NotificationControllerAPI.md#unregisterdevice) | **DELETE** /api/v1/me/devices/{token} | 
 *NotificationControllerAPI* | [**updateNotificationSettings**](docs/NotificationControllerAPI.md#updatenotificationsettings) | **PATCH** /api/v1/me/notifications | 
 *NotificationControllerAPI* | [**updateSeriesNotification**](docs/NotificationControllerAPI.md#updateseriesnotification) | **PUT** /api/v1/me/notifications/titles/{titleId} | 
-*PlexControllerAPI* | [**connectPlex**](docs/PlexControllerAPI.md#connectplex) | **POST** /api/v1/me/streaming-accounts/plex | 
-*PlexControllerAPI* | [**disconnectPlex**](docs/PlexControllerAPI.md#disconnectplex) | **DELETE** /api/v1/me/streaming-accounts/plex | 
-*PlexControllerAPI* | [**getPlexStatus**](docs/PlexControllerAPI.md#getplexstatus) | **GET** /api/v1/me/streaming-accounts/plex | 
 *StreamingControllerAPI* | [**listLinkedAccounts**](docs/StreamingControllerAPI.md#listlinkedaccounts) | **GET** /api/v1/me/streaming-accounts | 
 *StreamingControllerAPI* | [**listStreamingServices**](docs/StreamingControllerAPI.md#liststreamingservices) | **GET** /api/v1/streaming-services | 
 *StreamingControllerAPI* | [**reconcileStreamingServices**](docs/StreamingControllerAPI.md#reconcilestreamingservices) | **POST** /api/v1/streaming-services/reconcile | 
@@ -79,7 +79,7 @@ Class | Method | HTTP request | Description
  - [Bucket](docs/Bucket.md)
  - [BulkMarkResponse](docs/BulkMarkResponse.md)
  - [CommitImport](docs/CommitImport.md)
- - [ConnectPlex](docs/ConnectPlex.md)
+ - [ConnectMediaServer](docs/ConnectMediaServer.md)
  - [EpisodeResponse](docs/EpisodeResponse.md)
  - [ExchangeToken](docs/ExchangeToken.md)
  - [GenreResponse](docs/GenreResponse.md)
@@ -92,10 +92,10 @@ Class | Method | HTTP request | Description
  - [LogEpisodeWatched](docs/LogEpisodeWatched.md)
  - [LogMovieWatched](docs/LogMovieWatched.md)
  - [MarkWatchedUpTo](docs/MarkWatchedUpTo.md)
+ - [MediaServerConnectionResponse](docs/MediaServerConnectionResponse.md)
+ - [MediaServerStatusResponse](docs/MediaServerStatusResponse.md)
  - [MonthBucket](docs/MonthBucket.md)
  - [NotificationSettingsResponse](docs/NotificationSettingsResponse.md)
- - [PlexConnectionResponse](docs/PlexConnectionResponse.md)
- - [PlexStatusResponse](docs/PlexStatusResponse.md)
  - [PreviewImport](docs/PreviewImport.md)
  - [RefreshSession](docs/RefreshSession.md)
  - [RegisterDevice](docs/RegisterDevice.md)

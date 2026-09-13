@@ -11,7 +11,8 @@ import com.dhuelin.dev.watchguru.config.PublicUrlProperties;
 import com.dhuelin.dev.watchguru.config.TmdbProperties;
 import com.dhuelin.dev.watchguru.security.CurrentUserService;
 import com.dhuelin.dev.watchguru.security.SecurityConfig;
-import com.dhuelin.dev.watchguru.streaming.plex.PlexLinkService;
+import com.dhuelin.dev.watchguru.streaming.mediaserver.MediaServerLinkService;
+import com.dhuelin.dev.watchguru.streaming.mediaserver.MediaServers;
 import com.dhuelin.dev.watchguru.streaming.trakt.TraktConnectionService;
 import com.dhuelin.dev.watchguru.streaming.trakt.TraktSyncService;
 import com.dhuelin.dev.watchguru.streaming.repository.LinkedStreamingAccountRepository;
@@ -77,7 +78,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
         StreamingController.class,
         NotificationController.class,
         ImportController.class,
-        PlexController.class,
+        MediaServerController.class,
         TraktController.class,
         AuthController.class})
 @Import({SecurityConfig.class, TrustedIssuers.class, AccessTokenIssuer.class,
@@ -151,7 +152,8 @@ class OpenApiSpecTest {
     @MockitoBean private LinkedStreamingAccountRepository linkedStreamingAccountRepository;
     @MockitoBean private AppUserRepository appUserRepository;
     @MockitoBean private NotificationSettingsService notificationSettingsService;
-    @MockitoBean private PlexLinkService plexLinkService;
+    @MockitoBean private MediaServerLinkService mediaServerLinkService;
+    @MockitoBean private MediaServers mediaServers;
     @MockitoBean private TraktConnectionService traktConnectionService;
     @MockitoBean private TraktSyncService traktSyncService;
     @MockitoBean private SyncRunRepository syncRunRepository;

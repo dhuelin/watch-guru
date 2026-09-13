@@ -380,17 +380,20 @@ public final class Responses {
     }
 
     /**
-     * A Plex connection, and the webhook URL that feeds it.
+     * A media-server connection, and the webhook URL that feeds it.
      *
      * <p>{@code webhookUrl} carries the secret and is returned exactly once,
      * when the connection is made. It is stored only as a hash, so this
      * service cannot show it again -- a user who loses it reconnects, which
      * issues a new one and retires the old.
      *
-     * @param setUpHint what the user has to do with the URL, in one line: the
-     *                  app can show it verbatim next to a copy button
+     * @param setUpHint what the user has to do with the URL, in that server's
+     *                  own words: the app can show it verbatim next to a copy
+     *                  button rather than knowing three sets of menu names
      */
-    public record PlexConnectionResponse(
+    public record MediaServerConnectionResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String service,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String serviceName,
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) LinkedAccountResponse account,
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String webhookUrl,
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String setUpHint
@@ -398,15 +401,22 @@ public final class Responses {
     }
 
     /**
-     * Whether a connection is working, and what it has done lately.
+     * Whether a media-server connection is working, and what it has done lately.
      *
-     * @param connected  whether a webhook URL is live for this user
-     * @param recentRuns newest first. An integration that silently stops is
-     *                   worse than one never offered, so the last few
-     *                   deliveries are visible rather than inferred from
-     *                   whether anything showed up in the library
+     * @param requiresAccountName whether connecting must be given the username
+     *                            whose viewing counts. True for Jellyfin and
+     *                            Emby, whose webhooks fire for everybody on the
+     *                            server; the app asks for it rather than
+     *                            letting the connection fail
+     * @param recentRuns          newest first. An integration that silently
+     *                            stops is worse than one never offered, so the
+     *                            last few deliveries are visible rather than
+     *                            inferred from whether anything showed up
      */
-    public record PlexStatusResponse(
+    public record MediaServerStatusResponse(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String service,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) String serviceName,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean requiresAccountName,
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean connected,
             LinkedAccountResponse account,
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) List<SyncRunResponse> recentRuns

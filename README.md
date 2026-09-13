@@ -184,9 +184,10 @@ things worth knowing before changing any of it:
 Full detail, including the two Apple quirks that will otherwise cost an
 afternoon, is in [`docs/AUTHENTICATION.md`](docs/AUTHENTICATION.md).
 
-Connecting a Plex server, so watching something there records it here without
-anybody marking anything — and why Netflix, Prime Video and Apple TV cannot
-work the same way — is in [`docs/PLEX.md`](docs/PLEX.md). Connecting Trakt, which
+Connecting a media server — Plex, Jellyfin or Emby — so watching something
+there records it here without anybody marking anything, and why Netflix, Prime
+Video and Apple TV cannot work the same way, is in
+[`docs/MEDIA-SERVERS.md`](docs/MEDIA-SERVERS.md). Connecting Trakt, which
 brings in everything already scrobbled from anywhere else, is in
 [`docs/TRAKT.md`](docs/TRAKT.md).
 

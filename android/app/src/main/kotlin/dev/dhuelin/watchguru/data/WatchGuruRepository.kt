@@ -1,7 +1,7 @@
 package dev.dhuelin.watchguru.data
 
 import dev.dhuelin.watchguru.api.apis.MeControllerApi
-import dev.dhuelin.watchguru.api.apis.PlexControllerApi
+import dev.dhuelin.watchguru.api.apis.MediaServerControllerApi
 import dev.dhuelin.watchguru.api.apis.TraktControllerApi
 import dev.dhuelin.watchguru.api.apis.TitleControllerApi
 import dev.dhuelin.watchguru.api.apis.WatchHistoryControllerApi
@@ -9,10 +9,10 @@ import dev.dhuelin.watchguru.api.apis.WatchlistControllerApi
 import dev.dhuelin.watchguru.api.models.AddToWatchlist
 import dev.dhuelin.watchguru.api.models.BulkMarkResponse
 import dev.dhuelin.watchguru.api.models.LogEpisodeWatched
-import dev.dhuelin.watchguru.api.models.ConnectPlex
+import dev.dhuelin.watchguru.api.models.ConnectMediaServer
 import dev.dhuelin.watchguru.api.models.MarkWatchedUpTo
-import dev.dhuelin.watchguru.api.models.PlexConnectionResponse
-import dev.dhuelin.watchguru.api.models.PlexStatusResponse
+import dev.dhuelin.watchguru.api.models.MediaServerConnectionResponse
+import dev.dhuelin.watchguru.api.models.MediaServerStatusResponse
 import dev.dhuelin.watchguru.api.models.SyncResultResponse
 import dev.dhuelin.watchguru.api.models.TraktAuthorizationResponse
 import dev.dhuelin.watchguru.api.models.TraktStatusResponse
@@ -48,7 +48,7 @@ class WatchGuruRepository(
     private val watchlist: WatchlistControllerApi,
     private val history: WatchHistoryControllerApi,
     private val me: MeControllerApi,
-    private val plex: PlexControllerApi,
+    private val servers: MediaServerControllerApi,
     private val trakt: TraktControllerApi,
     private val io: CoroutineDispatcher,
 ) {
@@ -141,24 +141,30 @@ class WatchGuruRepository(
     suspend fun history(page: Int = 0, size: Int = 50): ApiResult<List<WatchEventResponse>> =
         call { history.getHistory(page = page, size = size) }
 
-    /** Whether a Plex server is connected, and what it has sent lately. */
-    suspend fun plexStatus(): ApiResult<PlexStatusResponse> = call { plex.getPlexStatus() }
+    /** Whether a media server is connected, and what it has sent lately. */
+    suspend fun mediaServerStatus(service: String): ApiResult<MediaServerStatusResponse> =
+        call { servers.getMediaServerStatus(service) }
 
     /**
-     * Connects, or reconnects, a Plex server.
+     * Connects, or reconnects, a media server.
      *
      * The webhook URL comes back once and is never recoverable: the server
      * keeps only a hash of it. Calling this again issues a new URL and retires
      * the previous one, which is also the way out if somebody pasted theirs
      * where they should not have.
      *
-     * @param plexUsername whose viewing counts. Optional, and it matters on a
-     *   shared server: without it, a housemate's evening could land here.
+     * @param accountName whose viewing counts. Required by Jellyfin and Emby,
+     *   whose webhooks fire for everybody on the server; optional for Plex.
      */
-    suspend fun connectPlex(plexUsername: String?): ApiResult<PlexConnectionResponse> =
-        call { plex.connectPlex(ConnectPlex(plexUsername?.trim()?.ifBlank { null })) }
+    suspend fun connectMediaServer(
+        service: String,
+        accountName: String?,
+    ): ApiResult<MediaServerConnectionResponse> = call {
+        servers.connectMediaServer(service, ConnectMediaServer(accountName?.trim()?.ifBlank { null }))
+    }
 
-    suspend fun disconnectPlex(): ApiResult<Unit> = call { plex.disconnectPlex() }
+    suspend fun disconnectMediaServer(service: String): ApiResult<Unit> =
+        call { servers.disconnectMediaServer(service) }
 
     /** Whether Trakt is connected, and what its last few syncs did. */
     suspend fun traktStatus(): ApiResult<TraktStatusResponse> = call { trakt.getTraktStatus() }

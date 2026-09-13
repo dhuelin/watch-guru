@@ -54,7 +54,7 @@ import dev.dhuelin.watchguru.ui.signin.SignInViewModel
 fun ProfileScreen(
     onOpenHistory: () -> Unit,
     onOpenStats: () -> Unit,
-    onOpenPlex: () -> Unit,
+    onOpenServer: (String) -> Unit,
     onOpenTrakt: () -> Unit,
     signIn: SignInViewModel,
     viewModel: ProfileViewModel = hiltViewModel(),
@@ -151,8 +151,16 @@ fun ProfileScreen(
                 TextButton(onClick = onOpenStats) {
                     Text(stringResource(R.string.action_view_stats))
                 }
-                TextButton(onClick = onOpenPlex) {
+                // One entry per server rather than a list behind another tap:
+                // somebody who runs Jellyfin does not want to read about Plex.
+                TextButton(onClick = { onOpenServer("plex") }) {
                     Text(stringResource(R.string.action_connect_plex))
+                }
+                TextButton(onClick = { onOpenServer("jellyfin") }) {
+                    Text(stringResource(R.string.action_connect_jellyfin))
+                }
+                TextButton(onClick = { onOpenServer("emby") }) {
+                    Text(stringResource(R.string.action_connect_emby))
                 }
                 TextButton(onClick = onOpenTrakt) {
                     Text(stringResource(R.string.action_connect_trakt))

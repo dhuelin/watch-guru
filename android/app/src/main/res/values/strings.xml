@@ -90,26 +90,29 @@
     <string name="stats_top_titles">Most watched</string>
     <string name="stats_hours">%1$d h</string>
 
-    <!-- Connecting a Plex server (#39). The explainer says who calls whom,
-         because that is the whole security story and the reason there is no
-         password field on this screen. -->
-    <string name="title_plex">Plex</string>
+    <!-- Connecting a media server (#39): Plex, Jellyfin or Emby. One set of
+         strings, because the setup is the same and what differs -- the name,
+         the menus to paste it into -- comes back from the server. -->
     <string name="action_back">Back</string>
     <string name="action_copy">Copy</string>
     <string name="action_done">Done</string>
-    <string name="plex_explainer">Watching something on your own Plex server records it here, without marking anything. Plex calls Watch Guru, so there is no Plex password to give: you paste a URL into your Plex settings and your server does the talking. Plex Pass is required for webhooks.</string>
-    <string name="plex_username_label">Plex username (optional)</string>
-    <string name="plex_username_explainer">Only needed if other people watch things on the same server. Without it, only viewing your server marks as yours is recorded.</string>
-    <string name="action_plex_connect">Connect</string>
-    <string name="action_plex_reconnect">Issue a new URL</string>
-    <string name="action_plex_disconnect">Disconnect</string>
-    <string name="plex_reconnect_explainer">A new URL retires the old one, which is the way out if yours ended up somewhere public.</string>
-    <string name="plex_url_heading">Your webhook URL</string>
-    <string name="plex_url_instructions">Copy it now: it is shown once and cannot be shown again. In Plex: Settings, Webhooks, Add Webhook, paste, save.</string>
-    <string name="plex_last_heard">Last heard from your server %1$s</string>
-    <string name="plex_recent_deliveries">Recent deliveries</string>
-    <string name="plex_other_services">Netflix, Prime Video and Apple TV cannot work this way: none of them offers any way to ask what you watched. Import their export instead \u2014 re-importing duplicates nothing.</string>
+    <string name="server_explainer">Watching something on your own %1$s server records it here, without marking anything. Your server calls Watch Guru, so there is no password to give: you paste a URL into its settings and it does the talking.</string>
+    <string name="server_username_optional_label">%1$s username (optional)</string>
+    <string name="server_username_required_label">%1$s username</string>
+    <string name="server_username_optional_explainer">Only needed if other people watch things on the same server. Without it, only viewing your server marks as yours is recorded.</string>
+    <string name="server_username_required_explainer">Required: this server sends one webhook for everybody on it, so the username is what separates your viewing from theirs.</string>
+    <string name="action_server_connect">Connect</string>
+    <string name="action_server_reconnect">Issue a new URL</string>
+    <string name="action_server_disconnect">Disconnect</string>
+    <string name="server_reconnect_explainer">A new URL retires the old one, which is the way out if yours ended up somewhere public.</string>
+    <string name="server_url_heading">Your webhook URL</string>
+    <string name="server_waiting">Waiting for your %1$s server. Paste the webhook URL into it, then watch something.</string>
+    <string name="server_last_heard">Last heard from your server %1$s</string>
+    <string name="server_recent_deliveries">Recent deliveries</string>
+    <string name="server_other_services">Netflix, Prime Video and Apple TV cannot work this way: none of them offers any way to ask what you watched. Import their export instead \u2014 re-importing duplicates nothing.</string>
     <string name="action_connect_plex">Connect Plex</string>
+    <string name="action_connect_jellyfin">Connect Jellyfin</string>
+    <string name="action_connect_emby">Connect Emby</string>
 
     <!-- Connecting Trakt (#39). The explainer leads with what it brings,
          because "connect Trakt" means nothing to somebody who has not heard
@@ -125,7 +128,6 @@
     <string name="trakt_sync_problems">Could not be matched: %1$s</string>
     <string name="trakt_no_browser">No browser is available to open the Trakt page.</string>
     <string name="trakt_privacy_note">Watch Guru holds the access Trakt gives it, encrypted, and never your password. Disconnecting revokes it at Trakt as well as here.</string>
-    <string name="plex_waiting">Waiting for your server. Paste the webhook URL into Plex, then watch something.</string>
     <plurals name="trakt_sync_result">
         <item quantity="one">Recorded %1$d viewing.</item>
         <item quantity="other">Recorded %1$d viewings.</item>
