@@ -182,7 +182,13 @@ class WatchGuruRepository(
         watchedAt: OffsetDateTime? = null,
         serviceId: Long? = null,
     ): ApiResult<WatchEventResponse> = call {
-        history.updateWatchEvent(eventId, UpdateWatchEvent(watchedAt, serviceId))
+        // Named, not positional: the generated model orders its fields
+        // alphabetically, so the two nullable arguments sit in the opposite
+        // order to this method's own.
+        history.updateWatchEvent(
+            eventId,
+            UpdateWatchEvent(streamingServiceId = serviceId, watchedAt = watchedAt),
+        )
     }
 
     /** Every streaming service the catalogue knows, for the filters and pickers. */
@@ -208,7 +214,7 @@ class WatchGuruRepository(
         service: String,
         accountName: String?,
     ): ApiResult<MediaServerConnectionResponse> = call {
-        servers.connectMediaServer(service, ConnectMediaServer(accountName?.trim()?.ifBlank { null }))
+        servers.connectMediaServer(service, ConnectMediaServer(accountName = accountName?.trim()?.ifBlank { null }))
     }
 
     suspend fun disconnectMediaServer(service: String): ApiResult<Unit> =
