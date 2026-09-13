@@ -9,7 +9,7 @@ import dagger.hilt.components.SingletonComponent
 import dev.dhuelin.watchguru.BuildConfig
 import dev.dhuelin.watchguru.api.apis.AuthenticationApi
 import dev.dhuelin.watchguru.api.apis.MeControllerApi
-import dev.dhuelin.watchguru.api.apis.PlexControllerApi
+import dev.dhuelin.watchguru.api.apis.MediaServerControllerApi
 import dev.dhuelin.watchguru.api.apis.TraktControllerApi
 import dev.dhuelin.watchguru.api.apis.TitleControllerApi
 import dev.dhuelin.watchguru.api.apis.WatchHistoryControllerApi
@@ -152,7 +152,8 @@ object NetworkModule {
     @Provides @Singleton fun watchlistApi(retrofit: Retrofit): WatchlistControllerApi = retrofit.create()
     @Provides @Singleton fun historyApi(retrofit: Retrofit): WatchHistoryControllerApi = retrofit.create()
     @Provides @Singleton fun meApi(retrofit: Retrofit): MeControllerApi = retrofit.create()
-    @Provides @Singleton fun plexApi(retrofit: Retrofit): PlexControllerApi = retrofit.create()
+    @Provides @Singleton
+    fun mediaServerApi(retrofit: Retrofit): MediaServerControllerApi = retrofit.create()
     @Provides @Singleton fun traktApi(retrofit: Retrofit): TraktControllerApi = retrofit.create()
 
     @Provides
@@ -162,10 +163,10 @@ object NetworkModule {
         watchlist: WatchlistControllerApi,
         history: WatchHistoryControllerApi,
         me: MeControllerApi,
-        plex: PlexControllerApi,
+        servers: MediaServerControllerApi,
         trakt: TraktControllerApi,
     ): WatchGuruRepository =
-        WatchGuruRepository(titles, watchlist, history, me, plex, trakt, ioDispatcher())
+        WatchGuruRepository(titles, watchlist, history, me, servers, trakt, ioDispatcher())
 
     private fun ioDispatcher(): CoroutineDispatcher = Dispatchers.IO
 }

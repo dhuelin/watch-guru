@@ -26,10 +26,14 @@ object Routes {
     const val TITLE_DETAIL = "title/{titleId}"
     const val HISTORY = "history"
     const val STATS = "stats"
-    const val PLEX = "plex"
+    /** One route for every media server; the slug says which. */
+    const val MEDIA_SERVER = "server/{service}"
     const val TRAKT = "trakt"
 
     fun titleDetail(titleId: Long) = "title/$titleId"
 
+    fun mediaServer(service: String) = "server/$service"
+
     const val ARG_TITLE_ID = "titleId"
+    const val ARG_SERVICE = "service"
 }

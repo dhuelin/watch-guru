@@ -7,7 +7,7 @@ their viewing in Trakt, so one connection here picks up every source they use.
 
 ## How it works, and how it differs from Plex
 
-[Plex](PLEX.md) calls us and we hold nothing of theirs. Trakt is the other way
+[A media server](MEDIA-SERVERS.md) calls us and we hold nothing of theirs. Trakt is the other way
 round: you authorise Watch Guru to read your history, and this service then
 holds an access token belonging to your Trakt account.
 

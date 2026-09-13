@@ -89,13 +89,15 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/auth/session", "/api/v1/auth/refresh", "/api/v1/auth/logout")
                             .permitAll()
-                        // A Plex server holds no account token and cannot be
+                        // A media server holds no account token and cannot be
                         // taught to send one. Its credential is the secret in
-                        // the webhook URL, which PlexWebhookService checks in
-                        // constant time and rejects with 401 -- so this path is
-                        // unauthenticated to the filter chain and guarded
-                        // inside, exactly as the token endpoints above are.
-                        .requestMatchers(HttpMethod.POST, "/api/v1/webhooks/plex/*").permitAll()
+                        // the webhook URL, which MediaServerWebhookService
+                        // checks in constant time and rejects with 401 -- so
+                        // this path is unauthenticated to the filter chain and
+                        // guarded inside, exactly as the token endpoints above
+                        // are. Two segments and no more: the service and the
+                        // token, never a path that walks further.
+                        .requestMatchers(HttpMethod.POST, "/api/v1/webhooks/*/*").permitAll()
                         // Trakt redirects a browser here, and a browser coming
                         // back from trakt.tv carries no token of ours. The
                         // guard is the single-use state parameter, which names

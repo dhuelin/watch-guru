@@ -88,12 +88,13 @@ class WatchGuruRepositoryTest {
             private fun fail(): Nothing = throw UnsupportedOperationException()
         },
         me = me,
-        plex = object : dev.dhuelin.watchguru.api.apis.PlexControllerApi {
-            override suspend fun connectPlex(
-                connectPlex: dev.dhuelin.watchguru.api.models.ConnectPlex?,
+        servers = object : dev.dhuelin.watchguru.api.apis.MediaServerControllerApi {
+            override suspend fun connectMediaServer(
+                service: String,
+                connectMediaServer: dev.dhuelin.watchguru.api.models.ConnectMediaServer?,
             ) = fail()
-            override suspend fun disconnectPlex() = fail()
-            override suspend fun getPlexStatus() = fail()
+            override suspend fun disconnectMediaServer(service: String) = fail()
+            override suspend fun getMediaServerStatus(service: String) = fail()
             private fun fail(): Nothing = throw UnsupportedOperationException()
         },
         trakt = object : dev.dhuelin.watchguru.api.apis.TraktControllerApi {

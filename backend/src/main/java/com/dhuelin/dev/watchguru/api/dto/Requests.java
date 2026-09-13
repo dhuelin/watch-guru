@@ -193,17 +193,18 @@ public final class Requests {
     }
 
     /**
-     * Connecting a Plex server.
+     * Connecting a media server.
      *
-     * @param plexUsername the Plex account whose viewing should be recorded.
-     *                     Optional, and it matters on a shared server: a Plex
-     *                     server owner receives webhook deliveries for
-     *                     everybody who watches anything on it, and without a
-     *                     name to match, a housemate's evening would land in
-     *                     this user's history
+     * @param accountName the account on that server whose viewing should be
+     *                    recorded. Required for Jellyfin and Emby, whose
+     *                    webhooks are configured once for the whole server and
+     *                    fire for everybody on it; optional for Plex, which
+     *                    says whose account played something. On a shared
+     *                    server it is the only thing keeping a housemate's
+     *                    evening out of this user's history
      */
-    public record ConnectPlex(
-            @Size(max = 128) String plexUsername
+    public record ConnectMediaServer(
+            @Size(max = 128) String accountName
     ) {
     }
 }

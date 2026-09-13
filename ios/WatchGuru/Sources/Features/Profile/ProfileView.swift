@@ -56,8 +56,17 @@ struct ProfileView: View {
                         NavigationLink("Statistics") {
                             StatsView()
                         }
+                        // One entry per server rather than a list behind
+                        // another tap: somebody who runs Jellyfin does not want
+                        // to read about Plex.
                         NavigationLink("Connect Plex") {
-                            PlexView()
+                            MediaServerView(service: "plex")
+                        }
+                        NavigationLink("Connect Jellyfin") {
+                            MediaServerView(service: "jellyfin")
+                        }
+                        NavigationLink("Connect Emby") {
+                            MediaServerView(service: "emby")
                         }
                         NavigationLink("Connect Trakt") {
                             TraktView()

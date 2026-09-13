@@ -6,7 +6,8 @@ import com.dhuelin.dev.watchguru.provider.MetadataProviderNotConfiguredException
 import com.dhuelin.dev.watchguru.security.AccountConflictException;
 import com.dhuelin.dev.watchguru.security.CurrentUserService;
 import com.dhuelin.dev.watchguru.security.session.SessionService;
-import com.dhuelin.dev.watchguru.streaming.plex.WebhookAuthenticationException;
+import com.dhuelin.dev.watchguru.streaming.mediaserver.MediaServerLinkService;
+import com.dhuelin.dev.watchguru.streaming.mediaserver.WebhookAuthenticationException;
 import com.dhuelin.dev.watchguru.streaming.trakt.TraktConnectionService;
 import com.dhuelin.dev.watchguru.streaming.trakt.TraktException;
 import org.slf4j.Logger;
@@ -95,6 +96,18 @@ public class ApiExceptionHandler {
      */
     @ExceptionHandler(TraktConnectionService.NotAvailableException.class)
     ProblemDetail onTraktUnavailable(TraktConnectionService.NotAvailableException e) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    /**
+     * A media server connection that cannot be made as asked for -- today,
+     * only a Jellyfin or Emby link with no username to filter on.
+     *
+     * <p>409 rather than 400: the request is well formed, and what is missing
+     * is something only the user can supply.
+     */
+    @ExceptionHandler(MediaServerLinkService.NotAvailableException.class)
+    ProblemDetail onMediaServerRefused(MediaServerLinkService.NotAvailableException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
     }
 

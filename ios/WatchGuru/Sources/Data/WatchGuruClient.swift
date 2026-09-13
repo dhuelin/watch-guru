@@ -235,33 +235,43 @@ actor WatchGuruClient {
         }
     }
 
-    // MARK: - Plex
+    // MARK: - Media servers
 
-    /// Whether a Plex server is connected, and what it has sent lately.
-    func plexStatus() async throws(APIFailure) -> PlexStatusResponse {
-        try await run { try await PlexControllerAPI.getPlexStatus(apiConfiguration: $0) }
+    /// Whether a media server is connected, and what it has sent lately.
+    func mediaServerStatus(service: String) async throws(APIFailure) -> MediaServerStatusResponse {
+        try await run {
+            try await MediaServerControllerAPI.getMediaServerStatus(
+                service: service, apiConfiguration: $0)
+        }
     }
 
-    /// Connects, or reconnects, a Plex server.
+    /// Connects, or reconnects, a media server.
     ///
     /// The webhook URL comes back once and is never recoverable: the server
     /// keeps only a hash of it. Calling this again issues a new URL and
     /// retires the previous one, which is also the way out if somebody pasted
     /// theirs where they should not have.
     ///
-    /// - Parameter plexUsername: whose viewing counts. Optional, and it
-    ///   matters on a shared server: without it, a housemate's evening could
-    ///   land in this library.
-    func connectPlex(plexUsername: String?) async throws(APIFailure) -> PlexConnectionResponse {
-        let trimmed = plexUsername?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let request = ConnectPlex(plexUsername: (trimmed?.isEmpty ?? true) ? nil : trimmed)
+    /// - Parameter accountName: whose viewing counts. Required by Jellyfin and
+    ///   Emby, whose webhooks fire for everybody on the server; optional for
+    ///   Plex, which says whose account played something.
+    func connectMediaServer(
+        service: String,
+        accountName: String?
+    ) async throws(APIFailure) -> MediaServerConnectionResponse {
+        let trimmed = accountName?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let request = ConnectMediaServer(accountName: (trimmed?.isEmpty ?? true) ? nil : trimmed)
         return try await run {
-            try await PlexControllerAPI.connectPlex(connectPlex: request, apiConfiguration: $0)
+            try await MediaServerControllerAPI.connectMediaServer(
+                service: service, connectMediaServer: request, apiConfiguration: $0)
         }
     }
 
-    func disconnectPlex() async throws(APIFailure) {
-        try await runVoid { try await PlexControllerAPI.disconnectPlex(apiConfiguration: $0) }
+    func disconnectMediaServer(service: String) async throws(APIFailure) {
+        try await runVoid {
+            try await MediaServerControllerAPI.disconnectMediaServer(
+                service: service, apiConfiguration: $0)
+        }
     }
 
     // MARK: - Trakt

@@ -68,11 +68,11 @@ the repository.
 | `WATCH_GURU_PUSH_PROVIDER` | `log` is the only value that exists today. |
 | `WATCH_GURU_TRAKT_CLIENT_ID` / `_SECRET` | A free [Trakt application](https://trakt.tv/oauth/applications), whose redirect URI must be `<public base url>/api/v1/streaming/trakt/callback`. Without both, connecting Trakt is refused up front rather than after the user has approved — see [`TRAKT.md`](TRAKT.md). |
 | `WATCH_GURU_CREDENTIALS_SECRET` | Base64 of at least 32 random bytes (`openssl rand -base64 32`): the AES-GCM key that seals third-party access tokens. No generated fallback, for the same reason as the session secret — a key invented at boot would lose every connection on the next restart, and every user would have to reconnect without being told why. Only needed where Trakt is offered. |
-| `WATCH_GURU_PUBLIC_BASE_URL` | Where this service is reachable from outside, e.g. `https://api.watch-guru.dev`. Both the Plex webhook URL and the Trakt OAuth redirect are built from it. Unset, it is derived from the incoming request, which is right in development and wrong behind a proxy that does not forward the original host — and a webhook URL that is wrong in that way fails silently, because Plex reports nothing for a URL that resolves to nothing. |
+| `WATCH_GURU_PUBLIC_BASE_URL` | Where this service is reachable from outside, e.g. `https://api.watch-guru.dev`. The media-server webhook URLs and the Trakt OAuth redirect are built from it. Unset, it is derived from the incoming request, which is right in development and wrong behind a proxy that does not forward the original host — and a webhook URL that is wrong in that way fails silently, because Plex reports nothing for a URL that resolves to nothing. |
 
 ### Webhook URLs are credentials, and they are in the path
 
-A Plex server sends no headers of our choosing and offers no signing secret,
+None of the media servers sends headers of our choosing or offers a signing secret,
 so the token that identifies a connection is in the URL path. Only its SHA-256
 hash is stored, and holding one lets its bearer write watch events into exactly
 one account and read nothing — but anything that logs full request URLs, a

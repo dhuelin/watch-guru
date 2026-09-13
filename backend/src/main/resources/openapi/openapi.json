@@ -428,39 +428,63 @@
         "tags" : [ "streaming-controller" ]
       }
     },
-    "/api/v1/me/streaming-accounts/plex" : {
+    "/api/v1/me/streaming-accounts/servers/{service}" : {
       "delete" : {
-        "operationId" : "disconnectPlex",
+        "operationId" : "disconnectMediaServer",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "service",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
         "responses" : {
           "200" : {
             "description" : "OK"
           }
         },
-        "tags" : [ "plex-controller" ]
+        "tags" : [ "media-server-controller" ]
       },
       "get" : {
-        "operationId" : "getPlexStatus",
+        "operationId" : "getMediaServerStatus",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "service",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
         "responses" : {
           "200" : {
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PlexStatusResponse"
+                  "$ref" : "#/components/schemas/MediaServerStatusResponse"
                 }
               }
             },
             "description" : "OK"
           }
         },
-        "tags" : [ "plex-controller" ]
+        "tags" : [ "media-server-controller" ]
       },
       "post" : {
-        "operationId" : "connectPlex",
+        "operationId" : "connectMediaServer",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "service",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
         "requestBody" : {
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/ConnectPlex"
+                "$ref" : "#/components/schemas/ConnectMediaServer"
               }
             }
           }
@@ -470,14 +494,14 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PlexConnectionResponse"
+                  "$ref" : "#/components/schemas/MediaServerConnectionResponse"
                 }
               }
             },
             "description" : "OK"
           }
         },
-        "tags" : [ "plex-controller" ]
+        "tags" : [ "media-server-controller" ]
       }
     },
     "/api/v1/me/streaming-accounts/trakt" : {
@@ -1154,10 +1178,10 @@
         },
         "required" : [ "rows" ]
       },
-      "ConnectPlex" : {
+      "ConnectMediaServer" : {
         "type" : "object",
         "properties" : {
-          "plexUsername" : {
+          "accountName" : {
             "type" : "string",
             "maxLength" : 128,
             "minLength" : 0
@@ -1486,6 +1510,54 @@
         },
         "required" : [ "episodeId" ]
       },
+      "MediaServerConnectionResponse" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "$ref" : "#/components/schemas/LinkedAccountResponse"
+          },
+          "service" : {
+            "type" : "string"
+          },
+          "serviceName" : {
+            "type" : "string"
+          },
+          "setUpHint" : {
+            "type" : "string"
+          },
+          "webhookUrl" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "account", "service", "serviceName", "setUpHint", "webhookUrl" ]
+      },
+      "MediaServerStatusResponse" : {
+        "type" : "object",
+        "properties" : {
+          "account" : {
+            "$ref" : "#/components/schemas/LinkedAccountResponse"
+          },
+          "connected" : {
+            "type" : "boolean"
+          },
+          "recentRuns" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SyncRunResponse"
+            }
+          },
+          "requiresAccountName" : {
+            "type" : "boolean"
+          },
+          "service" : {
+            "type" : "string"
+          },
+          "serviceName" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "connected", "recentRuns", "requiresAccountName", "service", "serviceName" ]
+      },
       "MonthBucket" : {
         "type" : "object",
         "properties" : {
@@ -1526,39 +1598,6 @@
           }
         },
         "required" : [ "enabled", "registeredDevices", "series" ]
-      },
-      "PlexConnectionResponse" : {
-        "type" : "object",
-        "properties" : {
-          "account" : {
-            "$ref" : "#/components/schemas/LinkedAccountResponse"
-          },
-          "setUpHint" : {
-            "type" : "string"
-          },
-          "webhookUrl" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "account", "setUpHint", "webhookUrl" ]
-      },
-      "PlexStatusResponse" : {
-        "type" : "object",
-        "properties" : {
-          "account" : {
-            "$ref" : "#/components/schemas/LinkedAccountResponse"
-          },
-          "connected" : {
-            "type" : "boolean"
-          },
-          "recentRuns" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/SyncRunResponse"
-            }
-          }
-        },
-        "required" : [ "connected", "recentRuns" ]
       },
       "PreviewImport" : {
         "type" : "object",
