@@ -52,6 +52,7 @@ docs/UpNextResponse.md
 docs/UpdateNotificationSettings.md
 docs/UpdateProfile.md
 docs/UpdateSeriesNotification.md
+docs/UpdateWatchEvent.md
 docs/UpdateWatchlistItem.md
 docs/UserResponse.md
 docs/WatchEventResponse.md
@@ -135,6 +136,7 @@ src/main/kotlin/dev/dhuelin/watchguru/api/models/UpNextResponse.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/UpdateNotificationSettings.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/UpdateProfile.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/UpdateSeriesNotification.kt
+src/main/kotlin/dev/dhuelin/watchguru/api/models/UpdateWatchEvent.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/UpdateWatchlistItem.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/UserResponse.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/WatchEventResponse.kt
@@ -193,6 +195,7 @@ src/test/kotlin/dev/dhuelin/watchguru/api/models/UpNextResponseTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/UpdateNotificationSettingsTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/UpdateProfileTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/UpdateSeriesNotificationTest.kt
+src/test/kotlin/dev/dhuelin/watchguru/api/models/UpdateWatchEventTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/UpdateWatchlistItemTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/UserResponseTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/WatchEventResponseTest.kt

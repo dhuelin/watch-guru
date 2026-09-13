@@ -214,6 +214,45 @@
             "format" : "int32",
             "default" : 50
           }
+        }, {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "type",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "MOVIE", "TV_SERIES" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "serviceId",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "in" : "query",
+          "name" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -717,6 +756,41 @@
         "responses" : {
           "204" : {
             "description" : "No Content"
+          }
+        },
+        "tags" : [ "watch-history-controller" ]
+      },
+      "patch" : {
+        "operationId" : "updateWatchEvent",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "eventId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateWatchEvent"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/WatchEventResponse"
+                }
+              }
+            },
+            "description" : "OK"
           }
         },
         "tags" : [ "watch-history-controller" ]
@@ -2146,6 +2220,19 @@
         },
         "required" : [ "newEpisodes" ]
       },
+      "UpdateWatchEvent" : {
+        "type" : "object",
+        "properties" : {
+          "streamingServiceId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "watchedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }
+      },
       "UpdateWatchlistItem" : {
         "type" : "object",
         "properties" : {
@@ -2209,11 +2296,18 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "posterUrl" : {
+            "type" : "string"
+          },
           "primaryTitle" : {
             "type" : "string"
           },
           "rewatch" : {
             "type" : "boolean"
+          },
+          "streamingServiceId" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "streamingServiceName" : {
             "type" : "string"

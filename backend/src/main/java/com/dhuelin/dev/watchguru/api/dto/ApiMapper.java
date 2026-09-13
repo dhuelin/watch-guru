@@ -219,7 +219,9 @@ public class ApiMapper {
                 event.getWatchedAt(),
                 event.getMinutesWatched(),
                 event.isRewatch(),
-                event.getStreamingService() == null ? null : event.getStreamingService().getName());
+                event.getStreamingService() == null ? null : event.getStreamingService().getName(),
+                event.getStreamingService() == null ? null : event.getStreamingService().getId(),
+                images.poster(event.getTitle().getPosterPath()));
     }
 
     public Responses.StreamingServiceResponse toService(StreamingService service) {

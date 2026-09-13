@@ -134,6 +134,18 @@
     </plurals>
     <string name="action_connect_trakt">Connect Trakt</string>
 
+    <!-- History timeline and editing (#22). The search box says what it
+         searches, because "Search" over a screen full of dates reads as a
+         search of the whole app. -->
+    <string name="history_search_label">Search your history</string>
+    <string name="history_filter_all">Everything</string>
+    <string name="history_filter_films">Films</string>
+    <string name="history_filter_series">Series</string>
+    <string name="history_any_service">Any service</string>
+    <string name="history_watched_on">Watched on</string>
+    <string name="history_watched_where">Watched where</string>
+    <string name="action_save">Save</string>
+
     <string name="tmdb_attribution">This product uses the TMDB API but is not endorsed or certified by TMDB.</string>
 
     <!-- Shown when changes made offline have not reached the server yet. Not

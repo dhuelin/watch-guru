@@ -182,7 +182,13 @@ public final class Responses {
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Instant watchedAt,
             Integer minutesWatched,
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) boolean rewatch,
-            String streamingServiceName
+            String streamingServiceName,
+            // Optional, both of them, and that is not an oversight: a required
+            // field added here stops an older app decoding its offline snapshot
+            // of the history, which throws away the cached library to fix a
+            // cosmetic gap.
+            Long streamingServiceId,
+            String posterUrl
     ) {
     }
 

@@ -1,6 +1,7 @@
 package dev.dhuelin.watchguru.ui.history
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,15 +25,21 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.dhuelin.watchguru.R
 import dev.dhuelin.watchguru.api.models.WatchEventResponse
+import dev.dhuelin.watchguru.data.HistoryDays
 import dev.dhuelin.watchguru.ui.components.ErrorView
 import dev.dhuelin.watchguru.ui.components.FullScreenMessage
 import dev.dhuelin.watchguru.ui.components.UiState
@@ -49,6 +56,13 @@ fun HistoryScreen(
     viewModel: HistoryViewModel = hiltViewModel(),
 ) {
     val events by viewModel.events.collectAsStateWithLifecycle()
+    val query by viewModel.query.collectAsStateWithLifecycle()
+    val type by viewModel.type.collectAsStateWithLifecycle()
+    val serviceId by viewModel.serviceId.collectAsStateWithLifecycle()
+    val services by viewModel.services.collectAsStateWithLifecycle()
+    // The id rather than the event: an id survives rotation without a custom
+    // saver, and the event it names is in the list on screen anyway.
+    var editingId by rememberSaveable { mutableStateOf<Long?>(null) }
 
     Scaffold(
         topBar = {
@@ -69,29 +83,46 @@ fun HistoryScreen(
                 // carried through the item lambdas would be wrong: lazy items
                 // compose on demand and out of order, so headers would appear
                 // and vanish as the list scrolled.
-                val byDay = remember(content) {
-                    content.groupBy {
-                        it.watchedAt.atZoneSameInstant(ZoneId.systemDefault()).toLocalDate()
-                    }
+                val days = remember(content) {
+                    HistoryDays.group(content, ZoneId.systemDefault())
                 }
 
                 LazyColumn(modifier = Modifier.fillMaxSize().padding(padding)) {
-                    byDay.forEach { (day, dayEvents) ->
+                    item(key = "filters") {
+                        Filters(
+                            query = query,
+                            type = type,
+                            serviceId = serviceId,
+                            services = services,
+                            onQuery = viewModel::setQuery,
+                            onType = viewModel::setType,
+                            onService = viewModel::setService,
+                        )
+                    }
+                    days.forEach { day ->
                         // "What did I watch last October" is the question this
                         // screen exists to answer, so the day is the anchor.
-                        stickyHeader(key = "day-$day") {
+                        stickyHeader(key = "day-${day.date}") {
                             Text(
-                                text = day.format(DayFormat),
+                                text = day.date.format(DayFormat),
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .background(MaterialTheme.colorScheme.surface)
-                                    .padding(start = 16.dp, top = 12.dp, bottom = 4.dp),
+                                    .padding(start = 16.dp, top = 12.dp, bottom = 4.dp)
+                                    .semantics {
+                                        contentDescription = day.date.format(DayFormat) +
+                                            ", " + HistoryDays.spokenSummary(day)
+                                    },
                             )
                         }
-                        items(dayEvents, key = { it.id }) { event ->
-                            HistoryRow(event = event, onDelete = { viewModel.delete(event) })
+                        items(day.events, key = { it.id }) { event ->
+                            HistoryRow(
+                                event = event,
+                                onEdit = { editingId = event.id },
+                                onDelete = { viewModel.delete(event) },
+                            )
                         }
                     }
                 }
@@ -116,12 +147,34 @@ fun HistoryScreen(
             )
         }
     }
+
+    events.contentOrNull()?.firstOrNull { it.id == editingId }?.let { event ->
+        EditEventSheet(
+            event = event,
+            services = services,
+            onDismiss = { editingId = null },
+            onSave = { watchedAt, service ->
+                viewModel.edit(event, watchedAt, service)
+                editingId = null
+            },
+        )
+    }
 }
 
 @Composable
-private fun HistoryRow(event: WatchEventResponse, onDelete: () -> Unit) {
+private fun HistoryRow(
+    event: WatchEventResponse,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            // The whole row opens the editor: this screen exists as much for
+            // correcting a wrong date as for reading the record, and a pencil
+            // icon per row would be a column of pencils.
+            .clickable(onClick = onEdit)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {

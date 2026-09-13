@@ -68,7 +68,19 @@ class WatchGuruRepositoryTest {
             private fun fail(): Nothing = throw UnsupportedOperationException()
         },
         history = object : WatchHistoryControllerApi {
-            override suspend fun getHistory(page: Int?, size: Int?) = fail()
+            override suspend fun getHistory(
+                page: Int?,
+                size: Int?,
+                from: java.time.LocalDate?,
+                to: java.time.LocalDate?,
+                type: WatchHistoryControllerApi.TypeGetHistory?,
+                serviceId: Long?,
+                query: String?,
+            ) = fail()
+            override suspend fun updateWatchEvent(
+                eventId: Long,
+                updateWatchEvent: dev.dhuelin.watchguru.api.models.UpdateWatchEvent,
+            ) = fail()
             override suspend fun getStats(
                 months: Int?,
                 period: WatchHistoryControllerApi.PeriodGetStats?,
@@ -95,6 +107,12 @@ class WatchGuruRepositoryTest {
             ) = fail()
             override suspend fun disconnectMediaServer(service: String) = fail()
             override suspend fun getMediaServerStatus(service: String) = fail()
+            private fun fail(): Nothing = throw UnsupportedOperationException()
+        },
+        streaming = object : dev.dhuelin.watchguru.api.apis.StreamingControllerApi {
+            override suspend fun listLinkedAccounts() = fail()
+            override suspend fun listStreamingServices() = fail()
+            override suspend fun reconcileStreamingServices(region: String?) = fail()
             private fun fail(): Nothing = throw UnsupportedOperationException()
         },
         trakt = object : dev.dhuelin.watchguru.api.apis.TraktControllerApi {

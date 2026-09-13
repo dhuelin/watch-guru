@@ -10,6 +10,7 @@ import dev.dhuelin.watchguru.BuildConfig
 import dev.dhuelin.watchguru.api.apis.AuthenticationApi
 import dev.dhuelin.watchguru.api.apis.MeControllerApi
 import dev.dhuelin.watchguru.api.apis.MediaServerControllerApi
+import dev.dhuelin.watchguru.api.apis.StreamingControllerApi
 import dev.dhuelin.watchguru.api.apis.TraktControllerApi
 import dev.dhuelin.watchguru.api.apis.TitleControllerApi
 import dev.dhuelin.watchguru.api.apis.WatchHistoryControllerApi
@@ -154,6 +155,8 @@ object NetworkModule {
     @Provides @Singleton fun meApi(retrofit: Retrofit): MeControllerApi = retrofit.create()
     @Provides @Singleton
     fun mediaServerApi(retrofit: Retrofit): MediaServerControllerApi = retrofit.create()
+    @Provides @Singleton
+    fun streamingApi(retrofit: Retrofit): StreamingControllerApi = retrofit.create()
     @Provides @Singleton fun traktApi(retrofit: Retrofit): TraktControllerApi = retrofit.create()
 
     @Provides
@@ -164,9 +167,10 @@ object NetworkModule {
         history: WatchHistoryControllerApi,
         me: MeControllerApi,
         servers: MediaServerControllerApi,
+        streaming: StreamingControllerApi,
         trakt: TraktControllerApi,
     ): WatchGuruRepository =
-        WatchGuruRepository(titles, watchlist, history, me, servers, trakt, ioDispatcher())
+        WatchGuruRepository(titles, watchlist, history, me, servers, streaming, trakt, ioDispatcher())
 
     private fun ioDispatcher(): CoroutineDispatcher = Dispatchers.IO
 }

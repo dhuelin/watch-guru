@@ -29,6 +29,60 @@ public interface WatchEventRepository extends JpaRepository<WatchEvent, Long> {
     @EntityGraph(attributePaths = {"title", "episode"})
     List<WatchEvent> findByUserIdAndTitleIdOrderByWatchedAtDesc(Long userId, Long titleId);
 
+    /**
+     * The history, filtered by everything the timeline can filter on.
+     *
+     * <p>One query rather than a Specification: the filters are fixed and few,
+     * and a criteria builder here would trade a readable query for the ability
+     * to add predicates nobody has asked for.
+     *
+     * <p>Every cast is load-bearing. Postgres cannot infer a type for a bare
+     * parameter on the left of {@code is null}, so without them each optional
+     * filter fails at runtime rather than at startup -- the same trap the stats
+     * aggregates hit in #17.
+     *
+     * <p>The joins are left joins written out rather than left implicit: an
+     * implicit join through {@code e.episode} in a where clause becomes an
+     * inner join, which would drop every film from a search the moment a term
+     * was typed.
+     */
+    @Query(value = """
+            select e from WatchEvent e
+            left join fetch e.title t
+            left join fetch e.episode ep
+            where e.user.id = :userId
+              and (cast(:from as Instant) is null or e.watchedAt >= :from)
+              and (cast(:to as Instant) is null or e.watchedAt < :to)
+              and (:episodesOnly = false or e.episode is not null)
+              and (:moviesOnly = false or e.episode is null)
+              and (cast(:serviceId as Long) is null or e.streamingService.id = :serviceId)
+              and (cast(:query as String) is null
+                   or lower(t.primaryTitle) like :query
+                   or lower(ep.name) like :query)
+            order by e.watchedAt desc, e.id desc
+            """,
+            countQuery = """
+            select count(e) from WatchEvent e
+            left join e.title t
+            left join e.episode ep
+            where e.user.id = :userId
+              and (cast(:from as Instant) is null or e.watchedAt >= :from)
+              and (cast(:to as Instant) is null or e.watchedAt < :to)
+              and (:episodesOnly = false or e.episode is not null)
+              and (:moviesOnly = false or e.episode is null)
+              and (cast(:serviceId as Long) is null or e.streamingService.id = :serviceId)
+              and (cast(:query as String) is null
+                   or lower(t.primaryTitle) like :query
+                   or lower(ep.name) like :query)
+            """)
+    Page<WatchEvent> search(@Param("userId") Long userId,
+                            @Param("from") Instant from,
+                            @Param("to") Instant to,
+                            @Param("episodesOnly") boolean episodesOnly,
+                            @Param("moviesOnly") boolean moviesOnly,
+                            @Param("serviceId") Long serviceId,
+                            @Param("query") String query,
+                            Pageable pageable);
     boolean existsByUserIdAndTitleIdAndEpisodeIsNull(Long userId, Long titleId);
 
     /**

@@ -40,6 +40,8 @@ import kotlinx.serialization.Contextual
  * @param episodeId 
  * @param episodeName 
  * @param minutesWatched 
+ * @param posterUrl 
+ * @param streamingServiceId 
  * @param streamingServiceName 
  */
 @Serializable
@@ -72,6 +74,12 @@ data class WatchEventResponse (
 
     @SerialName(value = "minutesWatched")
     val minutesWatched: kotlin.Int? = null,
+
+    @SerialName(value = "posterUrl")
+    val posterUrl: kotlin.String? = null,
+
+    @SerialName(value = "streamingServiceId")
+    val streamingServiceId: kotlin.Long? = null,
 
     @SerialName(value = "streamingServiceName")
     val streamingServiceName: kotlin.String? = null
