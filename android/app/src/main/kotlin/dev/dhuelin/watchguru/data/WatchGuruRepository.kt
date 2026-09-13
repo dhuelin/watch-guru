@@ -2,6 +2,7 @@ package dev.dhuelin.watchguru.data
 
 import dev.dhuelin.watchguru.api.apis.MeControllerApi
 import dev.dhuelin.watchguru.api.apis.PlexControllerApi
+import dev.dhuelin.watchguru.api.apis.TraktControllerApi
 import dev.dhuelin.watchguru.api.apis.TitleControllerApi
 import dev.dhuelin.watchguru.api.apis.WatchHistoryControllerApi
 import dev.dhuelin.watchguru.api.apis.WatchlistControllerApi
@@ -12,6 +13,9 @@ import dev.dhuelin.watchguru.api.models.ConnectPlex
 import dev.dhuelin.watchguru.api.models.MarkWatchedUpTo
 import dev.dhuelin.watchguru.api.models.PlexConnectionResponse
 import dev.dhuelin.watchguru.api.models.PlexStatusResponse
+import dev.dhuelin.watchguru.api.models.SyncResultResponse
+import dev.dhuelin.watchguru.api.models.TraktAuthorizationResponse
+import dev.dhuelin.watchguru.api.models.TraktStatusResponse
 import dev.dhuelin.watchguru.api.models.SeasonsResponse
 import dev.dhuelin.watchguru.api.models.UpNextResponse
 import dev.dhuelin.watchguru.api.models.SearchResponse
@@ -45,6 +49,7 @@ class WatchGuruRepository(
     private val history: WatchHistoryControllerApi,
     private val me: MeControllerApi,
     private val plex: PlexControllerApi,
+    private val trakt: TraktControllerApi,
     private val io: CoroutineDispatcher,
 ) {
 
@@ -154,6 +159,23 @@ class WatchGuruRepository(
         call { plex.connectPlex(ConnectPlex(plexUsername?.trim()?.ifBlank { null })) }
 
     suspend fun disconnectPlex(): ApiResult<Unit> = call { plex.disconnectPlex() }
+
+    /** Whether Trakt is connected, and what its last few syncs did. */
+    suspend fun traktStatus(): ApiResult<TraktStatusResponse> = call { trakt.getTraktStatus() }
+
+    /**
+     * Starts an authorisation and returns where to send the user.
+     *
+     * Nothing is connected until they come back through the callback, so the
+     * screen has to ask again afterwards rather than assume.
+     */
+    suspend fun authorizeTrakt(): ApiResult<TraktAuthorizationResponse> =
+        call { trakt.authorizeTrakt() }
+
+    /** Reads everything watched since the last sync, now. */
+    suspend fun syncTrakt(): ApiResult<SyncResultResponse> = call { trakt.syncTrakt() }
+
+    suspend fun disconnectTrakt(): ApiResult<Unit> = call { trakt.disconnectTrakt() }
 
     /**
      * Runs one call on the IO dispatcher.

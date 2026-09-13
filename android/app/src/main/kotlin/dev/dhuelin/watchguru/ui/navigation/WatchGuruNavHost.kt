@@ -14,6 +14,7 @@ import dev.dhuelin.watchguru.ui.home.HomeScreen
 import dev.dhuelin.watchguru.ui.library.LibraryScreen
 import dev.dhuelin.watchguru.ui.plex.PlexScreen
 import dev.dhuelin.watchguru.ui.profile.ProfileScreen
+import dev.dhuelin.watchguru.ui.trakt.TraktScreen
 import dev.dhuelin.watchguru.ui.search.SearchScreen
 import dev.dhuelin.watchguru.ui.signin.SignInViewModel
 
@@ -42,6 +43,7 @@ fun WatchGuruNavHost(
                 onOpenHistory = { navController.navigate(Routes.HISTORY) },
                 onOpenStats = { navController.navigate(Routes.STATS) },
                 onOpenPlex = { navController.navigate(Routes.PLEX) },
+                onOpenTrakt = { navController.navigate(Routes.TRAKT) },
                 signIn = signIn,
             )
         }
@@ -54,6 +56,9 @@ fun WatchGuruNavHost(
         }
         composable(Routes.PLEX) {
             PlexScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Routes.TRAKT) {
+            TraktScreen(onBack = { navController.popBackStack() })
         }
         composable(
             route = Routes.TITLE_DETAIL,

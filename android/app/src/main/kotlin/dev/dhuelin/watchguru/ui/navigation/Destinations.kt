@@ -27,6 +27,7 @@ object Routes {
     const val HISTORY = "history"
     const val STATS = "stats"
     const val PLEX = "plex"
+    const val TRAKT = "trakt"
 
     fun titleDetail(titleId: Long) = "title/$titleId"
 

@@ -1,5 +1,8 @@
-package dev.dhuelin.watchguru.ui.plex
+package dev.dhuelin.watchguru.ui.trakt
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import android.text.format.DateUtils
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,7 +22,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -30,47 +32,65 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.dhuelin.watchguru.R
-import dev.dhuelin.watchguru.api.models.PlexStatusResponse
+import dev.dhuelin.watchguru.api.models.SyncResultResponse
 import dev.dhuelin.watchguru.api.models.SyncRunResponse
+import dev.dhuelin.watchguru.api.models.TraktStatusResponse
 import dev.dhuelin.watchguru.data.ConnectionActivity
 import dev.dhuelin.watchguru.ui.components.ErrorView
 import dev.dhuelin.watchguru.ui.components.UiState
 import dev.dhuelin.watchguru.ui.components.contentOrNull
 
 /**
- * Connecting a Plex server.
+ * Connecting Trakt.
  *
- * The screen is mostly one instruction and one piece of text to copy, because
- * that is genuinely all the setup is: Plex calls us, so there is no login here
- * and nothing to authorise. What the screen has to do well is the part after
- * setup -- saying whether deliveries are arriving, and what happened to the
- * last one.
+ * The authorisation happens in a browser rather than a web view, so the user
+ * can see the address bar says trakt.tv before typing a password there. That
+ * also means this screen loses sight of them for a moment: it refreshes on
+ * resume, because coming back to a screen still saying "not connected" after
+ * connecting is the failure worth designing against.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlexScreen(
+fun TraktScreen(
     onBack: () -> Unit,
-    viewModel: PlexViewModel = hiltViewModel(),
+    viewModel: TraktViewModel = hiltViewModel(),
 ) {
     val state by viewModel.status.collectAsStateWithLifecycle()
-    val issuedUrl by viewModel.issuedUrl.collectAsStateWithLifecycle()
+    val authorizeUrl by viewModel.authorizeUrl.collectAsStateWithLifecycle()
+    val lastSync by viewModel.lastSync.collectAsStateWithLifecycle()
     val busy by viewModel.busy.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    val noBrowser = stringResource(R.string.trakt_no_browser)
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.load() }
+
+    LaunchedEffect(authorizeUrl) {
+        val url = authorizeUrl ?: return@LaunchedEffect
+        viewModel.authorizeUrlOpened()
+        try {
+            context.startActivity(
+                Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+        } catch (e: ActivityNotFoundException) {
+            // A device with no browser at all. Rare, and silently doing
+            // nothing would look like the button is broken.
+            snackbarHostState.showSnackbar(noBrowser)
+        }
+    }
 
     LaunchedEffect(error) {
         error?.let {
@@ -83,7 +103,7 @@ fun PlexScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.title_plex)) },
+                title = { Text(stringResource(R.string.title_trakt)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -108,13 +128,13 @@ fun PlexScreen(
                 modifier = Modifier.padding(padding),
             )
 
-            else -> PlexContent(
+            else -> TraktContent(
                 status = current.contentOrNull(),
-                issuedUrl = issuedUrl,
+                lastSync = lastSync,
                 busy = busy,
                 onConnect = viewModel::connect,
+                onSync = viewModel::syncNow,
                 onDisconnect = viewModel::disconnect,
-                onDismissUrl = viewModel::dismissIssuedUrl,
                 modifier = Modifier.padding(padding),
             )
         }
@@ -122,16 +142,15 @@ fun PlexScreen(
 }
 
 @Composable
-private fun PlexContent(
-    status: PlexStatusResponse?,
-    issuedUrl: String?,
+private fun TraktContent(
+    status: TraktStatusResponse?,
+    lastSync: SyncResultResponse?,
     busy: Boolean,
-    onConnect: (String?) -> Unit,
+    onConnect: () -> Unit,
+    onSync: () -> Unit,
     onDisconnect: () -> Unit,
-    onDismissUrl: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var plexUsername by rememberSaveable { mutableStateOf("") }
     val connected = status?.connected == true
 
     Column(
@@ -141,7 +160,7 @@ private fun PlexContent(
             .padding(16.dp),
     ) {
         Text(
-            text = stringResource(R.string.plex_explainer),
+            text = stringResource(R.string.trakt_explainer),
             style = MaterialTheme.typography.bodyMedium,
         )
 
@@ -149,35 +168,22 @@ private fun PlexContent(
             StatusLine(status = status, modifier = Modifier.padding(top = 16.dp))
         }
 
-        if (issuedUrl != null) {
-            WebhookUrlCard(
-                url = issuedUrl,
-                onDone = onDismissUrl,
-                modifier = Modifier.padding(top = 16.dp),
-            )
-        }
-
-        if (!connected) {
-            OutlinedTextField(
-                value = plexUsername,
-                onValueChange = { plexUsername = it },
-                singleLine = true,
-                label = { Text(stringResource(R.string.plex_username_label)) },
-                supportingText = { Text(stringResource(R.string.plex_username_explainer)) },
-                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-            )
+        if (lastSync != null) {
+            LastSync(result = lastSync, modifier = Modifier.padding(top = 12.dp))
         }
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(top = 16.dp),
         ) {
-            Button(onClick = { onConnect(plexUsername) }, enabled = !busy) {
-                Text(
-                    stringResource(
-                        if (connected) R.string.action_plex_reconnect else R.string.action_plex_connect,
-                    ),
-                )
+            if (connected) {
+                Button(onClick = onSync, enabled = !busy) {
+                    Text(stringResource(R.string.action_trakt_sync))
+                }
+            } else {
+                Button(onClick = onConnect, enabled = !busy) {
+                    Text(stringResource(R.string.action_trakt_connect))
+                }
             }
             if (busy) {
                 CircularProgressIndicator(
@@ -187,16 +193,11 @@ private fun PlexContent(
                 )
             }
         }
+
         if (connected) {
-            Text(
-                text = stringResource(R.string.plex_reconnect_explainer),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 4.dp),
-            )
             TextButton(onClick = onDisconnect, enabled = !busy) {
                 Text(
-                    text = stringResource(R.string.action_plex_disconnect),
+                    text = stringResource(R.string.action_trakt_disconnect),
                     color = MaterialTheme.colorScheme.error,
                 )
             }
@@ -206,24 +207,23 @@ private fun PlexContent(
         if (runs.isNotEmpty()) {
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
             Text(
-                text = stringResource(R.string.plex_recent_deliveries),
+                text = stringResource(R.string.trakt_recent_syncs),
                 style = MaterialTheme.typography.titleMedium,
             )
-            runs.forEach { Delivery(it) }
+            runs.forEach { SyncRun(it) }
         }
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
         Text(
-            text = stringResource(R.string.plex_other_services),
+            text = stringResource(R.string.trakt_privacy_note),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
 
-/** Whether deliveries are arriving, in one sentence and one timestamp. */
 @Composable
-private fun StatusLine(status: PlexStatusResponse, modifier: Modifier = Modifier) {
+private fun StatusLine(status: TraktStatusResponse, modifier: Modifier = Modifier) {
     val health = ConnectionActivity.health(status.connected, status.account)
     val lastSyncAt = status.account?.lastSyncAt
 
@@ -240,13 +240,16 @@ private fun StatusLine(status: PlexStatusResponse, modifier: Modifier = Modifier
                 text = ConnectionActivity.summary(
                     connected = status.connected,
                     account = status.account,
-                    waiting = stringResource(R.string.plex_waiting),
+                    waiting = stringResource(R.string.trakt_waiting),
                 ),
                 style = MaterialTheme.typography.bodyMedium,
             )
             if (lastSyncAt != null) {
                 Text(
-                    text = stringResource(R.string.plex_last_heard, relativeTime(lastSyncAt.toEpochSecond())),
+                    text = stringResource(
+                        R.string.trakt_last_synced,
+                        relativeTime(lastSyncAt.toEpochSecond()),
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 4.dp),
@@ -257,52 +260,38 @@ private fun StatusLine(status: PlexStatusResponse, modifier: Modifier = Modifier
 }
 
 /**
- * The webhook URL, once.
+ * What the sync the user just asked for did.
  *
- * Shown with the warning rather than beside it: this is the only time the URL
- * exists anywhere but in Plex, because the server keeps a hash of it and
- * nothing else.
+ * Named rather than counted where something could not be matched: "3 items
+ * could not be matched" is not something a person can act on, and a title they
+ * recognise is.
  */
 @Composable
-private fun WebhookUrlCard(url: String, onDone: () -> Unit, modifier: Modifier = Modifier) {
-    val clipboard = LocalClipboardManager.current
-
-    Surface(
-        color = MaterialTheme.colorScheme.primaryContainer,
-        shape = MaterialTheme.shapes.medium,
-        modifier = modifier.fillMaxWidth(),
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+private fun LastSync(result: SyncResultResponse, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        Text(
+            text = pluralStringResource(
+                R.plurals.trakt_sync_result,
+                result.imported,
+                result.imported,
+            ),
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        if (result.problems.isNotEmpty()) {
             Text(
-                text = stringResource(R.string.plex_url_heading),
-                style = MaterialTheme.typography.titleSmall,
-            )
-            Text(
-                text = stringResource(R.string.plex_url_instructions),
+                text = stringResource(
+                    R.string.trakt_sync_problems,
+                    result.problems.joinToString(", "),
+                ),
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 4.dp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Text(
-                text = url,
-                style = MaterialTheme.typography.bodySmall,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 8.dp),
-            )
-            Row(modifier = Modifier.padding(top = 8.dp)) {
-                Button(onClick = { clipboard.setText(AnnotatedString(url)) }) {
-                    Text(stringResource(R.string.action_copy))
-                }
-                TextButton(onClick = onDone, modifier = Modifier.padding(start = 8.dp)) {
-                    Text(stringResource(R.string.action_done))
-                }
-            }
         }
     }
 }
 
 @Composable
-private fun Delivery(run: SyncRunResponse) {
+private fun SyncRun(run: SyncRunResponse) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

@@ -111,6 +111,27 @@
     <string name="plex_other_services">Netflix, Prime Video and Apple TV cannot work this way: none of them offers any way to ask what you watched. Import their export instead \u2014 re-importing duplicates nothing.</string>
     <string name="action_connect_plex">Connect Plex</string>
 
+    <!-- Connecting Trakt (#39). The explainer leads with what it brings,
+         because "connect Trakt" means nothing to somebody who has not heard
+         of it and everything to somebody who already scrobbles. -->
+    <string name="title_trakt">Trakt</string>
+    <string name="trakt_explainer">If you already scrobble to Trakt — from Plex, Kodi, Infuse or anywhere else — connecting it brings all of that here. You approve it on trakt.tv in your browser; Watch Guru never sees your Trakt password.</string>
+    <string name="action_trakt_connect">Connect Trakt</string>
+    <string name="action_trakt_sync">Sync now</string>
+    <string name="action_trakt_disconnect">Disconnect</string>
+    <string name="trakt_waiting">Approve the connection in your browser, then come back here.</string>
+    <string name="trakt_last_synced">Last synced %1$s</string>
+    <string name="trakt_recent_syncs">Recent syncs</string>
+    <string name="trakt_sync_problems">Could not be matched: %1$s</string>
+    <string name="trakt_no_browser">No browser is available to open the Trakt page.</string>
+    <string name="trakt_privacy_note">Watch Guru holds the access Trakt gives it, encrypted, and never your password. Disconnecting revokes it at Trakt as well as here.</string>
+    <string name="plex_waiting">Waiting for your server. Paste the webhook URL into Plex, then watch something.</string>
+    <plurals name="trakt_sync_result">
+        <item quantity="one">Recorded %1$d viewing.</item>
+        <item quantity="other">Recorded %1$d viewings.</item>
+    </plurals>
+    <string name="action_connect_trakt">Connect Trakt</string>
+
     <string name="tmdb_attribution">This product uses the TMDB API but is not endorsed or certified by TMDB.</string>
 
     <!-- Shown when changes made offline have not reached the server yet. Not

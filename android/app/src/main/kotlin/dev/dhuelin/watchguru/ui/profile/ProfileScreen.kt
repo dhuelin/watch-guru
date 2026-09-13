@@ -55,6 +55,7 @@ fun ProfileScreen(
     onOpenHistory: () -> Unit,
     onOpenStats: () -> Unit,
     onOpenPlex: () -> Unit,
+    onOpenTrakt: () -> Unit,
     signIn: SignInViewModel,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
@@ -152,6 +153,9 @@ fun ProfileScreen(
                 }
                 TextButton(onClick = onOpenPlex) {
                     Text(stringResource(R.string.action_connect_plex))
+                }
+                TextButton(onClick = onOpenTrakt) {
+                    Text(stringResource(R.string.action_connect_trakt))
                 }
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
