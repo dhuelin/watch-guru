@@ -9,17 +9,21 @@ import Foundation
 
 public struct LogMovieWatched: Sendable, Codable, Hashable {
 
+    public static let clientRefRule = StringRule(minLength: 0, maxLength: 64, pattern: nil)
+    public var clientRef: String?
     public var streamingServiceId: Int64?
     public var titleId: Int64
     public var watchedAt: Date?
 
-    public init(streamingServiceId: Int64? = nil, titleId: Int64, watchedAt: Date? = nil) {
+    public init(clientRef: String? = nil, streamingServiceId: Int64? = nil, titleId: Int64, watchedAt: Date? = nil) {
+        self.clientRef = clientRef
         self.streamingServiceId = streamingServiceId
         self.titleId = titleId
         self.watchedAt = watchedAt
     }
 
     public enum CodingKeys: String, CodingKey, CaseIterable {
+        case clientRef
         case streamingServiceId
         case titleId
         case watchedAt
@@ -29,6 +33,7 @@ public struct LogMovieWatched: Sendable, Codable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(clientRef, forKey: .clientRef)
         try container.encodeIfPresent(streamingServiceId, forKey: .streamingServiceId)
         try container.encode(titleId, forKey: .titleId)
         try container.encodeIfPresent(watchedAt, forKey: .watchedAt)

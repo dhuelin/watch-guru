@@ -81,6 +81,18 @@ struct TitleDetailView: View {
                     }
                 }
 
+                // A film is watched or it is not: there is no next episode to
+                // offer, so this is the whole of its tracking, and without it a
+                // film could reach the library but never the history.
+                if title.titleType == .movie {
+                    LogFilmWatchedView(
+                        isMarking: model.isMarking,
+                        outcome: model.filmLog,
+                        log: { day in Task { await model.logFilmWatched(on: day) } },
+                        dismissOutcome: { model.clearFilmLog() }
+                    )
+                }
+
                 if let progress = model.progress, progress.airedEpisodes > 0 {
                     EpisodeProgressView(progress: progress, isMarking: model.isMarking) {
                         Task { await model.markNextEpisodeWatched() }

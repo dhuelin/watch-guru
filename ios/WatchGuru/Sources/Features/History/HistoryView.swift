@@ -108,6 +108,8 @@ private struct Filters: View {
 
     @Bindable var model: HistoryModel
 
+    @State private var isPickingRange = false
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             TextField("Search your history", text: $model.query)
@@ -125,6 +127,26 @@ private struct Filters: View {
             .pickerStyle(.segmented)
             .onChange(of: model.type) { Task { await model.load() } }
 
+            // "What did I watch last October" is the question, so the span of
+            // days is a filter like any other rather than something buried in
+            // a menu.
+            HStack {
+                Button {
+                    isPickingRange = true
+                } label: {
+                    Label(model.range.label, systemImage: "calendar")
+                }
+                .buttonStyle(.bordered)
+
+                if !model.range.isAnyTime {
+                    Button("Clear dates") {
+                        model.range = .anyTime
+                        Task { await model.load() }
+                    }
+                    .buttonStyle(.borderless)
+                }
+            }
+
             if !model.services.isEmpty {
                 Picker("Service", selection: $model.serviceId) {
                     Text("Any service").tag(Int64?.none)
@@ -136,6 +158,82 @@ private struct Filters: View {
             }
         }
         .padding(.vertical, 4)
+        .sheet(isPresented: $isPickingRange) {
+            DateRangeSheet(range: model.range) { picked in
+                isPickingRange = false
+                guard picked != model.range else { return }
+                model.range = picked
+                Task { await model.load() }
+            } cancel: {
+                isPickingRange = false
+            }
+        }
+    }
+}
+
+/// Picking the span of days, both bounds inclusive.
+///
+/// Two date pickers with switches rather than a range control, because SwiftUI
+/// has no range picker and because either bound alone is a real question:
+/// "since March" and "up to March" are both things people ask of a history.
+/// The switches are what make "no bound that way" expressible at all — a bare
+/// DatePicker always holds a date.
+private struct DateRangeSheet: View {
+
+    let apply: (DateRange) -> Void
+    let cancel: () -> Void
+
+    @State private var hasFrom: Bool
+    @State private var hasTo: Bool
+    @State private var from: Date
+    @State private var to: Date
+
+    init(range: DateRange, apply: @escaping (DateRange) -> Void, cancel: @escaping () -> Void) {
+        self.apply = apply
+        self.cancel = cancel
+        _hasFrom = State(initialValue: range.from != nil)
+        _hasTo = State(initialValue: range.to != nil)
+        _from = State(initialValue: range.from ?? Date.now)
+        _to = State(initialValue: range.to ?? Date.now)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Toggle("From a date", isOn: $hasFrom)
+                    if hasFrom {
+                        DatePicker("From", selection: $from, displayedComponents: .date)
+                    }
+                }
+                Section {
+                    Toggle("Up to a date", isOn: $hasTo)
+                    if hasTo {
+                        // Never before the start: a range that ends before it
+                        // begins renders as an empty history, which reads as
+                        // "you watched nothing" rather than as a bad filter.
+                        DatePicker(
+                            "Up to",
+                            selection: $to,
+                            in: (hasFrom ? from : Date.distantPast)...,
+                            displayedComponents: .date)
+                    }
+                }
+            }
+            .navigationTitle("Dates")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", action: cancel)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        apply(DateRange(from: hasFrom ? from : nil, to: hasTo ? to : nil))
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium])
     }
 }
 

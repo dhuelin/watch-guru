@@ -83,10 +83,33 @@ actor OfflineClient {
 
     func markEpisodeWatched(episodeId: Int64, titleId: Int64) async -> Written {
         let watchedAt = Date.now
+        // Minted before the first attempt and reused by every replay of it: a
+        // reference made at send time would be a new one each try, which is the
+        // same as having none.
+        let clientRef = Self.newClientRef()
         return await write {
-            _ = try await client.markEpisodeWatched(episodeId: episodeId, watchedAt: watchedAt)
+            _ = try await client.markEpisodeWatched(
+                episodeId: episodeId, watchedAt: watchedAt, clientRef: clientRef)
         } queueing: { id in
-            .markEpisodeWatched(id: id, episodeId: episodeId, titleId: titleId, watchedAt: watchedAt)
+            .markEpisodeWatched(
+                id: id, episodeId: episodeId, titleId: titleId,
+                watchedAt: watchedAt, clientRef: clientRef)
+        }
+    }
+
+    /// Logs a film, on the date the user says they watched it.
+    ///
+    /// Queued like everything else, which is why the reference matters more
+    /// here than anywhere: a film log is not idempotent server-side — a second
+    /// one is a rewatch — so without it a reply lost on a train would become a
+    /// film the user watched twice.
+    func logFilmWatched(titleId: Int64, watchedAt: Date) async -> Written {
+        let clientRef = Self.newClientRef()
+        return await write {
+            _ = try await client.logFilmWatched(
+                titleId: titleId, watchedAt: watchedAt, clientRef: clientRef)
+        } queueing: { id in
+            .logFilmWatched(id: id, titleId: titleId, watchedAt: watchedAt, clientRef: clientRef)
         }
     }
 
@@ -152,6 +175,9 @@ actor OfflineClient {
 
     // MARK: - Internals
 
+    /// Long enough that two phones cannot collide, short enough for the field.
+    private static func newClientRef() -> String { UUID().uuidString }
+
     /// - Parameter operation: untyped `throws` rather than `throws(APIFailure)`.
     ///   Swift infers a closure literal's thrown type as `any Error` even when
     ///   the parameter declares a typed throw, so declaring the narrower type
@@ -183,8 +209,12 @@ actor OfflineClient {
             // The stored timestamp, not "now": replaying with the current time
             // would file episodes watched last night as watched the moment the
             // train reached signal.
-            case .markEpisodeWatched(_, let episodeId, _, let watchedAt):
-                _ = try await client.markEpisodeWatched(episodeId: episodeId, watchedAt: watchedAt)
+            case .markEpisodeWatched(_, let episodeId, _, let watchedAt, let clientRef):
+                _ = try await client.markEpisodeWatched(
+                    episodeId: episodeId, watchedAt: watchedAt, clientRef: clientRef)
+            case .logFilmWatched(_, let titleId, let watchedAt, let clientRef):
+                _ = try await client.logFilmWatched(
+                    titleId: titleId, watchedAt: watchedAt, clientRef: clientRef)
             case .unmarkEpisode(_, let episodeId):
                 try await client.unmarkEpisode(episodeId: episodeId)
             case .markWatchedUpTo(_, let episodeId):

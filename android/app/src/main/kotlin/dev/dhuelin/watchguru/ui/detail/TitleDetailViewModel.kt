@@ -19,6 +19,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
 import javax.inject.Inject
 
 @HiltViewModel
@@ -40,6 +43,10 @@ class TitleDetailViewModel @Inject constructor(
 
     private val _marking = MutableStateFlow(false)
     val marking: StateFlow<Boolean> = _marking.asStateFlow()
+
+    /** What happened to the last film viewing logged here, if any. */
+    private val _filmLog = MutableStateFlow<FilmLog?>(null)
+    val filmLog: StateFlow<FilmLog?> = _filmLog.asStateFlow()
 
     /** Null for films, which have no seasons. */
     private val _seasons = MutableStateFlow<SeasonsResponse?>(null)
@@ -129,6 +136,37 @@ class TitleDetailViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Records a film as watched, on the day the user names.
+     *
+     * The only way a film reaches the history: there is no episode to mark. A
+     * date rather than an instant, with the current time of day attached, so
+     * "I saw this last Tuesday" is expressible without asking anyone what time
+     * it was. Today is a date like any other here.
+     *
+     * The outcome is reported as it happened -- sent, or queued for later --
+     * because on a train the honest answer is the second one and a screen that
+     * says "watched" either way is lying about where the record is.
+     */
+    fun logFilmWatched(on: LocalDate) {
+        if (_marking.value) return
+        viewModelScope.launch {
+            _marking.value = true
+            val watchedAt = on.atTime(LocalTime.now()).atZone(ZoneId.systemDefault()).toInstant()
+            _filmLog.value = when (val written = offline.logFilmWatched(titleId, watchedAt)) {
+                is OfflineRepository.Written.Sent -> FilmLog.Logged(on)
+                is OfflineRepository.Written.Queued -> FilmLog.Queued(on)
+                is OfflineRepository.Written.Failed -> FilmLog.Failed(written.failure)
+            }
+            _marking.value = false
+        }
+    }
+
+    /** Dismisses the confirmation, so it does not outlive the moment. */
+    fun clearFilmLog() {
+        _filmLog.value = null
+    }
+
     private suspend fun refreshSeasons() {
         _seasons.value = when (val result = repository.seasons(titleId)) {
             is ApiResult.Success -> result.value.also { response ->
@@ -174,5 +212,18 @@ class TitleDetailViewModel @Inject constructor(
             is ApiResult.Success -> result.value
             is ApiResult.Failure -> null
         }
+    }
+
+    /** The outcome of logging a film, as it actually went. */
+    sealed interface FilmLog {
+
+        /** The server has it. */
+        data class Logged(val on: LocalDate) : FilmLog
+
+        /** Stored locally; it will be sent when there is a network. */
+        data class Queued(val on: LocalDate) : FilmLog
+
+        /** The server refused it, and the user needs to know. */
+        data class Failed(val failure: ApiResult.Failure) : FilmLog
     }
 }

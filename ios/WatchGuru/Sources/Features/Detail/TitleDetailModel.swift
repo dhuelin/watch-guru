@@ -14,6 +14,8 @@ final class TitleDetailModel {
     private(set) var seasons: SeasonsResponse?
     /// Which season is open. Defaults to the one holding the next episode.
     var expandedSeason: Int?
+    /// What happened to the last film viewing logged here, if any.
+    private(set) var filmLog: FilmLog?
 
     private let client: WatchGuruClient
     private let offline: OfflineClient
@@ -81,6 +83,48 @@ final class TitleDetailModel {
         }
     }
 
+    /// Records a film as watched, on the day the user names.
+    ///
+    /// The only way a film reaches the history: there is no episode to tick.
+    /// A date rather than an instant, with the current time of day attached, so
+    /// "I saw this last Tuesday" is expressible without asking anyone what time
+    /// it was. Today is a date like any other here.
+    ///
+    /// The outcome is reported as it happened — sent, or queued for later —
+    /// because on a train the honest answer is the second one, and a screen
+    /// that says "watched" either way is lying about where the record is.
+    func logFilmWatched(on day: Date) async {
+        guard !isMarking else { return }
+
+        isMarking = true
+        defer { isMarking = false }
+
+        let watchedAt = Self.atTimeOfDay(on: day)
+        switch await offline.logFilmWatched(titleId: titleId, watchedAt: watchedAt) {
+        case .sent: filmLog = .logged(day)
+        case .queued: filmLog = .queued(day)
+        case .failed(let failure): filmLog = .failed(failure)
+        }
+    }
+
+    /// Dismisses the confirmation, so it does not outlive the moment.
+    func clearFilmLog() {
+        filmLog = nil
+    }
+
+    /// The chosen day, at the current time of day.
+    ///
+    /// Not midnight: a viewing filed at 00:00 sits at the top of its day on a
+    /// screen that orders by time, above things genuinely watched that morning.
+    private static func atTimeOfDay(on day: Date, now: Date = .now, calendar: Calendar = .current) -> Date {
+        let time = calendar.dateComponents([.hour, .minute, .second], from: now)
+        return calendar.date(
+            bySettingHour: time.hour ?? 12,
+            minute: time.minute ?? 0,
+            second: time.second ?? 0,
+            of: day) ?? day
+    }
+
     private func refreshSeasons() async {
         seasons = try? await client.seasons(titleId: titleId)
 
@@ -115,5 +159,18 @@ final class TitleDetailModel {
         // A film has no episode progress, and the endpoint says so with a 404
         // rather than an error worth showing anyone.
         progress = try? await client.progress(titleId: titleId)
+    }
+}
+
+extension TitleDetailModel {
+
+    /// The outcome of logging a film, as it actually went.
+    enum FilmLog: Equatable {
+        /// The server has it.
+        case logged(Date)
+        /// Stored locally; it will be sent when there is a network.
+        case queued(Date)
+        /// The server refused it, and the user needs to know.
+        case failed(APIFailure)
     }
 }

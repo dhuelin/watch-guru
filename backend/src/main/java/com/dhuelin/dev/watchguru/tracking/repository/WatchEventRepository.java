@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -210,4 +211,13 @@ public interface WatchEventRepository extends JpaRepository<WatchEvent, Long> {
     Set<String> findExistingOriginRefs(@Param("userId") Long userId,
                                        @Param("origin") WatchOrigin origin,
                                        @Param("refs") Collection<String> refs);
+
+    /**
+     * The event a client already filed under this reference, if any.
+     *
+     * <p>The single-row counterpart of {@link #findExistingOriginRefs}, for the
+     * manual log: an app that retries a request whose response it never saw
+     * needs the same answer as the first time, not a second viewing.
+     */
+    Optional<WatchEvent> findByUserIdAndOriginAndOriginRef(Long userId, WatchOrigin origin, String originRef);
 }

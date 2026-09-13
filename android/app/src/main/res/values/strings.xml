@@ -142,9 +142,26 @@
     <string name="history_filter_films">Films</string>
     <string name="history_filter_series">Series</string>
     <string name="history_any_service">Any service</string>
+    <string name="history_any_time">Any time</string>
+    <!-- The filter chip when only one bound is set: "everything since March"
+         and "everything up to March" are both questions people ask. -->
+    <string name="history_since">Since %1$s</string>
+    <string name="history_until">Until %1$s</string>
+    <string name="history_clear_dates">Clear dates</string>
     <string name="history_watched_on">Watched on</string>
     <string name="history_watched_where">Watched where</string>
     <string name="action_save">Save</string>
+
+    <!-- Logging a film. A film has no episode to tick, so these are the only
+         way one reaches the history at all. Two actions rather than one with a
+         date in it: finishing a film and logging it is the common case and
+         stays one tap. -->
+    <string name="action_log_film_today">Watched today</string>
+    <string name="action_log_film_on_a_date">Watched on a date</string>
+    <string name="film_logged_on">Added to your history for %1$s.</string>
+    <!-- Deliberately different from the sent case: on a train the honest
+         answer is that the record is still on the phone. -->
+    <string name="film_log_queued">Saved for %1$s. It will be sent when you are back online.</string>
 
     <string name="tmdb_attribution">This product uses the TMDB API but is not endorsed or certified by TMDB.</string>
 

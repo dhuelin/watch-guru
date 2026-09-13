@@ -40,6 +40,7 @@ import dev.dhuelin.watchguru.api.models.TitleResponse
 import dev.dhuelin.watchguru.ui.components.ErrorView
 import dev.dhuelin.watchguru.ui.components.Poster
 import dev.dhuelin.watchguru.ui.components.UiState
+import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +53,7 @@ fun TitleDetailScreen(
     val marking by viewModel.marking.collectAsStateWithLifecycle()
     val seasons by viewModel.seasons.collectAsStateWithLifecycle()
     val expandedSeason by viewModel.expandedSeason.collectAsStateWithLifecycle()
+    val filmLog by viewModel.filmLog.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -84,6 +86,9 @@ fun TitleDetailScreen(
                 marking = marking,
                 seasons = seasons,
                 expandedSeason = expandedSeason,
+                filmLog = filmLog,
+                onLogFilm = viewModel::logFilmWatched,
+                onDismissFilmLog = viewModel::clearFilmLog,
                 onMarkNext = viewModel::markNextEpisodeWatched,
                 onToggleSeason = viewModel::toggleSeason,
                 onToggleEpisode = { episode ->
@@ -105,6 +110,9 @@ private fun TitleDetailContent(
     marking: Boolean,
     seasons: SeasonsResponse?,
     expandedSeason: Int?,
+    filmLog: TitleDetailViewModel.FilmLog?,
+    onLogFilm: (LocalDate) -> Unit,
+    onDismissFilmLog: () -> Unit,
     onMarkNext: () -> Unit,
     onToggleSeason: (Int) -> Unit,
     onToggleEpisode: (EpisodeResponse) -> Unit,
@@ -143,6 +151,19 @@ private fun TitleDetailContent(
                     Text("IMDb ${it.toPlainString()}", style = MaterialTheme.typography.bodyMedium)
                 }
             }
+        }
+
+        // A film is watched or it is not: there is no next episode to offer, so
+        // this is the whole of its tracking, and without it a film could reach
+        // the library but never the history.
+        if (title.titleType == TitleResponse.TitleType.MOVIE) {
+            LogFilmWatched(
+                busy = marking,
+                outcome = filmLog,
+                onLog = onLogFilm,
+                onDismissOutcome = onDismissFilmLog,
+                modifier = Modifier.padding(top = 24.dp),
+            )
         }
 
         if (progress != null && progress.airedEpisodes > 0) {

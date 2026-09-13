@@ -232,4 +232,66 @@ class OfflineSyncTest {
 
         assertEquals(Duration.ofMinutes(90), cache(files).get("k", String.serializer())?.age)
     }
+
+    // MARK: - Viewings, which are not idempotent
+
+    @Test
+    fun `two viewings of one film are two entries`() {
+        // The one place collapsing by title would be wrong: a film and its
+        // rewatch are two things the user did, and the history is a record of
+        // viewings rather than of films.
+        val queue = queue()
+        queue.enqueue {
+            PendingMutation.LogFilmWatched(it, titleId = 9, watchedAtEpochSecond = 0, clientRef = "a")
+        }
+        queue.enqueue {
+            PendingMutation.LogFilmWatched(it, titleId = 9, watchedAtEpochSecond = 100, clientRef = "b")
+        }
+
+        assertEquals(2, queue.pending().size)
+    }
+
+    @Test
+    fun `a queued viewing keeps its reference across a restart`() {
+        // The reference is the whole mechanism: it is what lets the server
+        // recognise a replay of a send that did arrive. One minted afresh on
+        // each attempt would be the same as having none, and the viewing would
+        // land twice -- the second time as a rewatch.
+        val files = InMemoryFileStore()
+        queue(files).enqueue {
+            PendingMutation.LogFilmWatched(it, titleId = 9, watchedAtEpochSecond = 1_700_000_000, clientRef = "ref-1")
+        }
+
+        val afterRestart = queue(files).pending().single() as PendingMutation.LogFilmWatched
+        assertEquals("ref-1", afterRestart.clientRef)
+        assertEquals(1_700_000_000L, afterRestart.watchedAtEpochSecond)
+    }
+
+    @Test
+    fun `a mark queued by an older build still replays`() {
+        // Upgrading the app must not strand what is already queued: an entry
+        // written before references existed has no field for one, and it has to
+        // replay exactly as it used to.
+        //
+        // The old shape is derived by removing the field rather than written
+        // out by hand, so this stays a test about compatibility rather than
+        // about how the serializer spells a discriminator.
+        val files = InMemoryFileStore()
+        val current = json.encodeToString(
+            ListSerializer(PendingMutation.serializer()),
+            listOf(
+                PendingMutation.MarkEpisodeWatched(
+                    id = 1, episodeId = 4, titleId = 9,
+                    watchedAtEpochSecond = 1_700_000_000, clientRef = "dropped",
+                )
+            ),
+        )
+        files.write("pending-mutations.json", current.replace(""","clientRef":"dropped"""", ""))
+
+        val pending = queue(files).pending()
+        assertEquals(1, pending.size)
+        val mark = pending.single() as PendingMutation.MarkEpisodeWatched
+        assertNull(mark.clientRef)
+        assertEquals(4L, mark.episodeId)
+    }
 }

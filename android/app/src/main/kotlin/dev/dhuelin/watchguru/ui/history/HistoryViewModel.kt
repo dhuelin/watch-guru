@@ -18,9 +18,23 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import javax.inject.Inject
+
+/**
+ * The span of days the timeline is scoped to; both bounds inclusive, either
+ * one absent meaning "no bound that way".
+ */
+data class DateRange(val from: LocalDate?, val to: LocalDate?) {
+
+    val isAnyTime: Boolean get() = from == null && to == null
+
+    companion object {
+        fun any() = DateRange(null, null)
+    }
+}
 
 /** Which kinds of viewing the timeline is showing. */
 enum class HistoryType(val api: WatchHistoryControllerApi.TypeGetHistory?) {
@@ -60,6 +74,17 @@ class HistoryViewModel @Inject constructor(
     private val _serviceId = MutableStateFlow<Long?>(null)
     val serviceId: StateFlow<Long?> = _serviceId.asStateFlow()
 
+    /**
+     * The days the timeline is scoped to, both bounds inclusive.
+     *
+     * Dates rather than instants all the way down: the user picks days, the API
+     * takes days, and the server turns the last one into the instant that ends
+     * it in their own zone. Converting here would put that arithmetic in three
+     * places, each free to disagree about what "the 14th" means.
+     */
+    private val _range = MutableStateFlow(DateRange.any())
+    val range: StateFlow<DateRange> = _range.asStateFlow()
+
     /** For the filter row and the edit sheet's picker. */
     private val _services = MutableStateFlow<List<StreamingServiceResponse>>(emptyList())
     val services: StateFlow<List<StreamingServiceResponse>> = _services.asStateFlow()
@@ -81,6 +106,8 @@ class HistoryViewModel @Inject constructor(
             }
             _events.value = when (
                 val result = repository.history(
+                    from = _range.value.from,
+                    to = _range.value.to,
                     type = _type.value.api,
                     serviceId = _serviceId.value,
                     query = _query.value,
@@ -106,6 +133,13 @@ class HistoryViewModel @Inject constructor(
     fun setService(serviceId: Long?) {
         if (_serviceId.value == serviceId) return
         _serviceId.value = serviceId
+        refresh()
+    }
+
+    /** Scopes the timeline to a span of days, or to all of them. */
+    fun setRange(range: DateRange) {
+        if (_range.value == range) return
+        _range.value = range
         refresh()
     }
 

@@ -12,6 +12,7 @@ import com.dhuelin.dev.watchguru.streaming.trakt.TraktConnectionService;
 import com.dhuelin.dev.watchguru.streaming.trakt.TraktException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.oauth2.jwt.JwtException;
@@ -125,6 +126,22 @@ public class ApiExceptionHandler {
     @ExceptionHandler(AccountConflictException.class)
     ProblemDetail onAccountConflict(AccountConflictException e) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    /**
+     * A write the database refused because of what is already there.
+     *
+     * <p>409 rather than 500: the request is well formed and the service is
+     * healthy -- it lost a race with an identical one, which is what two
+     * retries of the same queued viewing arriving together look like. Logged at
+     * warn all the same, because a violation that is *not* a race is a bug and
+     * a quiet 409 would hide it.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    ProblemDetail onDataIntegrityViolation(DataIntegrityViolationException e) {
+        log.warn("A write was refused by a database constraint", e);
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                "That change conflicts with something already recorded.");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

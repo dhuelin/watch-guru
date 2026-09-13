@@ -10,6 +10,7 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -18,6 +19,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +33,7 @@ import dev.dhuelin.watchguru.R
 import dev.dhuelin.watchguru.api.models.StreamingServiceResponse
 import dev.dhuelin.watchguru.api.models.WatchEventResponse
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -51,11 +54,14 @@ fun Filters(
     query: String,
     type: HistoryType,
     serviceId: Long?,
+    range: DateRange,
     services: List<StreamingServiceResponse>,
     onQuery: (String) -> Unit,
     onType: (HistoryType) -> Unit,
     onService: (Long?) -> Unit,
+    onRange: (DateRange) -> Unit,
 ) {
+    var pickingRange by rememberSaveable { mutableStateOf(false) }
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
         OutlinedTextField(
             value = query,
@@ -75,6 +81,22 @@ fun Filters(
                     label = { Text(stringResource(option.label())) },
                     modifier = Modifier.padding(end = 8.dp),
                 )
+            }
+        }
+
+        Row(modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+            // "What did I watch last October" is the question, so the span of
+            // days is a filter like any other rather than something buried in a
+            // menu.
+            FilterChip(
+                selected = !range.isAnyTime,
+                onClick = { pickingRange = true },
+                label = { Text(range.label()) },
+            )
+            if (!range.isAnyTime) {
+                TextButton(onClick = { onRange(DateRange.any()) }) {
+                    Text(stringResource(R.string.history_clear_dates))
+                }
             }
         }
 
@@ -102,6 +124,75 @@ fun Filters(
             }
         }
     }
+
+    if (pickingRange) {
+        DateRangeDialog(
+            range = range,
+            onDismiss = { pickingRange = false },
+            onPick = { picked ->
+                onRange(picked)
+                pickingRange = false
+            },
+        )
+    }
+}
+
+/**
+ * Picking the span of days, both bounds inclusive.
+ *
+ * One range picker rather than two date fields: the pair is a single idea, and
+ * two fields invite a start after its end -- a state that has to be either
+ * validated or rendered as an empty history, and neither is worth the fields.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DateRangeDialog(
+    range: DateRange,
+    onDismiss: () -> Unit,
+    onPick: (DateRange) -> Unit,
+) {
+    val state = rememberDateRangePickerState(
+        initialSelectedStartDateMillis = range.from?.let { utcMillis(it) },
+        initialSelectedEndDateMillis = range.to?.let { utcMillis(it) },
+    )
+
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                // An end alone is a bound too: "everything up to March" is a
+                // question people ask. Only both being absent means any time.
+                onPick(DateRange(state.selectedStartDateMillis?.let(::utcDate),
+                        state.selectedEndDateMillis?.let(::utcDate)))
+            }) { Text(stringResource(R.string.action_done)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        },
+    ) {
+        DateRangePicker(state = state)
+    }
+}
+
+/**
+ * The picker works in UTC midnights, so both directions convert in UTC.
+ *
+ * Reading a selection back in the local zone is what slides the day the user
+ * tapped by one for anybody east or west of it.
+ */
+private fun utcMillis(date: LocalDate): Long =
+    date.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
+
+private fun utcDate(millis: Long): LocalDate =
+    Instant.ofEpochMilli(millis).atZone(ZoneId.of("UTC")).toLocalDate()
+
+@Composable
+private fun DateRange.label(): String = when {
+    isAnyTime -> stringResource(R.string.history_any_time)
+    from != null && to != null ->
+        from.format(EditDayFormat) + " – " + to.format(EditDayFormat)
+    from != null -> stringResource(R.string.history_since, from.format(EditDayFormat))
+    else -> stringResource(R.string.history_until, to!!.format(EditDayFormat))
 }
 
 private fun HistoryType.label() = when (this) {

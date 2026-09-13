@@ -84,23 +84,33 @@ fun ErrorView(
     modifier: Modifier = Modifier,
     onRetry: (() -> Unit)? = null,
 ) {
-    val (icon, message) = when (failure) {
-        is ApiResult.Failure.Offline ->
-            Icons.Outlined.CloudOff to stringResource(R.string.error_offline)
-        is ApiResult.Failure.Upstream ->
-            Icons.Outlined.CloudOff to stringResource(R.string.error_provider_down)
-        is ApiResult.Failure.NotFound ->
-            Icons.Outlined.SearchOff to stringResource(R.string.error_generic)
-        is ApiResult.Failure.Unauthorised,
-        is ApiResult.Failure.Unexpected ->
-            Icons.Outlined.ErrorOutline to stringResource(R.string.error_generic)
+    val icon = when (failure) {
+        is ApiResult.Failure.Offline, is ApiResult.Failure.Upstream -> Icons.Outlined.CloudOff
+        is ApiResult.Failure.NotFound -> Icons.Outlined.SearchOff
+        is ApiResult.Failure.Unauthorised, is ApiResult.Failure.Unexpected -> Icons.Outlined.ErrorOutline
     }
 
     FullScreenMessage(
         icon = icon,
-        message = message,
+        message = failureMessage(failure),
         modifier = modifier,
         actionLabel = onRetry?.let { stringResource(R.string.action_retry) },
         onAction = onRetry,
     )
+}
+
+/**
+ * What to tell the user about a failure.
+ *
+ * Separate from [ErrorView] because not every failure gets a whole screen: a
+ * change that could not be saved is reported where the user made it, and the
+ * wording should not drift between the two places.
+ */
+@Composable
+fun failureMessage(failure: ApiResult.Failure): String = when (failure) {
+    is ApiResult.Failure.Offline -> stringResource(R.string.error_offline)
+    is ApiResult.Failure.Upstream -> stringResource(R.string.error_provider_down)
+    is ApiResult.Failure.NotFound,
+    is ApiResult.Failure.Unauthorised,
+    is ApiResult.Failure.Unexpected -> stringResource(R.string.error_generic)
 }

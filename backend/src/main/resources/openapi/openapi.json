@@ -1537,6 +1537,11 @@
       "LogEpisodeWatched" : {
         "type" : "object",
         "properties" : {
+          "clientRef" : {
+            "type" : "string",
+            "maxLength" : 64,
+            "minLength" : 0
+          },
           "episodeId" : {
             "type" : "integer",
             "format" : "int64"
@@ -1555,6 +1560,11 @@
       "LogMovieWatched" : {
         "type" : "object",
         "properties" : {
+          "clientRef" : {
+            "type" : "string",
+            "maxLength" : 64,
+            "minLength" : 0
+          },
           "streamingServiceId" : {
             "type" : "integer",
             "format" : "int64"

@@ -3,6 +3,7 @@ package dev.dhuelin.watchguru.data
 import dev.dhuelin.watchguru.api.apis.WatchlistControllerApi
 import dev.dhuelin.watchguru.api.models.AddToWatchlist
 import dev.dhuelin.watchguru.api.models.LogEpisodeWatched
+import dev.dhuelin.watchguru.api.models.LogMovieWatched
 import dev.dhuelin.watchguru.api.models.UpNextResponse
 import dev.dhuelin.watchguru.api.models.UpdateWatchlistItem
 import dev.dhuelin.watchguru.api.models.WatchlistItemResponse
@@ -93,12 +94,54 @@ class OfflineRepository(
      */
     suspend fun markEpisodeWatched(episodeId: Long, titleId: Long): Written {
         val watchedAt = clock()
+        // Minted here, before the first attempt, and reused by every replay of
+        // it: a reference made at send time would be a new one each try, which
+        // is the same as having none.
+        val clientRef = newClientRef()
         return write(
             network.markEpisodeWatched(
-                LogEpisodeWatched(episodeId = episodeId, watchedAt = watchedAt.atOffset(ZoneOffset.UTC))
+                LogEpisodeWatched(
+                    clientRef = clientRef,
+                    episodeId = episodeId,
+                    watchedAt = watchedAt.atOffset(ZoneOffset.UTC),
+                )
             )
         ) { id ->
-            PendingMutation.MarkEpisodeWatched(id, episodeId, titleId, watchedAt.epochSecond)
+            PendingMutation.MarkEpisodeWatched(
+                id = id,
+                episodeId = episodeId,
+                titleId = titleId,
+                watchedAtEpochSecond = watchedAt.epochSecond,
+                clientRef = clientRef,
+            )
+        }
+    }
+
+    /**
+     * Logs a film, on the date the user says they watched it.
+     *
+     * Queued like everything else, which is the reason the reference matters
+     * more here than anywhere: a film log is not idempotent server-side -- a
+     * second one is a rewatch -- so without it a reply lost on a train would
+     * become a film the user watched twice.
+     */
+    suspend fun logFilmWatched(titleId: Long, watchedAt: Instant): Written {
+        val clientRef = newClientRef()
+        return write(
+            network.logFilmWatched(
+                LogMovieWatched(
+                    clientRef = clientRef,
+                    titleId = titleId,
+                    watchedAt = watchedAt.atOffset(ZoneOffset.UTC),
+                )
+            )
+        ) { id ->
+            PendingMutation.LogFilmWatched(
+                id = id,
+                titleId = titleId,
+                watchedAtEpochSecond = watchedAt.epochSecond,
+                clientRef = clientRef,
+            )
         }
     }
 
@@ -142,6 +185,9 @@ class OfflineRepository(
         queue.clear()
     }
 
+    /** Long enough that two phones cannot collide, short enough for the field. */
+    private fun newClientRef(): String = java.util.UUID.randomUUID().toString()
+
     private fun <T> cached(key: String, serializer: kotlinx.serialization.KSerializer<T>): T? =
         // No maxAge: a library the user last saw a week ago still beats an
         // empty screen on a train, and the UI says how old it is.
@@ -165,7 +211,15 @@ class OfflineRepository(
         // train reached signal.
         is PendingMutation.MarkEpisodeWatched -> network.markEpisodeWatched(
             LogEpisodeWatched(
+                clientRef = mutation.clientRef,
                 episodeId = mutation.episodeId,
+                watchedAt = Instant.ofEpochSecond(mutation.watchedAtEpochSecond).atOffset(ZoneOffset.UTC),
+            )
+        )
+        is PendingMutation.LogFilmWatched -> network.logFilmWatched(
+            LogMovieWatched(
+                clientRef = mutation.clientRef,
+                titleId = mutation.titleId,
                 watchedAt = Instant.ofEpochSecond(mutation.watchedAtEpochSecond).atOffset(ZoneOffset.UTC),
             )
         )

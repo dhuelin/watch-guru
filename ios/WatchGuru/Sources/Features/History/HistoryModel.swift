@@ -27,6 +27,31 @@ enum HistoryType: String, CaseIterable, Identifiable {
     }
 }
 
+/// The span of days the timeline is scoped to; both bounds inclusive, either
+/// one absent meaning "no bound that way".
+struct DateRange: Equatable {
+
+    var from: Date?
+    var to: Date?
+
+    static let anyTime = DateRange(from: nil, to: nil)
+
+    var isAnyTime: Bool { from == nil && to == nil }
+
+    /// What the filter chip says. An end alone is a bound too: "everything up
+    /// to March" is a question people ask.
+    var label: String {
+        switch (from, to) {
+        case (nil, nil): "Any time"
+        case (let from?, let to?):
+            "\(from.formatted(date: .abbreviated, time: .omitted)) – "
+                + "\(to.formatted(date: .abbreviated, time: .omitted))"
+        case (let from?, nil): "Since \(from.formatted(date: .abbreviated, time: .omitted))"
+        case (nil, let to?): "Until \(to.formatted(date: .abbreviated, time: .omitted))"
+        }
+    }
+}
+
 /// The user's viewing history, and the place mistakes get corrected.
 ///
 /// Backed by the append-only watch-event log, which is the real record of what
@@ -49,6 +74,14 @@ final class HistoryModel {
     var type: HistoryType = .all
     var serviceId: Int64?
 
+    /// The days the timeline is scoped to, both bounds inclusive.
+    ///
+    /// Dates rather than instants all the way down: the user picks days, the
+    /// API takes days, and the server turns the last one into the instant that
+    /// ends it in their own zone. Converting here would put that arithmetic in
+    /// three places, each free to disagree about what "the 14th" means.
+    var range = DateRange.anyTime
+
     private let client: WatchGuruClient
 
     init(client: WatchGuruClient) {
@@ -64,6 +97,7 @@ final class HistoryModel {
 
         do {
             let events = try await client.history(
+                from: range.from, to: range.to,
                 type: type.api, serviceId: serviceId, query: query)
             state = events.isEmpty ? .empty : .content(events)
         } catch {
