@@ -37,9 +37,11 @@ import dev.dhuelin.watchguru.api.models.EpisodeResponse
 import dev.dhuelin.watchguru.api.models.SeasonsResponse
 import dev.dhuelin.watchguru.api.models.TitleProgress
 import dev.dhuelin.watchguru.api.models.TitleResponse
+import dev.dhuelin.watchguru.api.models.UpdateWatchlistItem
 import dev.dhuelin.watchguru.ui.components.ErrorView
 import dev.dhuelin.watchguru.ui.components.Poster
 import dev.dhuelin.watchguru.ui.components.UiState
+import java.time.LocalDate
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +54,7 @@ fun TitleDetailScreen(
     val marking by viewModel.marking.collectAsStateWithLifecycle()
     val seasons by viewModel.seasons.collectAsStateWithLifecycle()
     val expandedSeason by viewModel.expandedSeason.collectAsStateWithLifecycle()
+    val filmLog by viewModel.filmLog.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -84,6 +87,13 @@ fun TitleDetailScreen(
                 marking = marking,
                 seasons = seasons,
                 expandedSeason = expandedSeason,
+                filmLog = filmLog,
+                onLogFilm = viewModel::logFilmWatched,
+                onDismissFilmLog = viewModel::clearFilmLog,
+                onAddToLibrary = { viewModel.addToLibrary(state.value) },
+                onStatus = viewModel::setStatus,
+                onRating = viewModel::setRating,
+                onRemoveFromLibrary = viewModel::removeFromLibrary,
                 onMarkNext = viewModel::markNextEpisodeWatched,
                 onToggleSeason = viewModel::toggleSeason,
                 onToggleEpisode = { episode ->
@@ -105,6 +115,13 @@ private fun TitleDetailContent(
     marking: Boolean,
     seasons: SeasonsResponse?,
     expandedSeason: Int?,
+    filmLog: TitleDetailViewModel.FilmLog?,
+    onLogFilm: (LocalDate) -> Unit,
+    onDismissFilmLog: () -> Unit,
+    onAddToLibrary: () -> Unit,
+    onStatus: (Long, UpdateWatchlistItem.Status) -> Unit,
+    onRating: (Long, Int) -> Unit,
+    onRemoveFromLibrary: (Long) -> Unit,
     onMarkNext: () -> Unit,
     onToggleSeason: (Int) -> Unit,
     onToggleEpisode: (EpisodeResponse) -> Unit,
@@ -143,6 +160,32 @@ private fun TitleDetailContent(
                     Text("IMDb ${it.toPlainString()}", style = MaterialTheme.typography.bodyMedium)
                 }
             }
+        }
+
+        // Before the tracking actions, because whether this is in the library
+        // at all is the first thing somebody arriving from the trending shelf
+        // needs to know.
+        LibraryEntrySection(
+            title = title,
+            busy = marking,
+            onAdd = onAddToLibrary,
+            onStatus = onStatus,
+            onRating = onRating,
+            onRemove = onRemoveFromLibrary,
+            modifier = Modifier.padding(top = 24.dp),
+        )
+
+        // A film is watched or it is not: there is no next episode to offer, so
+        // this is the whole of its tracking, and without it a film could reach
+        // the library but never the history.
+        if (title.titleType == TitleResponse.TitleType.MOVIE) {
+            LogFilmWatched(
+                busy = marking,
+                outcome = filmLog,
+                onLog = onLogFilm,
+                onDismissOutcome = onDismissFilmLog,
+                modifier = Modifier.padding(top = 24.dp),
+            )
         }
 
         if (progress != null && progress.airedEpisodes > 0) {

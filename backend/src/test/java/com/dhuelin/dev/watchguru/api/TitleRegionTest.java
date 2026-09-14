@@ -4,6 +4,7 @@ import com.dhuelin.dev.watchguru.api.dto.ApiMapper;
 import com.dhuelin.dev.watchguru.catalog.domain.Title;
 import com.dhuelin.dev.watchguru.catalog.domain.TitleType;
 import com.dhuelin.dev.watchguru.catalog.repository.TitleRepository;
+import com.dhuelin.dev.watchguru.tracking.repository.WatchlistItemRepository;
 import com.dhuelin.dev.watchguru.catalog.service.CatalogService;
 import com.dhuelin.dev.watchguru.config.AuthProperties;
 import com.dhuelin.dev.watchguru.config.TmdbProperties;
@@ -89,6 +90,8 @@ class TitleRegionTest {
     private AvailabilityService availability;
     @MockitoBean
     private TitleRepository titles;
+    @MockitoBean
+    private WatchlistItemRepository items;
     @MockitoBean
     private ApiMapper mapper;
 

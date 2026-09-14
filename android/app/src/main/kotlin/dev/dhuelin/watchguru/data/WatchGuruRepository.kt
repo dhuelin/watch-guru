@@ -10,6 +10,7 @@ import dev.dhuelin.watchguru.api.apis.WatchlistControllerApi
 import dev.dhuelin.watchguru.api.models.AddToWatchlist
 import dev.dhuelin.watchguru.api.models.BulkMarkResponse
 import dev.dhuelin.watchguru.api.models.LogEpisodeWatched
+import dev.dhuelin.watchguru.api.models.LogMovieWatched
 import dev.dhuelin.watchguru.api.models.ConnectMediaServer
 import dev.dhuelin.watchguru.api.models.MarkWatchedUpTo
 import dev.dhuelin.watchguru.api.models.MediaServerConnectionResponse
@@ -103,6 +104,26 @@ class WatchGuruRepository(
 
     suspend fun markEpisodeWatched(request: LogEpisodeWatched): ApiResult<WatchEventResponse> =
         call { history.logEpisodeWatched(request) }
+
+    /**
+     * Records a film as watched, on a date the caller chooses.
+     *
+     * A film has no episode to mark, so this is the only way one reaches the
+     * history -- including for a viewing that happened last month, which is
+     * what makes the detail screen the place to log something the history has
+     * never seen.
+     */
+    /**
+     * What people are watching this week.
+     *
+     * The answer to an empty search box: a tracker that shows nothing until a
+     * title is typed asks a new user to already know what they want.
+     */
+    suspend fun trending(page: Int = 1): ApiResult<SearchResponse> =
+        call { titles.getTrending(page = page) }
+
+    suspend fun logFilmWatched(request: LogMovieWatched): ApiResult<WatchEventResponse> =
+        call { history.logMovieWatched(request) }
 
     /** Every season of a series with the caller's watched state already folded in. */
     suspend fun seasons(titleId: Long): ApiResult<SeasonsResponse> =

@@ -22,6 +22,7 @@ public struct TitleResponse: Sendable, Codable, Hashable {
     public var imdbRating: Double?
     public var imdbUrl: String?
     public var lastAirDate: Date?
+    public var library: LibraryEntry?
     public var numberOfEpisodes: Int?
     public var numberOfSeasons: Int?
     public var originalTitle: String?
@@ -37,7 +38,7 @@ public struct TitleResponse: Sendable, Codable, Hashable {
     public var tagline: String?
     public var titleType: TitleType
 
-    public init(availability: [AvailabilityResponse], availabilityCheckedAt: Date? = nil, backdropUrl: String? = nil, genres: [GenreResponse], id: Int64, imdbId: String? = nil, imdbRating: Double? = nil, imdbUrl: String? = nil, lastAirDate: Date? = nil, numberOfEpisodes: Int? = nil, numberOfSeasons: Int? = nil, originalTitle: String? = nil, overview: String? = nil, posterUrl: String? = nil, primaryTitle: String, productionStatus: String? = nil, providerId: Int64, providerRating: Double? = nil, providerVoteCount: Int? = nil, releaseDate: Date? = nil, runtimeMinutes: Int? = nil, tagline: String? = nil, titleType: TitleType) {
+    public init(availability: [AvailabilityResponse], availabilityCheckedAt: Date? = nil, backdropUrl: String? = nil, genres: [GenreResponse], id: Int64, imdbId: String? = nil, imdbRating: Double? = nil, imdbUrl: String? = nil, lastAirDate: Date? = nil, library: LibraryEntry? = nil, numberOfEpisodes: Int? = nil, numberOfSeasons: Int? = nil, originalTitle: String? = nil, overview: String? = nil, posterUrl: String? = nil, primaryTitle: String, productionStatus: String? = nil, providerId: Int64, providerRating: Double? = nil, providerVoteCount: Int? = nil, releaseDate: Date? = nil, runtimeMinutes: Int? = nil, tagline: String? = nil, titleType: TitleType) {
         self.availability = availability
         self.availabilityCheckedAt = availabilityCheckedAt
         self.backdropUrl = backdropUrl
@@ -47,6 +48,7 @@ public struct TitleResponse: Sendable, Codable, Hashable {
         self.imdbRating = imdbRating
         self.imdbUrl = imdbUrl
         self.lastAirDate = lastAirDate
+        self.library = library
         self.numberOfEpisodes = numberOfEpisodes
         self.numberOfSeasons = numberOfSeasons
         self.originalTitle = originalTitle
@@ -73,6 +75,7 @@ public struct TitleResponse: Sendable, Codable, Hashable {
         case imdbRating
         case imdbUrl
         case lastAirDate
+        case library
         case numberOfEpisodes
         case numberOfSeasons
         case originalTitle
@@ -102,6 +105,7 @@ public struct TitleResponse: Sendable, Codable, Hashable {
         try container.encodeIfPresent(imdbRating, forKey: .imdbRating)
         try container.encodeIfPresent(imdbUrl, forKey: .imdbUrl)
         try container.encodeIfPresent(lastAirDate, forKey: .lastAirDate)
+        try container.encodeIfPresent(library, forKey: .library)
         try container.encodeIfPresent(numberOfEpisodes, forKey: .numberOfEpisodes)
         try container.encodeIfPresent(numberOfSeasons, forKey: .numberOfSeasons)
         try container.encodeIfPresent(originalTitle, forKey: .originalTitle)

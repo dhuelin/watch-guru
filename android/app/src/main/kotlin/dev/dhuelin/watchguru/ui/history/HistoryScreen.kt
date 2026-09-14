@@ -59,6 +59,7 @@ fun HistoryScreen(
     val query by viewModel.query.collectAsStateWithLifecycle()
     val type by viewModel.type.collectAsStateWithLifecycle()
     val serviceId by viewModel.serviceId.collectAsStateWithLifecycle()
+    val range by viewModel.range.collectAsStateWithLifecycle()
     val services by viewModel.services.collectAsStateWithLifecycle()
     // The id rather than the event: an id survives rotation without a custom
     // saver, and the event it names is in the list on screen anyway.
@@ -93,10 +94,12 @@ fun HistoryScreen(
                             query = query,
                             type = type,
                             serviceId = serviceId,
+                            range = range,
                             services = services,
                             onQuery = viewModel::setQuery,
                             onType = viewModel::setType,
                             onService = viewModel::setService,
+                            onRange = viewModel::setRange,
                         )
                     }
                     days.forEach { day ->

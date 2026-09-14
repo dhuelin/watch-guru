@@ -161,7 +161,7 @@ library rots.
 | [#21](https://github.com/dhuelin/watch-guru/issues/21) | Import from Trakt, CSV, Netflix | Nobody starts from zero; an empty library is why tracking apps get deleted on day one |
 | [#20](https://github.com/dhuelin/watch-guru/issues/20) | Home screen widgets | Next episode, markable, without opening the app |
 | [#17](https://github.com/dhuelin/watch-guru/issues/17) | Stats and streaks | Already computed server-side, never rendered |
-| [#22](https://github.com/dhuelin/watch-guru/issues/22) | History timeline and editing | Where mistakes get corrected, and backdated entries get logged |
+| [#22](https://github.com/dhuelin/watch-guru/issues/22) | History timeline and editing | Where mistakes get corrected, and backdated entries get logged. Done: filters, search, date range, editing, and logging a film for any past date |
 | [#23](https://github.com/dhuelin/watch-guru/issues/23) | Accessibility and localisation | Filed separately because that is the only way it does not get skipped |
 | [#24](https://github.com/dhuelin/watch-guru/issues/24) | IMDb licensing decision | Cheap to settle now, a compliance problem after launch |
 | [#39](https://github.com/dhuelin/watch-guru/issues/39) | Connect Plex, Jellyfin, Emby and Trakt | Watching something should record it without anybody marking anything. Plex, Jellyfin, Emby and Trakt are connected; see [`MEDIA-SERVERS.md`](MEDIA-SERVERS.md) and [`TRAKT.md`](TRAKT.md) |

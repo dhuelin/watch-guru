@@ -32,6 +32,7 @@ import kotlinx.serialization.Contextual
  * 
  *
  * @param episodeId 
+ * @param clientRef 
  * @param streamingServiceId 
  * @param watchedAt 
  */
@@ -41,6 +42,9 @@ data class LogEpisodeWatched (
 
     @SerialName(value = "episodeId")
     val episodeId: kotlin.Long,
+
+    @SerialName(value = "clientRef")
+    val clientRef: kotlin.String? = null,
 
     @SerialName(value = "streamingServiceId")
     val streamingServiceId: kotlin.Long? = null,

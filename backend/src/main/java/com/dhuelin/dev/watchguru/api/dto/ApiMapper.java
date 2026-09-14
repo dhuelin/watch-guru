@@ -49,7 +49,19 @@ public class ApiMapper {
     }
 
     public Responses.TitleResponse toTitle(Title title, AvailabilityService.Offers availability) {
-        return toTitle(title, availability.offers(), availability.checkedAt());
+        return toTitle(title, availability.offers(), availability.checkedAt(), null);
+    }
+
+    /**
+     * The detail screen's view of a title, including what the caller has
+     * recorded about it.
+     *
+     * @param item the caller's library entry, or null if they have not added
+     *             this title. Null is a real answer here and is what the screen
+     *             renders its "add" action from.
+     */
+    public Responses.TitleResponse toTitle(Title title, AvailabilityService.Offers availability, WatchlistItem item) {
+        return toTitle(title, availability.offers(), availability.checkedAt(), item);
     }
 
     /**
@@ -60,6 +72,11 @@ public class ApiMapper {
      *                  not look" is exactly what they mean
      */
     public Responses.TitleResponse toTitle(Title title, List<TitleAvailability> availability, Instant checkedAt) {
+        return toTitle(title, availability, checkedAt, null);
+    }
+
+    private Responses.TitleResponse toTitle(Title title, List<TitleAvailability> availability, Instant checkedAt,
+                                            WatchlistItem item) {
         List<Responses.GenreResponse> genres = title.getGenres().stream()
                 .map(g -> new Responses.GenreResponse(g.getId(), g.getName()))
                 .toList();
@@ -98,7 +115,9 @@ public class ApiMapper {
                 title.getImdbId() == null ? null : IMDB_TITLE_URL + title.getImdbId(),
                 genres,
                 offers,
-                checkedAt);
+                checkedAt,
+                item == null ? null : new Responses.LibraryEntry(
+                        item.getId(), item.getStatus(), item.getUserRating(), item.getNotes()));
     }
 
     private static Instant oldestFetch(List<TitleAvailability> availability) {

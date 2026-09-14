@@ -25,6 +25,7 @@ package dev.dhuelin.watchguru.api.models
 
 import dev.dhuelin.watchguru.api.models.AvailabilityResponse
 import dev.dhuelin.watchguru.api.models.GenreResponse
+import dev.dhuelin.watchguru.api.models.LibraryEntry
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -45,6 +46,7 @@ import kotlinx.serialization.Contextual
  * @param imdbRating 
  * @param imdbUrl 
  * @param lastAirDate 
+ * @param library 
  * @param numberOfEpisodes 
  * @param numberOfSeasons 
  * @param originalTitle 
@@ -96,6 +98,9 @@ data class TitleResponse (
 
     @Contextual @SerialName(value = "lastAirDate")
     val lastAirDate: java.time.LocalDate? = null,
+
+    @SerialName(value = "library")
+    val library: LibraryEntry? = null,
 
     @SerialName(value = "numberOfEpisodes")
     val numberOfEpisodes: kotlin.Int? = null,

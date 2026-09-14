@@ -4,7 +4,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.dhuelin.watchguru.api.models.AddToWatchlist
 import dev.dhuelin.watchguru.api.models.SeasonsResponse
+import dev.dhuelin.watchguru.api.models.UpdateWatchlistItem
 import dev.dhuelin.watchguru.api.models.TitleProgress
 import dev.dhuelin.watchguru.api.models.TitleResponse
 import dev.dhuelin.watchguru.data.ApiResult
@@ -19,6 +21,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
 import javax.inject.Inject
 
 @HiltViewModel
@@ -40,6 +45,10 @@ class TitleDetailViewModel @Inject constructor(
 
     private val _marking = MutableStateFlow(false)
     val marking: StateFlow<Boolean> = _marking.asStateFlow()
+
+    /** What happened to the last film viewing logged here, if any. */
+    private val _filmLog = MutableStateFlow<FilmLog?>(null)
+    val filmLog: StateFlow<FilmLog?> = _filmLog.asStateFlow()
 
     /** Null for films, which have no seasons. */
     private val _seasons = MutableStateFlow<SeasonsResponse?>(null)
@@ -129,6 +138,90 @@ class TitleDetailViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Records a film as watched, on the day the user names.
+     *
+     * The only way a film reaches the history: there is no episode to mark. A
+     * date rather than an instant, with the current time of day attached, so
+     * "I saw this last Tuesday" is expressible without asking anyone what time
+     * it was. Today is a date like any other here.
+     *
+     * The outcome is reported as it happened -- sent, or queued for later --
+     * because on a train the honest answer is the second one and a screen that
+     * says "watched" either way is lying about where the record is.
+     */
+    fun logFilmWatched(on: LocalDate) {
+        if (_marking.value) return
+        viewModelScope.launch {
+            _marking.value = true
+            val watchedAt = on.atTime(LocalTime.now()).atZone(ZoneId.systemDefault()).toInstant()
+            _filmLog.value = when (val written = offline.logFilmWatched(titleId, watchedAt)) {
+                is OfflineRepository.Written.Sent -> FilmLog.Logged(on)
+                is OfflineRepository.Written.Queued -> FilmLog.Queued(on)
+                is OfflineRepository.Written.Failed -> FilmLog.Failed(written.failure)
+            }
+            _marking.value = false
+        }
+    }
+
+    /**
+     * Adds this title to the library.
+     *
+     * Reloads afterwards rather than guessing the entry: the server assigns the
+     * item id everything else on this screen needs, and inventing one locally
+     * would give the rating control something to write to that does not exist.
+     */
+    fun addToLibrary(title: TitleResponse) {
+        if (_marking.value) return
+        viewModelScope.launch {
+            _marking.value = true
+            val request = AddToWatchlist(
+                providerId = title.providerId,
+                titleType = AddToWatchlist.TitleType.valueOf(title.titleType.value),
+            )
+            if (offline.addToLibrary(request) !is OfflineRepository.Written.Failed) load()
+            _marking.value = false
+        }
+    }
+
+    fun setStatus(itemId: Long, status: UpdateWatchlistItem.Status) {
+        updateEntry(itemId, UpdateWatchlistItem(status = status))
+    }
+
+    /**
+     * Records what the user thought of it, out of ten.
+     *
+     * Ten rather than five stars because that is the scale the column has held
+     * since the first migration, and the one both the TMDB and IMDb figures
+     * beside it are on -- three scales on one screen is two too many.
+     */
+    fun setRating(itemId: Long, rating: Int) {
+        updateEntry(itemId, UpdateWatchlistItem(rating = rating.toBigDecimal()))
+    }
+
+    fun removeFromLibrary(itemId: Long) {
+        if (_marking.value) return
+        viewModelScope.launch {
+            _marking.value = true
+            if (offline.removeFromLibrary(itemId) !is OfflineRepository.Written.Failed) load()
+            _marking.value = false
+        }
+    }
+
+    private fun updateEntry(itemId: Long, update: UpdateWatchlistItem) {
+        if (_marking.value) return
+        viewModelScope.launch {
+            _marking.value = true
+            if (offline.updateLibraryItem(itemId, update) !is OfflineRepository.Written.Failed) load()
+            _marking.value = false
+        }
+    }
+
+    /** Dismisses the confirmation, so it does not outlive the moment. */
+    fun clearFilmLog() {
+        _filmLog.value = null
+    }
+
     private suspend fun refreshSeasons() {
         _seasons.value = when (val result = repository.seasons(titleId)) {
             is ApiResult.Success -> result.value.also { response ->
@@ -174,5 +267,18 @@ class TitleDetailViewModel @Inject constructor(
             is ApiResult.Success -> result.value
             is ApiResult.Failure -> null
         }
+    }
+
+    /** The outcome of logging a film, as it actually went. */
+    sealed interface FilmLog {
+
+        /** The server has it. */
+        data class Logged(val on: LocalDate) : FilmLog
+
+        /** Stored locally; it will be sent when there is a network. */
+        data class Queued(val on: LocalDate) : FilmLog
+
+        /** The server refused it, and the user needs to know. */
+        data class Failed(val failure: ApiResult.Failure) : FilmLog
     }
 }

@@ -31,11 +31,21 @@ public class CacheConfig {
     /** Cache of provider search pages, keyed by query, page and language. */
     public static final String SEARCH_CACHE = "tmdbSearch";
 
+    /**
+     * Cache of the trending list, keyed by page and language.
+     *
+     * <p>Shares the search cache's settings, which is generous rather than
+     * wrong: this is one list per language that every user opening the search
+     * tab asks for, so it collapses far more traffic than search does, and a
+     * weekly chart is not less true a minute later.
+     */
+    public static final String TRENDING_CACHE = "tmdbTrending";
+
     @Bean
     CaffeineCacheManager cacheManager(TmdbProperties properties) {
         TmdbProperties.Search search = properties.search();
 
-        CaffeineCacheManager manager = new CaffeineCacheManager(SEARCH_CACHE);
+        CaffeineCacheManager manager = new CaffeineCacheManager(SEARCH_CACHE, TRENDING_CACHE);
         manager.setCaffeine(Caffeine.newBuilder()
                 .expireAfterWrite(search.cacheTtl())
                 .maximumSize(search.cacheMaxSize())

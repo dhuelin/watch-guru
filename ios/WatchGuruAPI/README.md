@@ -51,6 +51,7 @@ Class | Method | HTTP request | Description
 *StreamingControllerAPI* | [**reconcileStreamingServices**](docs/StreamingControllerAPI.md#reconcilestreamingservices) | **POST** /api/v1/streaming-services/reconcile | 
 *TitleControllerAPI* | [**getSeasons**](docs/TitleControllerAPI.md#getseasons) | **GET** /api/v1/titles/{titleId}/seasons | 
 *TitleControllerAPI* | [**getTitle**](docs/TitleControllerAPI.md#gettitle) | **GET** /api/v1/titles/{titleId} | 
+*TitleControllerAPI* | [**getTrending**](docs/TitleControllerAPI.md#gettrending) | **GET** /api/v1/titles/trending | 
 *TitleControllerAPI* | [**importTitle**](docs/TitleControllerAPI.md#importtitle) | **POST** /api/v1/titles/import | 
 *TitleControllerAPI* | [**searchTitles**](docs/TitleControllerAPI.md#searchtitles) | **GET** /api/v1/titles/search | 
 *TraktControllerAPI* | [**authorizeTrakt**](docs/TraktControllerAPI.md#authorizetrakt) | **POST** /api/v1/me/streaming-accounts/trakt/authorize | 
@@ -89,6 +90,7 @@ Class | Method | HTTP request | Description
  - [ImportResultResponse](docs/ImportResultResponse.md)
  - [ImportRowResponse](docs/ImportRowResponse.md)
  - [ImportSelection](docs/ImportSelection.md)
+ - [LibraryEntry](docs/LibraryEntry.md)
  - [LinkedAccountResponse](docs/LinkedAccountResponse.md)
  - [LogEpisodeWatched](docs/LogEpisodeWatched.md)
  - [LogMovieWatched](docs/LogMovieWatched.md)

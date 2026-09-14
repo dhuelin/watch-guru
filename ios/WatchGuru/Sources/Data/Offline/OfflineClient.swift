@@ -83,10 +83,33 @@ actor OfflineClient {
 
     func markEpisodeWatched(episodeId: Int64, titleId: Int64) async -> Written {
         let watchedAt = Date.now
+        // Minted before the first attempt and reused by every replay of it: a
+        // reference made at send time would be a new one each try, which is the
+        // same as having none.
+        let clientRef = Self.newClientRef()
         return await write {
-            _ = try await client.markEpisodeWatched(episodeId: episodeId, watchedAt: watchedAt)
+            _ = try await client.markEpisodeWatched(
+                episodeId: episodeId, watchedAt: watchedAt, clientRef: clientRef)
         } queueing: { id in
-            .markEpisodeWatched(id: id, episodeId: episodeId, titleId: titleId, watchedAt: watchedAt)
+            .markEpisodeWatched(
+                id: id, episodeId: episodeId, titleId: titleId,
+                watchedAt: watchedAt, clientRef: clientRef)
+        }
+    }
+
+    /// Logs a film, on the date the user says they watched it.
+    ///
+    /// Queued like everything else, which is why the reference matters more
+    /// here than anywhere: a film log is not idempotent server-side — a second
+    /// one is a rewatch — so without it a reply lost on a train would become a
+    /// film the user watched twice.
+    func logFilmWatched(titleId: Int64, watchedAt: Date) async -> Written {
+        let clientRef = Self.newClientRef()
+        return await write {
+            _ = try await client.logFilmWatched(
+                titleId: titleId, watchedAt: watchedAt, clientRef: clientRef)
+        } queueing: { id in
+            .logFilmWatched(id: id, titleId: titleId, watchedAt: watchedAt, clientRef: clientRef)
         }
     }
 
@@ -115,6 +138,24 @@ actor OfflineClient {
                 providerId: request.providerId,
                 titleType: request.titleType.rawValue,
                 status: request.status?.rawValue
+            )
+        }
+    }
+
+    /// Changes what the user has recorded about a title they added.
+    ///
+    /// Queued like everything else. The replay carries the rating as well as
+    /// the status, which the case could not do until now -- a rating chosen
+    /// offline used to reach the server as an update that set only the status.
+    func updateLibraryItem(itemId: Int64, _ update: UpdateWatchlistItem) async -> Written {
+        await write {
+            _ = try await client.updateLibraryItem(itemId: itemId, update)
+        } queueing: { id in
+            .updateLibraryItem(
+                id: id,
+                itemId: itemId,
+                status: update.status?.rawValue,
+                rating: update.rating
             )
         }
     }
@@ -152,6 +193,9 @@ actor OfflineClient {
 
     // MARK: - Internals
 
+    /// Long enough that two phones cannot collide, short enough for the field.
+    private static func newClientRef() -> String { UUID().uuidString }
+
     /// - Parameter operation: untyped `throws` rather than `throws(APIFailure)`.
     ///   Swift infers a closure literal's thrown type as `any Error` even when
     ///   the parameter declares a typed throw, so declaring the narrower type
@@ -183,8 +227,12 @@ actor OfflineClient {
             // The stored timestamp, not "now": replaying with the current time
             // would file episodes watched last night as watched the moment the
             // train reached signal.
-            case .markEpisodeWatched(_, let episodeId, _, let watchedAt):
-                _ = try await client.markEpisodeWatched(episodeId: episodeId, watchedAt: watchedAt)
+            case .markEpisodeWatched(_, let episodeId, _, let watchedAt, let clientRef):
+                _ = try await client.markEpisodeWatched(
+                    episodeId: episodeId, watchedAt: watchedAt, clientRef: clientRef)
+            case .logFilmWatched(_, let titleId, let watchedAt, let clientRef):
+                _ = try await client.logFilmWatched(
+                    titleId: titleId, watchedAt: watchedAt, clientRef: clientRef)
             case .unmarkEpisode(_, let episodeId):
                 try await client.unmarkEpisode(episodeId: episodeId)
             case .markWatchedUpTo(_, let episodeId):
@@ -202,10 +250,13 @@ actor OfflineClient {
                     status: status.flatMap(AddToWatchlist.Status.init(rawValue:)),
                     titleType: type
                 ))
-            case .updateLibraryItem(_, let itemId, let status):
+            case .updateLibraryItem(_, let itemId, let status, let rating):
                 _ = try await client.updateLibraryItem(
                     itemId: itemId,
-                    UpdateWatchlistItem(status: status.flatMap(UpdateWatchlistItem.Status.init(rawValue:)))
+                    UpdateWatchlistItem(
+                        rating: rating,
+                        status: status.flatMap(UpdateWatchlistItem.Status.init(rawValue:))
+                    )
                 )
             case .removeFromLibrary(_, let itemId):
                 try await client.removeFromLibrary(itemId: itemId)

@@ -119,7 +119,27 @@ public class WatchlistService {
      */
     @Transactional
     public WatchEvent logMovieWatched(Long userId, Long titleId, Instant watchedAt, Long serviceId) {
-        return logMovieWatched(userId, titleId, watchedAt, serviceId, WatchOrigin.MANUAL, null);
+        return logMovieWatched(userId, titleId, watchedAt, serviceId, (String) null);
+    }
+
+    /**
+     * Logs a film the user says they watched, once per {@code clientRef}.
+     *
+     * <p>An app that queues a viewing made on a train cannot tell "the server
+     * never saw it" from "the server saw it and the reply was lost", so it has
+     * to be safe to send twice. Neither this nor the episode log is naturally
+     * idempotent -- a second call is a *rewatch*, which is a real thing users
+     * do -- so the app says which viewing it means and a replay of that
+     * reference returns the event already filed instead of inventing a second
+     * viewing of the same film.
+     */
+    @Transactional
+    public WatchEvent logMovieWatched(Long userId, Long titleId, Instant watchedAt, Long serviceId,
+                                      String clientRef) {
+        WatchEvent alreadyFiled = alreadyFiled(userId, clientRef);
+        return alreadyFiled != null
+                ? alreadyFiled
+                : logMovieWatched(userId, titleId, watchedAt, serviceId, WatchOrigin.MANUAL, clientRef);
     }
 
     /**
@@ -161,7 +181,38 @@ public class WatchlistService {
      */
     @Transactional
     public WatchEvent logEpisodeWatched(Long userId, Long episodeId, Instant watchedAt, Long serviceId) {
-        return logEpisodeWatched(userId, episodeId, watchedAt, serviceId, WatchOrigin.MANUAL, null);
+        return logEpisodeWatched(userId, episodeId, watchedAt, serviceId, (String) null);
+    }
+
+    /**
+     * Logs an episode, once per {@code clientRef}; see
+     * {@link #logMovieWatched(Long, Long, Instant, Long, String)}.
+     *
+     * <p>The check comes before anything is written, which matters more here
+     * than for a film: this method also moves the episode's last-watched date
+     * and bumps its count, and a replay that fell over on the unique index
+     * afterwards would leave both changed by a viewing it then refused to
+     * record.
+     */
+    @Transactional
+    public WatchEvent logEpisodeWatched(Long userId, Long episodeId, Instant watchedAt, Long serviceId,
+                                        String clientRef) {
+        WatchEvent alreadyFiled = alreadyFiled(userId, clientRef);
+        return alreadyFiled != null
+                ? alreadyFiled
+                : logEpisodeWatched(userId, episodeId, watchedAt, serviceId, WatchOrigin.MANUAL, clientRef);
+    }
+
+    /**
+     * The manual event already filed under this reference, or null.
+     *
+     * <p>Scoped to {@link WatchOrigin#MANUAL} so a client cannot collide with,
+     * or reach, a reference a media server or an import owns.
+     */
+    private WatchEvent alreadyFiled(Long userId, String clientRef) {
+        return clientRef == null ? null
+                : watchEvents.findByUserIdAndOriginAndOriginRef(userId, WatchOrigin.MANUAL, clientRef)
+                        .orElse(null);
     }
 
     /** As above, recording where the record came from; see the movie variant. */

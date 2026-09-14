@@ -92,17 +92,28 @@ public final class Requests {
     ) {
     }
 
+    /**
+     * @param watchedAt when it was watched; now if omitted, so logging
+     *                  something as you finish it stays one field
+     * @param clientRef an id the app makes up for this viewing, so a retry it
+     *                  cannot tell from a first attempt is not a second
+     *                  viewing. Optional: a client that does not retry does not
+     *                  need one.
+     */
     public record LogMovieWatched(
             @NotNull Long titleId,
             Instant watchedAt,
-            Long streamingServiceId
+            Long streamingServiceId,
+            @Size(max = 64) String clientRef
     ) {
     }
 
+    /** @param clientRef as on {@link LogMovieWatched}. */
     public record LogEpisodeWatched(
             @NotNull Long episodeId,
             Instant watchedAt,
-            Long streamingServiceId
+            Long streamingServiceId,
+            @Size(max = 64) String clientRef
     ) {
     }
 

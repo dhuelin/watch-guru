@@ -119,6 +119,14 @@ actor WatchGuruClient {
         try await run { try await TitleControllerAPI.searchTitles(query: query, page: page, apiConfiguration: $0) }
     }
 
+    /// What people are watching this week.
+    ///
+    /// The answer to an empty search box: a tracker that shows nothing until a
+    /// title is typed asks a new user to already know what they want.
+    func trending(page: Int = 1) async throws(APIFailure) -> SearchResponse {
+        try await run { try await TitleControllerAPI.getTrending(page: page, apiConfiguration: $0) }
+    }
+
     func title(_ id: Int64) async throws(APIFailure) -> TitleResponse {
         try await run { try await TitleControllerAPI.getTitle(titleId: id, apiConfiguration: $0) }
     }
@@ -171,16 +179,70 @@ actor WatchGuruClient {
     ///   Passed explicitly by the offline replay, which must record the moment
     ///   the user actually watched rather than the moment the train reached
     ///   signal.
+    /// - Parameter clientRef: names this viewing to the server, so a send whose
+    ///   reply was lost and the retry that follows it are one viewing rather
+    ///   than a viewing and a rewatch.
     func markEpisodeWatched(
         episodeId: Int64,
-        watchedAt: Date? = nil
+        watchedAt: Date? = nil,
+        clientRef: String? = nil
     ) async throws(APIFailure) -> WatchEventResponse {
         try await run {
             try await WatchHistoryControllerAPI.logEpisodeWatched(
-                logEpisodeWatched: LogEpisodeWatched(episodeId: episodeId, watchedAt: watchedAt),
+                // Alphabetical, because the generator declares them that way
+                // and Swift requires named arguments in declaration order --
+                // it will not reorder them for you the way Kotlin does.
+                logEpisodeWatched: LogEpisodeWatched(
+                    clientRef: clientRef,
+                    episodeId: episodeId,
+                    watchedAt: watchedAt
+                ),
                 apiConfiguration: $0
             )
         }
+    }
+
+    /// Records a film as watched, on a date the caller chooses.
+    ///
+    /// A film has no episode to mark, so this is the only way one reaches the
+    /// history -- including a viewing that happened last month, which is what
+    /// makes the detail screen the place to log something the history has never
+    /// seen.
+    ///
+    /// - Parameter clientRef: as on ``markEpisodeWatched(episodeId:watchedAt:clientRef:)``.
+    ///   It matters more here: without it, a reply lost on a train becomes a
+    ///   film the user watched twice.
+    func logFilmWatched(
+        titleId: Int64,
+        watchedAt: Date? = nil,
+        clientRef: String? = nil
+    ) async throws(APIFailure) -> WatchEventResponse {
+        try await run {
+            try await WatchHistoryControllerAPI.logMovieWatched(
+                logMovieWatched: LogMovieWatched(
+                    clientRef: clientRef,
+                    titleId: titleId,
+                    watchedAt: watchedAt
+                ),
+                apiConfiguration: $0
+            )
+        }
+    }
+
+    /// The start of the day this moment falls in, in UTC.
+    ///
+    /// The calendar is the user's, because the day meant is the one they are
+    /// reading off their own screen; the time of day is then discarded.
+    /// Internal rather than private so the zone arithmetic can be tested
+    /// directly: the case that matters is a user far enough east that their
+    /// local day and the UTC one disagree. `nonisolated` is said explicitly
+    /// rather than relied upon -- it takes only values and touches nothing on
+    /// the actor, and saying so keeps it callable from a test without an await.
+    nonisolated static func asDayInUTC(_ date: Date, calendar: Calendar = .current) -> Date {
+        let day = calendar.dateComponents([.year, .month, .day], from: date)
+        var utc = Calendar(identifier: .gregorian)
+        utc.timeZone = TimeZone(secondsFromGMT: 0)!
+        return utc.date(from: day) ?? date
     }
 
     /// Marks everything up to and including one episode.
@@ -222,6 +284,17 @@ actor WatchGuruClient {
     /// Dates rather than instants for the bounds, and both inclusive: a person
     /// filtering their history thinks in days, and the server turns the upper
     /// bound into the end of that day in their own zone.
+    /// - Parameters:
+    ///   - from: the first day to include, in the user's own calendar.
+    ///   - to: the last day, inclusive. The server turns it into the instant
+    ///     that ends that day in the user's zone.
+    ///
+    ///   Both are sent as the start of that day in UTC rather than as the
+    ///   moment the picker produced. The generated client has no way to send a
+    ///   bare date -- it maps `format: date` onto `Date` and serialises the lot
+    ///   -- and the server reads the instant's UTC date, so the day that
+    ///   arrives is the day the user tapped rather than the one their local
+    ///   midnight happens to fall on in UTC.
     func history(
         page: Int = 0,
         size: Int = 50,
@@ -236,8 +309,8 @@ actor WatchGuruClient {
             try await WatchHistoryControllerAPI.getHistory(
                 page: page,
                 size: size,
-                from: from,
-                to: to,
+                from: from.map { Self.asDayInUTC($0) },
+                to: to.map { Self.asDayInUTC($0) },
                 type: type,
                 serviceId: serviceId,
                 query: (trimmed?.isEmpty ?? true) ? nil : trimmed,

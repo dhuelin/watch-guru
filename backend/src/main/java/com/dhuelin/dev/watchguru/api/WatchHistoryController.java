@@ -59,13 +59,21 @@ public class WatchHistoryController {
         this.mapper = mapper;
     }
 
+    /**
+     * Records a film as watched, optionally on a past date.
+     *
+     * <p>Send a {@code clientRef} to make the call replay-safe: the same
+     * reference twice returns the viewing already filed rather than recording a
+     * second one. Without it a second call is a rewatch, which is what a second
+     * call from a person means.
+     */
     @PostMapping("/watch-events/movie")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(operationId = "logMovieWatched")
     public Responses.WatchEventResponse logMovie(@Valid @RequestBody Requests.LogMovieWatched request) {
         return mapper.toWatchEvent(watchlist.logMovieWatched(
                 currentUser.require().getId(),
-                request.titleId(), request.watchedAt(), request.streamingServiceId()));
+                request.titleId(), request.watchedAt(), request.streamingServiceId(), request.clientRef()));
     }
 
     @PostMapping("/watch-events/episode")
@@ -74,7 +82,7 @@ public class WatchHistoryController {
     public Responses.WatchEventResponse logEpisode(@Valid @RequestBody Requests.LogEpisodeWatched request) {
         return mapper.toWatchEvent(watchlist.logEpisodeWatched(
                 currentUser.require().getId(),
-                request.episodeId(), request.watchedAt(), request.streamingServiceId()));
+                request.episodeId(), request.watchedAt(), request.streamingServiceId(), request.clientRef()));
     }
 
     /**

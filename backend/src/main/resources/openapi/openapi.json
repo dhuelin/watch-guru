@@ -1085,6 +1085,41 @@
         "tags" : [ "title-controller" ]
       }
     },
+    "/api/v1/titles/trending" : {
+      "get" : {
+        "operationId" : "getTrending",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 1
+          }
+        }, {
+          "in" : "query",
+          "name" : "language",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SearchResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "title-controller" ]
+      }
+    },
     "/api/v1/titles/{titleId}" : {
       "get" : {
         "operationId" : "getTitle",
@@ -1504,6 +1539,26 @@
         },
         "required" : [ "sourceRef", "titleId" ]
       },
+      "LibraryEntry" : {
+        "type" : "object",
+        "properties" : {
+          "itemId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "notes" : {
+            "type" : "string"
+          },
+          "rating" : {
+            "type" : "number"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "WATCHLIST", "WATCHING", "COMPLETED", "ON_HOLD", "DROPPED" ]
+          }
+        },
+        "required" : [ "itemId", "status" ]
+      },
       "LinkedAccountResponse" : {
         "type" : "object",
         "properties" : {
@@ -1537,6 +1592,11 @@
       "LogEpisodeWatched" : {
         "type" : "object",
         "properties" : {
+          "clientRef" : {
+            "type" : "string",
+            "maxLength" : 64,
+            "minLength" : 0
+          },
           "episodeId" : {
             "type" : "integer",
             "format" : "int64"
@@ -1555,6 +1615,11 @@
       "LogMovieWatched" : {
         "type" : "object",
         "properties" : {
+          "clientRef" : {
+            "type" : "string",
+            "maxLength" : 64,
+            "minLength" : 0
+          },
           "streamingServiceId" : {
             "type" : "integer",
             "format" : "int64"
@@ -2053,6 +2118,9 @@
           "lastAirDate" : {
             "type" : "string",
             "format" : "date"
+          },
+          "library" : {
+            "$ref" : "#/components/schemas/LibraryEntry"
           },
           "numberOfEpisodes" : {
             "type" : "integer",

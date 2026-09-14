@@ -17,7 +17,9 @@ struct SearchView: View {
         .navigationTitle("Search")
         .task {
             if model == nil {
-                model = SearchModel(client: session.client, offline: session.offline)
+                let fresh = SearchModel(client: session.client, offline: session.offline)
+                model = fresh
+                await fresh.loadTrending()
             }
         }
     }
@@ -27,33 +29,27 @@ struct SearchView: View {
         @Bindable var model = model
 
         Group {
-            if let hits = model.state.value {
-                List(hits, id: \.providerId) { hit in
-                    NavigationLink(value: hit.providerId) {
-                        SearchResultRow(
-                            hit: hit,
-                            alreadyAdded: model.added.contains(hit.providerId)
-                        )
-                    }
-                    // A swipe to add, because reaching a button on a row is
-                    // slower than the gesture iOS users already have.
-                    .swipeActions(edge: .trailing) {
-                        Button {
-                            Task { await model.addToLibrary(hit) }
-                        } label: {
-                            Label("Add", systemImage: "plus")
+            if let hits = model.visible.value {
+                List {
+                    if !model.isSearching {
+                        // Named, because an unlabelled list of films on a
+                        // search screen reads as results for something the user
+                        // did not type.
+                        Section("Trending this week") {
+                            rows(hits, model: model)
                         }
-                        .tint(.accentColor)
+                    } else {
+                        rows(hits, model: model)
                     }
                 }
                 .listStyle(.plain)
             } else {
-                switch model.state {
+                switch model.visible {
                 case .loading:
                     ProgressView()
                 case .failed(let failure):
                     FailureView(failure: failure) { model.retry() }
-                case .empty where model.query.isEmpty:
+                case .empty where !model.isSearching:
                     ContentUnavailableView(
                         "Search for something to watch",
                         systemImage: "magnifyingglass"
@@ -68,6 +64,30 @@ struct SearchView: View {
         .searchable(text: $model.query, prompt: "Search films and series")
         .navigationDestination(for: Int64.self) { providerId in
             TitleDetailView(titleId: providerId)
+        }
+    }
+
+    /// One row builder for both lists, so a result and a trending row are the
+    /// same thing -- including the swipe that adds it.
+    @ViewBuilder
+    private func rows(_ hits: [SearchHit], model: SearchModel) -> some View {
+        ForEach(hits, id: \.providerId) { hit in
+            NavigationLink(value: hit.providerId) {
+                SearchResultRow(
+                    hit: hit,
+                    alreadyAdded: model.added.contains(hit.providerId)
+                )
+            }
+            // A swipe to add, because reaching a button on a row is slower
+            // than the gesture iOS users already have.
+            .swipeActions(edge: .trailing) {
+                Button {
+                    Task { await model.addToLibrary(hit) }
+                } label: {
+                    Label("Add", systemImage: "plus")
+                }
+                .tint(.accentColor)
+            }
         }
     }
 }

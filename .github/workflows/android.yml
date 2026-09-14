@@ -38,6 +38,14 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      # Seconds, and before the eight-minute build: a duplicate resource name
+      # or a comment containing "--" fails the merge rather than the compile,
+      # so the error arrives late and looks unrelated to the change that caused
+      # it. Both have now cost a CI round.
+      - name: Check resources
+        working-directory: .
+        run: python3 tools/check-android-resources.py
+
       # This is the first Gradle build these sources will ever have had. They
       # were written in an environment that could not reach Google's Maven, so
       # the plugin versions and everything under ui/ are unproven. The data

@@ -9,6 +9,8 @@ import com.dhuelin.dev.watchguru.catalog.service.CatalogService;
 import com.dhuelin.dev.watchguru.common.NotFoundException;
 import com.dhuelin.dev.watchguru.config.TmdbProperties;
 import com.dhuelin.dev.watchguru.security.CurrentUserService;
+import com.dhuelin.dev.watchguru.tracking.domain.WatchlistItem;
+import com.dhuelin.dev.watchguru.tracking.repository.WatchlistItemRepository;
 import com.dhuelin.dev.watchguru.tracking.service.EpisodeListService;
 import com.dhuelin.dev.watchguru.streaming.service.AvailabilityService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,6 +33,7 @@ public class TitleController {
     private final CurrentUserService currentUser;
     private final AvailabilityService availability;
     private final TitleRepository titles;
+    private final WatchlistItemRepository items;
     private final ApiMapper mapper;
     private final TmdbProperties tmdbProperties;
 
@@ -39,6 +42,7 @@ public class TitleController {
                            CurrentUserService currentUser,
                            AvailabilityService availability,
                            TitleRepository titles,
+                           WatchlistItemRepository items,
                            ApiMapper mapper,
                            TmdbProperties tmdbProperties) {
         this.catalog = catalog;
@@ -46,8 +50,27 @@ public class TitleController {
         this.currentUser = currentUser;
         this.availability = availability;
         this.titles = titles;
+        this.items = items;
         this.mapper = mapper;
         this.tmdbProperties = tmdbProperties;
+    }
+
+    /**
+     * What people are watching this week.
+     *
+     * <p>What the search screen shows before anything is typed. An empty box
+     * over an empty screen asks a new user to already know what they want to
+     * track, which is the opposite of the job.
+     *
+     * <p>Declared before {@code /{titleId}} for readability only -- Spring
+     * matches the literal path first either way -- and nothing is persisted
+     * until a row is opened, exactly as with search.
+     */
+    @GetMapping("/trending")
+    @Operation(operationId = "getTrending")
+    public Responses.SearchResponse trending(@RequestParam(defaultValue = "1") int page,
+                                             @RequestParam(required = false) String language) {
+        return mapper.toSearch(catalog.trending(page, language));
     }
 
     /** Live search against the metadata provider; nothing is persisted. */
@@ -69,13 +92,25 @@ public class TitleController {
         return mapper.toTitle(title, availability.offersFor(title, region(null)));
     }
 
+    /**
+     * One title, with whatever the caller has recorded about it.
+     *
+     * <p>The library entry travels with the title rather than being fetched
+     * beside it, so the screen can say at once whether this is something the
+     * user is already tracking. Fetching it separately would render the screen
+     * as though nothing were tracked and correct itself a moment later, which
+     * is how a user ends up adding something twice.
+     */
     @GetMapping("/{titleId}")
     @Operation(operationId = "getTitle")
     public Responses.TitleResponse get(@PathVariable Long titleId,
                                        @RequestParam(required = false) String region) {
         Title title = titles.findById(titleId)
                 .orElseThrow(() -> NotFoundException.of("Title", titleId));
-        return mapper.toTitle(title, availability.offersFor(title, region(region)));
+        WatchlistItem item = items
+                .findByUserIdAndTitleId(currentUser.require().getId(), titleId)
+                .orElse(null);
+        return mapper.toTitle(title, availability.offersFor(title, region(region)), item);
     }
 
     /**
