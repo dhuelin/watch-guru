@@ -60,7 +60,7 @@ fun LibraryScreen(
             FilterChip(
                 selected = filter == null,
                 onClick = { viewModel.setFilter(null) },
-                label = { Text("All") },
+                label = { Text(stringResource(R.string.library_filter_all)) },
             )
             WatchlistControllerApi.StatusListWatchlist.entries.forEach { status ->
                 FilterChip(
@@ -141,17 +141,17 @@ private fun LibraryRow(item: WatchlistItemResponse, onOpen: () -> Unit) {
             // null for films, which have no episode progress -- a bar there
             // would be meaningless rather than merely empty.
             item.progress?.let { progress ->
+                val progressLabel = stringResource(
+                    R.string.cd_progress, progress.watchedEpisodes, progress.airedEpisodes,
+                )
                 LinearProgressIndicator(
                     progress = { progress.watchedEpisodes.toFloat() / progress.airedEpisodes.coerceAtLeast(1) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 6.dp)
-                        .semantics {
-                            // Read as a sentence rather than a percentage a
-                            // screen reader has to interpret.
-                            contentDescription = "${progress.watchedEpisodes} of " +
-                                    "${progress.airedEpisodes} episodes watched"
-                        },
+                        // Read as a sentence rather than a percentage a screen
+                        // reader has to interpret.
+                        .semantics { contentDescription = progressLabel },
                 )
                 Text(
                     text = "${progress.watchedEpisodes} / ${progress.airedEpisodes}",

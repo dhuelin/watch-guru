@@ -1,0 +1,187 @@
+/*
+  Localizable.strings
+
+  Every user-facing string in the app, keyed by its English text.
+
+  SwiftUI localises a literal passed to Text, Button, Label and friends by
+  treating the literal itself as the key, so extracting the copy here changed
+  no call site and cannot change what renders: a key with no entry falls back
+  to the literal. What it buys is that the copy can now be found, reviewed and
+  translated in one place, which was impossible while it was scattered across
+  eighty-odd files.
+
+  The Android app keeps the same copy in res/values/strings.xml. Where the two
+  differ it is because the platform control differs -- iOS splits an empty
+  state into a title and a description, Android states it in one line -- and
+  not because the product says different things on different phones.
+
+  Keys are unique across the file: a word used on three screens is one entry,
+  translated once. That is also why the shared block comes first.
+*/
+
+/* MARK: Used on more than one screen */
+/* Detail, History, Profile */
+"Cancel" = "Cancel";
+/* Server, Trakt */
+"Disconnect" = "Disconnect";
+/* Detail, History, Server */
+"Done" = "Done";
+/* Library, Navigation */
+"Library" = "Library";
+/* Detail, Home */
+"Mark watched" = "Mark watched";
+/* Profile, Server, Trakt */
+"OK" = "OK";
+/* Navigation, Profile */
+"Profile" = "Profile";
+/* Navigation, Search */
+"Search" = "Search";
+/* Detail, Library */
+"Status" = "Status";
+/* Detail, Profile, SignIn */
+"This product uses the TMDB API but is not endorsed or certified by TMDB." = "This product uses the TMDB API but is not endorsed or certified by TMDB.";
+/* Detail, History */
+"Watched on" = "Watched on";
+
+/* MARK: Detail */
+"Add to library" = "Add to library";
+"Episodes" = "Episodes";
+"Mark all up to here" = "Mark all up to here";
+"Not on any streaming service in your region." = "Not on any streaming service in your region.";
+"Offers for the country set in your profile." = "Offers for the country set in your profile.";
+"Remove from library" = "Remove from library";
+"Streaming availability data provided by JustWatch." = "Streaming availability data provided by JustWatch.";
+"Watched on a date…" = "Watched on a date…";
+"Watched today" = "Watched today";
+"When did you watch it?" = "When did you watch it?";
+"Where to watch" = "Where to watch";
+"You are not tracking this yet." = "You are not tracking this yet.";
+"You're all caught up." = "You're all caught up.";
+"Your library" = "Your library";
+"Your rating" = "Your rating";
+"Your rating out of ten" = "Your rating out of ten";
+
+/* MARK: History */
+"Any service" = "Any service";
+"Clear dates" = "Clear dates";
+"Correct this entry" = "Correct this entry";
+"Dates" = "Dates";
+"Delete" = "Delete";
+"From" = "From";
+"From a date" = "From a date";
+"History" = "History";
+"Not recorded" = "Not recorded";
+"Nothing here" = "Nothing here";
+"Save" = "Save";
+"Search your history" = "Search your history";
+"Service" = "Service";
+"Show" = "Show";
+"Up to" = "Up to";
+"Up to a date" = "Up to a date";
+"Watched where" = "Watched where";
+
+/* MARK: Home */
+"Nothing on the go" = "Nothing on the go";
+"Start a series and it will show up here." = "Start a series and it will show up here.";
+"Up Next" = "Up Next";
+
+/* MARK: Import */
+"Bring in what you have already watched. Nothing is added to your library until you have seen what the file contains and said yes." = "Bring in what you have already watched. Nothing is added to your library until you have seen what the file contains and said yes.";
+"Choose a file" = "Choose a file";
+"Files this reads" = "Files this reads";
+"IMDb (Lists or Ratings → Export), Letterboxd (Settings → Import & Export), Netflix (Viewing activity → Download all), and Watch Guru's own CSV. The format is worked out from the file, so there is nothing to pick." = "IMDb (Lists or Ratings → Export), Letterboxd (Settings → Import & Export), Netflix (Viewing activity → Download all), and Watch Guru's own CSV. The format is worked out from the file, so there is nothing to pick.";
+"Import" = "Import";
+"Import a watch history" = "Import a watch history";
+"Import another file" = "Import another file";
+"Imported" = "Imported";
+"Importing…" = "Importing…";
+"More than one title matches. Pick the right one, or leave it out." = "More than one title matches. Pick the right one, or leave it out.";
+"Needs a choice" = "Needs a choice";
+"Not found" = "Not found";
+"Nothing in this file could be read as a watch history." = "Nothing in this file could be read as a watch history.";
+"Nothing selected" = "Nothing selected";
+"Reading the file…" = "Reading the file…";
+"Ready to import" = "Ready to import";
+"Rows that could not be read" = "Rows that could not be read";
+"These could not be matched to a title, so they cannot be imported. Nothing is lost — you can add them by hand later." = "These could not be matched to a title, so they cannot be imported. Nothing is lost — you can add them by hand later.";
+"Worth knowing about this file" = "Worth knowing about this file";
+
+/* Which export the file turned out to be. One key each rather than a name
+   substituted into a sentence: "Read as %@" reads badly in languages that
+   decline the noun, and there are only five of them. */
+"Read as a Watch Guru export" = "Read as a Watch Guru export";
+"Read as an IMDb export" = "Read as an IMDb export";
+"Read as a Letterboxd export" = "Read as a Letterboxd export";
+"Read as a Netflix export" = "Read as a Netflix export";
+"Read as an unrecognised file" = "Read as an unrecognised file";
+
+/* Interpolated, so the key is the format SwiftUI derives from the literal
+   rather than the literal itself. Listed by hand because the check cannot
+   compute these safely -- an interpolation's type decides its specifier. */
+"Import %lld" = "Import %lld";
+"%lld already imported. These are skipped." = "%lld already imported. These are skipped.";
+"%lld added, %lld already there." = "%lld added, %lld already there.";
+"%lld could not be written." = "%lld could not be written.";
+
+/* Sentences a model produces, so they are looked up explicitly rather than
+   written as a literal in a view. */
+"That file could not be read." = "That file could not be read.";
+"That file is too large to import." = "That file is too large to import.";
+"The file could not be checked. Try again." = "The file could not be checked. Try again.";
+"That import did not go through. Nothing was added." = "That import did not go through. Nothing was added.";
+
+/* MARK: Library */
+"All" = "All";
+"Filter" = "Filter";
+"Nothing tracked yet" = "Nothing tracked yet";
+"Remove" = "Remove";
+"Search for a film or series to get started." = "Search for a film or series to get started.";
+
+/* MARK: Navigation */
+"Home" = "Home";
+
+/* MARK: Profile */
+"Choose your region" = "Choose your region";
+"Connect Emby" = "Connect Emby";
+"Connect Jellyfin" = "Connect Jellyfin";
+"Connect Plex" = "Connect Plex";
+"Delete account" = "Delete account";
+"Deleting your account removes your library, progress and history permanently." = "Deleting your account removes your library, progress and history permanently.";
+"Preferences" = "Preferences";
+"Search countries" = "Search countries";
+"Sign out" = "Sign out";
+"Streaming offers are shown for this country." = "Streaming offers are shown for this country.";
+"This removes your library, progress and history permanently. It cannot be undone." = "This removes your library, progress and history permanently. It cannot be undone.";
+"Viewing history" = "Viewing history";
+"Your region is unchanged. Please try again." = "Your region is unchanged. Please try again.";
+
+/* MARK: Search */
+"Add" = "Add";
+"Already in your library" = "Already in your library";
+"Search films and series" = "Search films and series";
+"Search for something to watch" = "Search for something to watch";
+"Trending this week" = "Trending this week";
+
+/* MARK: Server */
+"Check the username and try again." = "Check the username and try again.";
+"Copy" = "Copy";
+"Recent deliveries" = "Recent deliveries";
+"Your webhook URL" = "Your webhook URL";
+
+/* MARK: SignIn */
+"Know what you've watched and where you left off." = "Know what you've watched and where you left off.";
+"Sign in with Apple" = "Sign in with Apple";
+"Watch Guru" = "Watch Guru";
+
+/* MARK: Stats */
+"Mark something watched and this fills in." = "Mark something watched and this fills in.";
+"Nothing watched in this period." = "Nothing watched in this period.";
+"Nothing watched yet" = "Nothing watched yet";
+"Period" = "Period";
+"Statistics" = "Statistics";
+
+/* MARK: Trakt */
+"Connect Trakt" = "Connect Trakt";
+"Recent syncs" = "Recent syncs";
+"Sync now" = "Sync now";
+"Trakt" = "Trakt";

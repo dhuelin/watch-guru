@@ -123,6 +123,15 @@ class WatchGuruRepositoryTest {
             override suspend fun syncTrakt() = fail()
             private fun fail(): Nothing = throw UnsupportedOperationException()
         },
+        imports = object : dev.dhuelin.watchguru.api.apis.ImportControllerApi {
+            override suspend fun previewImport(
+                previewImport: dev.dhuelin.watchguru.api.models.PreviewImport,
+            ) = fail()
+            override suspend fun commitImport(
+                commitImport: dev.dhuelin.watchguru.api.models.CommitImport,
+            ) = fail()
+            private fun fail(): Nothing = throw UnsupportedOperationException()
+        },
         io = Dispatchers.Unconfined,
     )
 

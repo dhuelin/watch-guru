@@ -71,7 +71,7 @@ fun HistoryScreen(
                 title = { Text(stringResource(R.string.title_history)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
             )
@@ -206,7 +206,7 @@ private fun HistoryRow(
         IconButton(onClick = onDelete) {
             Icon(
                 imageVector = Icons.Outlined.Delete,
-                contentDescription = "Delete this entry for ${event.primaryTitle}",
+                contentDescription = stringResource(R.string.cd_delete_entry, event.primaryTitle),
             )
         }
     }

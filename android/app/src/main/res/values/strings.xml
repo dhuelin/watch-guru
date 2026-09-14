@@ -192,4 +192,62 @@
     <string name="cd_mark_episode_unwatched">Mark %1$s unwatched</string>
     <string name="cd_poster">Poster for %1$s</string>
     <string name="cd_progress">%1$d of %2$d episodes watched</string>
+    <!-- Names the episode and the series, because Up Next shows several of
+         these at once and "Mark watched" alone does not say which. -->
+    <string name="cd_mark_next_episode">Mark %1$s of %2$s watched</string>
+    <string name="cd_expand_season">Expand season</string>
+    <string name="cd_collapse_season">Collapse season</string>
+    <string name="cd_more_actions">More actions for %1$s</string>
+    <string name="cd_your_rating">Your rating out of ten</string>
+    <string name="cd_delete_entry">Delete this entry for %1$s</string>
+
+    <!-- Title detail figures. Format strings rather than concatenation, so a
+         translation can put the unit where its language puts it. -->
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_rating_tmdb">TMDB %1$s</string>
+    <string name="detail_rating_imdb">IMDb %1$s</string>
+    <string name="library_filter_all">All</string>
+
+    <!-- Reading an existing history in from another service. Two steps, and
+         the copy says so before a file is chosen: an import that wrote
+         straight from the file would be the thing people are wary of. -->
+    <string name="action_import_history">Import a watch history</string>
+    <string name="import_title">Import</string>
+    <string name="import_intro">Bring in what you have already watched. Nothing is added to your library until you have seen what the file contains and said yes.</string>
+    <string name="import_sources_title">Files this reads</string>
+    <string name="import_sources_body">IMDb (Lists or Ratings → Export), Letterboxd (Settings → Import &amp; Export), Netflix (Viewing activity → Download all), and Watch Guru\'s own CSV. The format is worked out from the file, so there is nothing to pick.</string>
+    <string name="action_choose_file">Choose a file</string>
+    <string name="import_reading">Reading the file…</string>
+    <string name="import_source_label">Read as %1$s</string>
+    <string name="import_source_watch_guru">a Watch Guru export</string>
+    <string name="import_source_imdb">an IMDb export</string>
+    <string name="import_source_letterboxd">a Letterboxd export</string>
+    <string name="import_source_netflix">a Netflix export</string>
+    <string name="import_source_unknown">an unrecognised file</string>
+    <string name="import_nothing_found">Nothing in this file could be read as a watch history.</string>
+    <!-- Counts the user acts on. Separated because they need different things
+         from them: matched rows need only a glance, ambiguous ones need a
+         choice, and unmatched ones need nothing at all. -->
+    <string name="import_already_imported">%1$d already imported. These are skipped.</string>
+    <string name="import_section_matched">Ready to import</string>
+    <string name="import_section_ambiguous">Needs a choice</string>
+    <string name="import_section_unmatched">Not found</string>
+    <string name="import_ambiguous_hint">More than one title matches. Pick the right one, or leave it out.</string>
+    <string name="import_unmatched_hint">These could not be matched to a title, so they cannot be imported. Nothing is lost -- you can add them by hand later.</string>
+    <string name="import_row_watched_on">Watched %1$s</string>
+    <string name="import_row_rating">Rated %1$s</string>
+    <string name="import_candidate_year">%1$s (%2$d)</string>
+    <string name="import_problems_title">Rows that could not be read</string>
+    <string name="import_warnings_title">Worth knowing about this file</string>
+    <string name="action_import_selected">Import %1$d</string>
+    <string name="import_none_selected">Nothing selected</string>
+    <string name="import_committing">Importing…</string>
+    <string name="import_done_title">Imported</string>
+    <string name="import_done_body">%1$d added, %2$d already there.</string>
+    <string name="import_done_failed">%1$d could not be written.</string>
+    <string name="action_import_another">Import another file</string>
+    <string name="error_import_unreadable">That file could not be read.</string>
+    <string name="error_import_too_large">That file is too large to import.</string>
+    <string name="error_import_preview">The file could not be checked. Try again.</string>
+    <string name="error_import_commit">That import did not go through. Nothing was added.</string>
 </resources>
