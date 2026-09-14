@@ -50,6 +50,24 @@ public class TitleController {
         this.tmdbProperties = tmdbProperties;
     }
 
+    /**
+     * What people are watching this week.
+     *
+     * <p>What the search screen shows before anything is typed. An empty box
+     * over an empty screen asks a new user to already know what they want to
+     * track, which is the opposite of the job.
+     *
+     * <p>Declared before {@code /{titleId}} for readability only -- Spring
+     * matches the literal path first either way -- and nothing is persisted
+     * until a row is opened, exactly as with search.
+     */
+    @GetMapping("/trending")
+    @Operation(operationId = "getTrending")
+    public Responses.SearchResponse trending(@RequestParam(defaultValue = "1") int page,
+                                             @RequestParam(required = false) String language) {
+        return mapper.toSearch(catalog.trending(page, language));
+    }
+
     /** Live search against the metadata provider; nothing is persisted. */
     @GetMapping("/search")
     @Operation(operationId = "searchTitles")

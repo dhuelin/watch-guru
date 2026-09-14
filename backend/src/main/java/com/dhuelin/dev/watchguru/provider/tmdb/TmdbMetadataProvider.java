@@ -197,6 +197,36 @@ public class TmdbMetadataProvider implements MetadataProvider {
 
     // ---------- mapping ----------
 
+    @Override
+    public ProviderSearchPage trending(int page, String language) {
+        requireToken();
+        // /trending/all returns the same result shape as /search/multi, people
+        // included, so the summary mapping and the people filter below are the
+        // ones already proven by search rather than a second copy.
+        //
+        // The week window rather than the day: a daily list churns enough that
+        // the screen looks different every time it is opened, which reads as
+        // instability rather than freshness.
+        TmdbResponses.MultiSearch response = get(uriBuilder -> uriBuilder
+                        .path("/trending/all/week")
+                        .queryParam("page", Math.max(page, 1))
+                        .queryParam("language", language(language))
+                        .build(),
+                TmdbResponses.MultiSearch.class,
+                "trending");
+
+        if (response == null || response.results() == null) {
+            return new ProviderSearchPage(List.of(), page, 0, 0);
+        }
+
+        List<ProviderTitleSummary> summaries = response.results().stream()
+                .map(this::toSummary)
+                .filter(Objects::nonNull)
+                .toList();
+
+        return new ProviderSearchPage(summaries, response.page(), response.totalPages(), response.totalResults());
+    }
+
     private ProviderTitleSummary toSummary(TmdbResponses.MultiSearchResult result) {
         TitleType type = mediaType(result.mediaType());
         if (type == null || result.id() == null) {

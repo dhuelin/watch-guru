@@ -53,6 +53,8 @@ Security key, and a pure function pinned to the main actor.
 ## Layout
 
 ```
+WatchGuru/Resources/
+└── Assets.xcassets/   App icon and accent colour
 WatchGuru/Sources/
 ├── Data/         API client wrapper, Keychain token store, failure mapping
 ├── Design/       Status styles, poster placeholder, shared state views
@@ -140,6 +142,23 @@ design and none at all about this code.
 ## Not built yet
 
 - **Stats (#17), notifications (#19), widgets (#20).**
+
+## The app icon
+
+The icon is drawn by a script rather than exported from a design tool:
+
+```bash
+python3 tools/make-ios-icon.py
+```
+
+It writes `WatchGuru/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png`
+from the same shapes and colours as the Android launcher icon, which is a
+vector. An asset catalogue takes a PNG and nothing else, so the committed image
+is a build product; the script is the source, and it is the thing to change.
+
+The accent colour beside it is the brand blue, which every `Color.accentColor`
+in the app was already asking for and not getting -- without the asset those
+call sites fell back to the system blue.
 
 ## Regenerating the API client
 

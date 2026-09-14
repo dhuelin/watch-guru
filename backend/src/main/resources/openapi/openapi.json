@@ -1085,6 +1085,41 @@
         "tags" : [ "title-controller" ]
       }
     },
+    "/api/v1/titles/trending" : {
+      "get" : {
+        "operationId" : "getTrending",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 1
+          }
+        }, {
+          "in" : "query",
+          "name" : "language",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SearchResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "title-controller" ]
+      }
+    },
     "/api/v1/titles/{titleId}" : {
       "get" : {
         "operationId" : "getTitle",

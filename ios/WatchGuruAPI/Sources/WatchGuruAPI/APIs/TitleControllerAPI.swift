@@ -95,6 +95,49 @@ open class TitleControllerAPI {
     }
 
     /**
+
+     - parameter page: (query)  (optional, default to 1)
+     - parameter language: (query)  (optional)
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: SearchResponse
+     */
+    open class func getTrending(page: Int? = nil, language: String? = nil, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) async throws(ErrorResponse) -> SearchResponse {
+        return try await getTrendingWithRequestBuilder(page: page, language: language, apiConfiguration: apiConfiguration).execute().body
+    }
+
+    /**
+     - GET /api/v1/titles/trending
+     - Bearer Token:
+       - type: http
+       - name: bearerAuth
+     - parameter page: (query)  (optional, default to 1)
+     - parameter language: (query)  (optional)
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: RequestBuilder<SearchResponse> 
+     */
+    open class func getTrendingWithRequestBuilder(page: Int? = nil, language: String? = nil, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) -> RequestBuilder<SearchResponse> {
+        let localVariablePath = "/api/v1/titles/trending"
+        let localVariableURLString = apiConfiguration.basePath + localVariablePath
+        let localVariableParameters: [String: any Sendable]? = nil
+
+        var localVariableUrlComponents = URLComponents(string: localVariableURLString)
+        localVariableUrlComponents?.queryItems = APIHelper.mapValuesToQueryItems([
+            "page": (wrappedValue: page?.asParameter(codableHelper: apiConfiguration.codableHelper), isExplode: true),
+            "language": (wrappedValue: language?.asParameter(codableHelper: apiConfiguration.codableHelper), isExplode: true),
+        ])
+
+        let localVariableNillableHeaders: [String: (any Sendable)?] = [
+            :
+        ]
+
+        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
+
+        let localVariableRequestBuilder: RequestBuilder<SearchResponse>.Type = apiConfiguration.requestBuilderFactory.getBuilder()
+
+        return localVariableRequestBuilder.init(method: "GET", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
+    }
+
+    /**
      * enum for parameter titleType
      */
     public enum TitleType_importTitle: String, Sendable, CaseIterable {

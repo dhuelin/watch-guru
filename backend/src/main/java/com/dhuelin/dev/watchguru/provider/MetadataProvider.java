@@ -25,6 +25,18 @@ public interface MetadataProvider {
     /** Combined movie and series search, 1-based page numbering. */
     ProviderSearchPage search(String query, int page, String language);
 
+    /**
+     * What people are watching this week, films and series together.
+     *
+     * <p>The answer to an empty search box. A tracker whose search screen is
+     * blank until something is typed gives a new user nothing to track, and
+     * asks them to remember a title before the app is any use.
+     *
+     * <p>Returns the same summaries as {@link #search}, so a row here and a
+     * result there are the same thing and are imported the same way.
+     */
+    ProviderSearchPage trending(int page, String language);
+
     ProviderTitleDetail fetchDetail(TitleType titleType, long providerId, String language);
 
     ProviderSeasonDetail fetchSeason(long seriesProviderId, int seasonNumber, String language);

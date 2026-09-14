@@ -12,6 +12,7 @@ import com.dhuelin.dev.watchguru.provider.MetadataProvider;
 import com.dhuelin.dev.watchguru.provider.MetadataProviderException;
 import com.dhuelin.dev.watchguru.provider.UpstreamUnavailableException;
 import com.dhuelin.dev.watchguru.provider.model.ProviderSearchPage;
+import com.dhuelin.dev.watchguru.provider.model.ProviderTitleSummary;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -135,5 +136,48 @@ class CatalogServiceResilienceTest {
         catalog.importTitle(TitleType.TV_SERIES, 1396L, "en-US");
 
         verify(provider, never()).fetchDetail(any(), anyLong(), any());
+    }
+
+    // MARK: - Trending, which is shown to people who asked for nothing
+
+    @Test
+    @DisplayName("adult titles are kept off the screen a new user opens first")
+    void trendingHidesAdultTitles() {
+        // The distinction being defended: a search result is what somebody
+        // asked for, trending is what we chose to put in front of them.
+        when(provider.trending(anyInt(), any())).thenReturn(new ProviderSearchPage(
+                List.of(summary(1L, "Dune", false), summary(2L, "Not That", true)),
+                1, 1, 2));
+
+        ProviderSearchPage page = catalog.trending(1, "en-US");
+
+        assertThat(page.results()).singleElement()
+                .satisfies(result -> assertThat(result.title()).isEqualTo("Dune"));
+    }
+
+    @Test
+    @DisplayName("the page's own counts are left alone when nothing was filtered")
+    void trendingKeepsItsPageWhenNothingIsRemoved() {
+        ProviderSearchPage fromProvider = new ProviderSearchPage(
+                List.of(summary(1L, "Dune", false)), 2, 9, 180);
+        when(provider.trending(anyInt(), any())).thenReturn(fromProvider);
+
+        assertThat(catalog.trending(2, "en-US")).isSameAs(fromProvider);
+    }
+
+    @Test
+    @DisplayName("a page below one is asked for as page one rather than refused")
+    void trendingNormalisesThePage() {
+        when(provider.trending(anyInt(), any())).thenReturn(new ProviderSearchPage(List.of(), 1, 0, 0));
+
+        catalog.trending(0, "en-US");
+
+        verify(provider).trending(1, "en-US");
+    }
+
+    private ProviderTitleSummary summary(long id, String title, boolean adult) {
+        return new ProviderTitleSummary(
+                id, TitleType.MOVIE, title, title, null, null, null, null,
+                "en", null, null, null, adult, List.of());
     }
 }

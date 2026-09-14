@@ -13,6 +13,23 @@ final class SearchModel {
     private(set) var state: ViewState<[SearchHit]> = .empty
     private(set) var added: Set<Int64> = []
 
+    /// What people are watching this week, shown while the box is empty.
+    ///
+    /// Held apart from `state` rather than loaded into it: returning to an
+    /// empty box should not cost a request, and a search that found nothing
+    /// must still read as "nothing found" rather than silently becoming a
+    /// chart.
+    private(set) var trending: ViewState<[SearchHit]> = .loading
+
+    /// Whether the box holds enough to have searched for anything.
+    var isSearching: Bool {
+        query.trimmingCharacters(in: .whitespacesAndNewlines).count >= minimumQueryLength
+    }
+
+    /// The list on screen, chosen by the box rather than by whichever load
+    /// finished last.
+    var visible: ViewState<[SearchHit]> { isSearching ? state : trending }
+
     var query: String = "" {
         didSet { scheduleSearch() }
     }
@@ -50,7 +67,25 @@ final class SearchModel {
     }
 
     func retry() {
-        scheduleSearch()
+        if isSearching {
+            scheduleSearch()
+        } else {
+            Task { await loadTrending() }
+        }
+    }
+
+    /// Loads the shelf once, when the screen first appears.
+    func loadTrending() async {
+        trending = .loading
+        do {
+            let page = try await client.trending()
+            trending = page.results.isEmpty ? .empty : .content(page.results)
+        } catch {
+            // Shown as an error rather than as an empty shelf: the screen has
+            // nothing else on it, and "nothing is trending this week" is a
+            // claim about the world rather than about the network.
+            trending = .failed(error)
+        }
     }
 
     private func search(_ text: String) async {

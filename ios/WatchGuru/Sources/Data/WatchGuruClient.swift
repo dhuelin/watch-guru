@@ -119,6 +119,14 @@ actor WatchGuruClient {
         try await run { try await TitleControllerAPI.searchTitles(query: query, page: page, apiConfiguration: $0) }
     }
 
+    /// What people are watching this week.
+    ///
+    /// The answer to an empty search box: a tracker that shows nothing until a
+    /// title is typed asks a new user to already know what they want.
+    func trending(page: Int = 1) async throws(APIFailure) -> SearchResponse {
+        try await run { try await TitleControllerAPI.getTrending(page: page, apiConfiguration: $0) }
+    }
+
     func title(_ id: Int64) async throws(APIFailure) -> TitleResponse {
         try await run { try await TitleControllerAPI.getTitle(titleId: id, apiConfiguration: $0) }
     }

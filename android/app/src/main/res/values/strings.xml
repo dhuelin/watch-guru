@@ -32,6 +32,10 @@
     <string name="empty_search">No results for \"%1$s\".</string>
     <string name="search_hint">Search films and series</string>
     <string name="search_prompt">Search for something to watch.</string>
+    <!-- Heading over the shelf shown before anything is typed. Named, because
+         an unlabelled list on a search screen reads as results for a search
+         nobody made. -->
+    <string name="trending_this_week">Trending this week</string>
 
     <string name="error_offline">Offline — changes will sync when you reconnect.</string>
     <string name="error_provider_down">Couldn\'t reach the catalogue. Your library is still up to date.</string>

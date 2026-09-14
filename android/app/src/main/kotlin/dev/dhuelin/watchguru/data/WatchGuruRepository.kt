@@ -113,6 +113,15 @@ class WatchGuruRepository(
      * what makes the detail screen the place to log something the history has
      * never seen.
      */
+    /**
+     * What people are watching this week.
+     *
+     * The answer to an empty search box: a tracker that shows nothing until a
+     * title is typed asks a new user to already know what they want.
+     */
+    suspend fun trending(page: Int = 1): ApiResult<SearchResponse> =
+        call { titles.getTrending(page = page) }
+
     suspend fun logFilmWatched(request: LogMovieWatched): ApiResult<WatchEventResponse> =
         call { history.logMovieWatched(request) }
 

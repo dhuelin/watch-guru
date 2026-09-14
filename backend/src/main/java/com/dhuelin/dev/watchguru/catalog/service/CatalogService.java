@@ -80,6 +80,33 @@ public class CatalogService {
      * <p>The key is normalised so "Breaking Bad" and "breaking bad " share an
      * entry rather than each costing a call.
      */
+    /**
+     * What people are watching this week.
+     *
+     * <p>Cached harder than it looks: this is one list per language asked for
+     * by everyone who opens the search tab, where search is a different string
+     * per user. The resilience wrapper around the provider applies here too, so
+     * a provider outage is an empty shelf rather than a failed screen.
+     */
+    @Cacheable(cacheNames = CacheConfig.TRENDING_CACHE,
+            key = "#page + '|' + T(java.util.Objects).toString(#language)")
+    public ProviderSearchPage trending(int page, String language) {
+        ProviderSearchPage trending = provider.trending(Math.max(page, 1), language);
+
+        // Filtered here rather than at the provider because it is a product
+        // rule, not a detail of TMDB: trending is shown unprompted, on the
+        // screen a new user opens first. A search result is what somebody asked
+        // for; this is what we chose to put in front of them, and the two are
+        // not the same responsibility.
+        List<ProviderTitleSummary> suitable = trending.results().stream()
+                .filter(summary -> !summary.adult())
+                .toList();
+
+        return suitable.size() == trending.results().size()
+                ? trending
+                : new ProviderSearchPage(suitable, trending.page(), trending.totalPages(), trending.totalResults());
+    }
+
     @Cacheable(cacheNames = CacheConfig.SEARCH_CACHE,
             key = "T(java.util.Objects).toString(#query).trim().toLowerCase() + '|' + #page + '|' "
                     + "+ T(java.util.Objects).toString(#language)")

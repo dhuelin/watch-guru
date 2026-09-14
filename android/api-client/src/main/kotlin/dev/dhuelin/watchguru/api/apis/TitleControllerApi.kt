@@ -39,6 +39,20 @@ interface TitleControllerApi {
     @GET("api/v1/titles/{titleId}")
     suspend fun getTitle(@Path("titleId") titleId: kotlin.Long, @Query("region") region: kotlin.String? = null): Response<TitleResponse>
 
+    /**
+     * GET api/v1/titles/trending
+     * 
+     * 
+     * Responses:
+     *  - 200: OK
+     *
+     * @param page  (optional, default to 1)
+     * @param language  (optional)
+     * @return [SearchResponse]
+     */
+    @GET("api/v1/titles/trending")
+    suspend fun getTrending(@Query("page") page: kotlin.Int? = 1, @Query("language") language: kotlin.String? = null): Response<SearchResponse>
+
 
     /**
     * enum for parameter titleType

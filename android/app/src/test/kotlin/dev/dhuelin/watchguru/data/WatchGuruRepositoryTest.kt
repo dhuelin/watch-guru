@@ -32,6 +32,7 @@ class WatchGuruRepositoryTest {
     ) : TitleControllerApi {
         override suspend fun searchTitles(query: String, page: Int?, language: String?) = responder()
         override suspend fun getTitle(titleId: Long, region: String?) = notUsed()
+        override suspend fun getTrending(page: Int?, language: String?) = responder()
         override suspend fun importTitle(
             titleType: TitleControllerApi.TitleTypeImportTitle,
             providerId: Long,
@@ -209,5 +210,17 @@ class WatchGuruRepositoryTest {
 
         val failed: ApiResult<Int> = ApiResult.Failure.Offline
         assertEquals(ApiResult.Failure.Offline, failed.map { it * 2 })
+    }
+
+    @Test
+    fun `trending fails the same way search does`() = runTest {
+        // The shelf is the whole of the search screen before anything is typed,
+        // so a failure there has to arrive as something the UI can act on
+        // rather than as an empty list that reads as "nothing is trending".
+        val result = repositoryWith(
+            titles = StubTitles { throw IOException("no route to host") },
+        ).trending()
+
+        assertEquals(ApiResult.Failure.Offline, result)
     }
 }

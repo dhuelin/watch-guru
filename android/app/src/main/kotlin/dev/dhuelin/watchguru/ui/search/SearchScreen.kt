@@ -48,7 +48,13 @@ fun SearchScreen(
 ) {
     val query by viewModel.query.collectAsStateWithLifecycle()
     val results by viewModel.results.collectAsStateWithLifecycle()
+    val trending by viewModel.trending.collectAsStateWithLifecycle()
+    val isSearching by viewModel.isSearching.collectAsStateWithLifecycle()
     val added by viewModel.added.collectAsStateWithLifecycle()
+
+    // One list, two sources. Which one is showing is decided by the box rather
+    // than by whichever finished loading last.
+    val state = if (isSearching) results else trending
 
     Column(modifier = Modifier.fillMaxSize()) {
         SearchBar(
@@ -68,9 +74,22 @@ fun SearchScreen(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
         ) {}
 
-        val content = results.contentOrNull()
+        val content = state.contentOrNull()
         when {
             content != null -> LazyColumn(modifier = Modifier.fillMaxSize()) {
+                if (!isSearching) {
+                    // Labelled, because an unlabelled list of films on a search
+                    // screen reads as results for something the user did not
+                    // type.
+                    item(key = "trending-header") {
+                        Text(
+                            text = stringResource(R.string.trending_this_week),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp),
+                        )
+                    }
+                }
                 items(content, key = { it.providerId }) { hit ->
                     SearchResultRow(
                         hit = hit,
@@ -81,27 +100,28 @@ fun SearchScreen(
                 }
             }
 
-            results is UiState.Loading -> Column(
+            state is UiState.Loading -> Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) { CircularProgressIndicator() }
 
-            results is UiState.Error -> ErrorView(
-                failure = (results as UiState.Error).failure,
+            state is UiState.Error -> ErrorView(
+                failure = (state as UiState.Error).failure,
                 onRetry = viewModel::retry,
             )
 
-            // Empty covers two situations that need different words: nothing
-            // typed yet, and nothing found.
-            query.isBlank() -> FullScreenMessage(
-                icon = Icons.Outlined.Search,
-                message = stringResource(R.string.search_prompt),
+            // Only reachable now when a search found nothing, or when the
+            // trending shelf itself came back empty -- the "type something"
+            // prompt was what the shelf replaced.
+            isSearching -> FullScreenMessage(
+                icon = Icons.Outlined.SearchOff,
+                message = stringResource(R.string.empty_search, query),
             )
 
             else -> FullScreenMessage(
-                icon = Icons.Outlined.SearchOff,
-                message = stringResource(R.string.empty_search, query),
+                icon = Icons.Outlined.Search,
+                message = stringResource(R.string.search_prompt),
             )
         }
     }
