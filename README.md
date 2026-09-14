@@ -11,9 +11,15 @@ to be playing the episode.
 
 | Component | State |
 |---|---|
-| Backend (Spring Boot) | Phase 0 complete. Catalog, watchlist, episode progress, history, stats, streaming availability, OIDC authentication, published API contract, IMDb ratings enrichment. |
-| iOS app (SwiftUI) | Not started — issue #7. |
-| Android app (Jetpack Compose) | Not started — issue #8. |
+| Backend (Spring Boot) | Catalog and trending, watchlist and ratings, episode progress, history with filters and editing, stats and streaks, streaming availability, CSV import, new-episode notifications, Plex/Jellyfin/Emby/Trakt sync, OIDC authentication, published API contract, IMDb ratings enrichment. |
+| iOS app (SwiftUI) | Every screen built: sign-in, trending and search, library, title detail with progress and rating, history, stats, media-server and Trakt connections. Works offline with a replayed mutation queue. |
+| Android app (Jetpack Compose) | The same, screen for screen. |
+
+**Neither app has been run by a human.** Both compile in CI on every push and
+their unit tests pass; nobody has yet installed either on a device or a
+simulator, which is [#35](https://github.com/dhuelin/watch-guru/issues/35) and
+needs a machine with Xcode or an Android SDK. Treat every screen as unverified
+against a real screen until then.
 
 See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the phased plan and the GitHub
 issues tracking each piece.
@@ -131,7 +137,8 @@ token identifies; there is no way to name a different one.
 | Method | Path | Purpose |
 |---|---|---|
 | `GET` | `/api/v1/titles/search` | Combined film and series search |
-| `GET` | `/api/v1/titles/{titleId}` | Title detail, seasons, episodes |
+| `GET` | `/api/v1/titles/trending` | What people are watching this week |
+| `GET` | `/api/v1/titles/{titleId}` | Title detail, including the caller's own library entry |
 | `POST` | `/api/v1/titles/import` | Import a provider title into the catalog |
 | `GET` | `/api/v1/me` | Own profile |
 | `PATCH` | `/api/v1/me` | Display name, region, language, time zone |
@@ -143,9 +150,16 @@ token identifies; there is no way to name a different one.
 | `GET` | `/api/v1/me/watchlist/titles/{titleId}/progress` | Per-title progress |
 | `POST` | `/api/v1/me/watch-events/movie` | Mark a film watched |
 | `POST` | `/api/v1/me/watch-events/episode` | Mark an episode watched |
-| `GET` | `/api/v1/me/history` | Viewing history |
+| `PATCH` | `/api/v1/me/watch-events/{eventId}` | Correct when or where something was watched |
+| `DELETE` | `/api/v1/me/watch-events/{eventId}` | Delete one history entry |
+| `GET` | `/api/v1/me/history` | Viewing history, filtered by date, type, service or text |
 | `GET` | `/api/v1/me/stats` | Totals and streaks |
+| `GET` | `/api/v1/me/up-next` | The next episode of everything in progress |
+| `POST` | `/api/v1/me/imports/preview` | Parse a CSV export and match it against the catalogue |
 | `GET` | `/api/v1/me/streaming-accounts` | Linked accounts |
+| `POST` | `/api/v1/me/streaming-accounts/servers/{service}` | Connect Plex, Jellyfin or Emby |
+| `GET` | `/api/v1/me/streaming-accounts/trakt` | Trakt connection and last sync |
+| `POST` | `/api/v1/webhooks/{service}` | Where a media server reports a viewing |
 | `GET` | `/api/v1/streaming-services` | Known services |
 
 There is no endpoint for creating a user. An account comes into existence the

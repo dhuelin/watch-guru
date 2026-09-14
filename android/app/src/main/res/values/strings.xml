@@ -42,7 +42,6 @@
          migration and the one the TMDB and IMDb figures beside it use. -->
     <string name="library_your_entry">Your library</string>
     <string name="library_not_tracked">You are not tracking this yet.</string>
-    <string name="action_add_to_library">Add to library</string>
     <string name="action_remove_from_library">Remove from library</string>
     <string name="library_your_rating">Your rating</string>
     <string name="library_not_rated">Not rated</string>
