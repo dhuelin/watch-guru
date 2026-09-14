@@ -192,4 +192,19 @@
     <string name="cd_mark_episode_unwatched">Mark %1$s unwatched</string>
     <string name="cd_poster">Poster for %1$s</string>
     <string name="cd_progress">%1$d of %2$d episodes watched</string>
+    <!-- Names the episode and the series, because Up Next shows several of
+         these at once and "Mark watched" alone does not say which. -->
+    <string name="cd_mark_next_episode">Mark %1$s of %2$s watched</string>
+    <string name="cd_expand_season">Expand season</string>
+    <string name="cd_collapse_season">Collapse season</string>
+    <string name="cd_more_actions">More actions for %1$s</string>
+    <string name="cd_your_rating">Your rating out of ten</string>
+    <string name="cd_delete_entry">Delete this entry for %1$s</string>
+
+    <!-- Title detail figures. Format strings rather than concatenation, so a
+         translation can put the unit where its language puts it. -->
+    <string name="detail_runtime_minutes">%1$d min</string>
+    <string name="detail_rating_tmdb">TMDB %1$s</string>
+    <string name="detail_rating_imdb">IMDb %1$s</string>
+    <string name="library_filter_all">All</string>
 </resources>

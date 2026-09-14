@@ -40,6 +40,14 @@ jobs:
           xcodebuild -version
           xcrun simctl list runtimes
 
+      # Before the ten-minute macOS build, and before XcodeGen: copy that
+      # reaches a screen without an entry in the catalogue is untranslatable,
+      # and nothing in a build ever says so -- SwiftUI falls back to the
+      # literal and the app looks fine in English.
+      - name: Check the string catalogue
+        working-directory: .
+        run: python3 tools/check-ios-strings.py
+
       - name: Install XcodeGen
         run: brew install xcodegen
 

@@ -125,6 +125,9 @@ private fun RatingRow(
         mutableFloatStateOf(entry.rating?.toFloat() ?: 0f)
     }
     val shown = dragging.toInt()
+    // Hoisted for the same reason as in EpisodeList: the semantics lambda
+    // cannot call a composable.
+    val ratingLabel = stringResource(R.string.cd_your_rating)
 
     Column(modifier = modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -154,7 +157,7 @@ private fun RatingRow(
             steps = 9,
             enabled = !busy,
             modifier = Modifier.semantics {
-                contentDescription = "Your rating out of ten"
+                contentDescription = ratingLabel
             },
         )
     }

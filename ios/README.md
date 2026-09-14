@@ -54,7 +54,8 @@ Security key, and a pure function pinned to the main actor.
 
 ```
 WatchGuru/Resources/
-└── Assets.xcassets/   App icon and accent colour
+├── Assets.xcassets/   App icon and accent colour
+└── en.lproj/          Localizable.strings: all user-facing copy
 WatchGuru/Sources/
 ├── Data/         API client wrapper, Keychain token store, failure mapping
 ├── Design/       Status styles, poster placeholder, shared state views
@@ -142,6 +143,27 @@ design and none at all about this code.
 ## Not built yet
 
 - **Stats (#17), notifications (#19), widgets (#20).**
+
+## Copy and localisation
+
+Every user-facing string lives in
+`WatchGuru/Resources/en.lproj/Localizable.strings`, keyed by its English text.
+SwiftUI localises a literal passed to `Text`, `Button`, `Label` and friends by
+treating the literal itself as the key, so extracting the copy changed no call
+site and cannot change what renders -- a key with no entry falls back to the
+literal.
+
+That fallback is also why the catalogue rots quietly: a new string that never
+reaches the file is simply untranslatable, and no build says so. A check runs
+locally and in CI before the build:
+
+```bash
+python3 tools/check-ios-strings.py
+```
+
+It fails when a literal on a screen has no entry, and when the file has the
+same key twice. To add a language, copy `en.lproj/Localizable.strings` to
+`<code>.lproj/` and translate the values, leaving the keys alone.
 
 ## The app icon
 
