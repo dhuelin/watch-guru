@@ -160,7 +160,12 @@ class OfflineRepository(
 
     suspend fun updateLibraryItem(itemId: Long, update: UpdateWatchlistItem): Written =
         write(network.updateLibraryItem(itemId, update)) { id ->
-            PendingMutation.UpdateLibraryItem(id, itemId, update.status?.name)
+            PendingMutation.UpdateLibraryItem(
+                id = id,
+                itemId = itemId,
+                status = update.status?.name,
+                rating = update.rating?.toDouble(),
+            )
         }
 
     suspend fun removeFromLibrary(itemId: Long): Written =
@@ -235,6 +240,7 @@ class OfflineRepository(
         is PendingMutation.UpdateLibraryItem -> network.updateLibraryItem(
             mutation.itemId,
             UpdateWatchlistItem(
+                rating = mutation.rating?.toBigDecimal(),
                 status = mutation.status
                     ?.let { runCatching { UpdateWatchlistItem.Status.valueOf(it) }.getOrNull() },
             ),

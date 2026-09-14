@@ -108,11 +108,19 @@ sealed interface PendingMutation {
         override val target: String get() = "library:$titleType:$providerId"
     }
 
+    /**
+     * @param status the enum name, or null to leave it alone
+     * @param rating 0 to 10, or null to leave it alone. Carried because a
+     *   rating queued offline is otherwise dropped on replay -- the mutation
+     *   would be sent with only its status and quietly forget what the user
+     *   actually typed.
+     */
     @Serializable
     data class UpdateLibraryItem(
         override val id: Long,
         val itemId: Long,
         val status: String? = null,
+        val rating: Double? = null,
     ) : PendingMutation {
         override val target: String get() = "item:$itemId"
     }

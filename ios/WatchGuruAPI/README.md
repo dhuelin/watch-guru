@@ -90,6 +90,7 @@ Class | Method | HTTP request | Description
  - [ImportResultResponse](docs/ImportResultResponse.md)
  - [ImportRowResponse](docs/ImportRowResponse.md)
  - [ImportSelection](docs/ImportSelection.md)
+ - [LibraryEntry](docs/LibraryEntry.md)
  - [LinkedAccountResponse](docs/LinkedAccountResponse.md)
  - [LogEpisodeWatched](docs/LogEpisodeWatched.md)
  - [LogMovieWatched](docs/LogMovieWatched.md)

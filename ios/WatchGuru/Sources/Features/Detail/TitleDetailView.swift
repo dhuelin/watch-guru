@@ -81,6 +81,22 @@ struct TitleDetailView: View {
                     }
                 }
 
+                // Before the tracking actions, because whether this is in the
+                // library at all is the first thing somebody arriving from the
+                // trending shelf needs to know.
+                LibraryEntryView(
+                    title: title,
+                    isMarking: model.isMarking,
+                    add: { Task { await model.addToLibrary(title) } },
+                    setStatus: { itemId, status in
+                        Task { await model.setStatus(itemId: itemId, status: status) }
+                    },
+                    setRating: { itemId, rating in
+                        Task { await model.setRating(itemId: itemId, rating: rating) }
+                    },
+                    remove: { itemId in Task { await model.removeFromLibrary(itemId: itemId) } }
+                )
+
                 // A film is watched or it is not: there is no next episode to
                 // offer, so this is the whole of its tracking, and without it a
                 // film could reach the library but never the history.

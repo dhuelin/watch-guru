@@ -142,6 +142,24 @@ actor OfflineClient {
         }
     }
 
+    /// Changes what the user has recorded about a title they added.
+    ///
+    /// Queued like everything else. The replay carries the rating as well as
+    /// the status, which the case could not do until now -- a rating chosen
+    /// offline used to reach the server as an update that set only the status.
+    func updateLibraryItem(itemId: Int64, _ update: UpdateWatchlistItem) async -> Written {
+        await write {
+            _ = try await client.updateLibraryItem(itemId: itemId, update)
+        } queueing: { id in
+            .updateLibraryItem(
+                id: id,
+                itemId: itemId,
+                status: update.status?.rawValue,
+                rating: update.rating
+            )
+        }
+    }
+
     func removeFromLibrary(itemId: Int64) async -> Written {
         await write {
             try await client.removeFromLibrary(itemId: itemId)
@@ -232,10 +250,13 @@ actor OfflineClient {
                     status: status.flatMap(AddToWatchlist.Status.init(rawValue:)),
                     titleType: type
                 ))
-            case .updateLibraryItem(_, let itemId, let status):
+            case .updateLibraryItem(_, let itemId, let status, let rating):
                 _ = try await client.updateLibraryItem(
                     itemId: itemId,
-                    UpdateWatchlistItem(status: status.flatMap(UpdateWatchlistItem.Status.init(rawValue:)))
+                    UpdateWatchlistItem(
+                        rating: rating,
+                        status: status.flatMap(UpdateWatchlistItem.Status.init(rawValue:))
+                    )
                 )
             case .removeFromLibrary(_, let itemId):
                 try await client.removeFromLibrary(itemId: itemId)

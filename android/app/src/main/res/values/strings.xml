@@ -37,6 +37,17 @@
          nobody made. -->
     <string name="trending_this_week">Trending this week</string>
 
+    <!-- The title screen's account of what the user has recorded. Rating is out
+         of ten, which is the scale the column has held since the first
+         migration and the one the TMDB and IMDb figures beside it use. -->
+    <string name="library_your_entry">Your library</string>
+    <string name="library_not_tracked">You are not tracking this yet.</string>
+    <string name="action_add_to_library">Add to library</string>
+    <string name="action_remove_from_library">Remove from library</string>
+    <string name="library_your_rating">Your rating</string>
+    <string name="library_not_rated">Not rated</string>
+    <string name="library_rating_value">%1$d / 10</string>
+
     <string name="error_offline">Offline — changes will sync when you reconnect.</string>
     <string name="error_provider_down">Couldn\'t reach the catalogue. Your library is still up to date.</string>
     <string name="error_generic">Something went wrong.</string>

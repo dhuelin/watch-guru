@@ -82,4 +82,48 @@ struct PendingMutationTests {
 
         #expect(first.target == second.target)
     }
+
+    @Test("a library update carries the rating as well as the status")
+    func libraryUpdatesCarryTheirRating() throws {
+        // Before the rating travelled with it, a rating chosen offline reached
+        // the server as an update that set only the status -- silently losing
+        // the thing the user had just chosen.
+        let data = try encoded([
+            .updateLibraryItem(id: 1, itemId: 7, status: "COMPLETED", rating: 8)
+        ])
+
+        let decoded = try JSONDecoder().decode([PendingMutation].self, from: data)
+
+        guard case .updateLibraryItem(_, let itemId, let status, let rating) = decoded[0] else {
+            Issue.record("expected a library update, got \(decoded[0])")
+            return
+        }
+        #expect(itemId == 7)
+        #expect(status == "COMPLETED")
+        #expect(rating == 8)
+    }
+
+    @Test("a library update queued before ratings existed still decodes")
+    func olderLibraryUpdatesStillDecode() throws {
+        let current = try encoded([
+            .updateLibraryItem(id: 1, itemId: 7, status: "COMPLETED", rating: 8)
+        ])
+        // Both spellings, because whether a whole Double encodes as 8 or 8.0
+        // is the encoder's business and not what this test is about.
+        let withoutRating = String(decoding: current, as: UTF8.self)
+            .replacingOccurrences(of: "\"rating\":8.0", with: "")
+            .replacingOccurrences(of: "\"rating\":8", with: "")
+            .replacingOccurrences(of: ",,", with: ",")
+            .replacingOccurrences(of: ",}", with: "}")
+
+        let decoded = try JSONDecoder().decode(
+            [PendingMutation].self, from: Data(withoutRating.utf8))
+
+        guard case .updateLibraryItem(_, _, let status, let rating) = decoded[0] else {
+            Issue.record("expected a library update, got \(decoded[0])")
+            return
+        }
+        #expect(status == "COMPLETED")
+        #expect(rating == nil)
+    }
 }

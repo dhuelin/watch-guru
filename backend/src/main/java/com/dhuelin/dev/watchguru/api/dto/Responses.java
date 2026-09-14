@@ -138,7 +138,38 @@ public final class Responses {
              * previous version undecodable, and an undecodable snapshot is
              * deleted -- costing an offline user their library on upgrade.
              */
-            Instant availabilityCheckedAt
+            Instant availabilityCheckedAt,
+
+            /**
+             * The caller's own entry for this title, or null if they have not
+             * added it.
+             *
+             * <p>On the title response rather than fetched separately because
+             * the detail screen needs it to say anything at all about the
+             * user's relationship to what they are looking at -- whether it is
+             * in their library, where they have got to, what they thought of
+             * it. A second request for that would mean the screen renders once
+             * as if nothing were tracked and again a moment later.
+             *
+             * <p>Optional for the same reason as the timestamp above: a
+             * required field added to a response both apps cache offline makes
+             * every snapshot written by a previous version undecodable.
+             */
+            LibraryEntry library
+    ) {
+    }
+
+    /**
+     * What the caller has recorded about a title they added.
+     *
+     * <p>Not the whole {@link WatchlistItemResponse}: that one carries the
+     * title, which would nest a title inside its own response.
+     */
+    public record LibraryEntry(
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long itemId,
+            @Schema(requiredMode = Schema.RequiredMode.REQUIRED) WatchStatus status,
+            BigDecimal rating,
+            String notes
     ) {
     }
 

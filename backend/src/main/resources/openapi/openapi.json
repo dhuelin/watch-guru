@@ -1539,6 +1539,26 @@
         },
         "required" : [ "sourceRef", "titleId" ]
       },
+      "LibraryEntry" : {
+        "type" : "object",
+        "properties" : {
+          "itemId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "notes" : {
+            "type" : "string"
+          },
+          "rating" : {
+            "type" : "number"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "WATCHLIST", "WATCHING", "COMPLETED", "ON_HOLD", "DROPPED" ]
+          }
+        },
+        "required" : [ "itemId", "status" ]
+      },
       "LinkedAccountResponse" : {
         "type" : "object",
         "properties" : {
@@ -2098,6 +2118,9 @@
           "lastAirDate" : {
             "type" : "string",
             "format" : "date"
+          },
+          "library" : {
+            "$ref" : "#/components/schemas/LibraryEntry"
           },
           "numberOfEpisodes" : {
             "type" : "integer",

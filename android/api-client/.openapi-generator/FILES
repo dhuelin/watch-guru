@@ -17,6 +17,7 @@ docs/ImportPreviewResponse.md
 docs/ImportResultResponse.md
 docs/ImportRowResponse.md
 docs/ImportSelection.md
+docs/LibraryEntry.md
 docs/LinkedAccountResponse.md
 docs/LogEpisodeWatched.md
 docs/LogMovieWatched.md
@@ -107,6 +108,7 @@ src/main/kotlin/dev/dhuelin/watchguru/api/models/ImportPreviewResponse.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/ImportResultResponse.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/ImportRowResponse.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/ImportSelection.kt
+src/main/kotlin/dev/dhuelin/watchguru/api/models/LibraryEntry.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/LinkedAccountResponse.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/LogEpisodeWatched.kt
 src/main/kotlin/dev/dhuelin/watchguru/api/models/LogMovieWatched.kt
@@ -166,6 +168,7 @@ src/test/kotlin/dev/dhuelin/watchguru/api/models/ImportPreviewResponseTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/ImportResultResponseTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/ImportRowResponseTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/ImportSelectionTest.kt
+src/test/kotlin/dev/dhuelin/watchguru/api/models/LibraryEntryTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/LinkedAccountResponseTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/LogEpisodeWatchedTest.kt
 src/test/kotlin/dev/dhuelin/watchguru/api/models/LogMovieWatchedTest.kt

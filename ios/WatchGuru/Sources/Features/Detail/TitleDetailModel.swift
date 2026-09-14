@@ -107,6 +107,59 @@ final class TitleDetailModel {
         }
     }
 
+    /// Adds this title to the library.
+    ///
+    /// Reloads afterwards rather than guessing the entry: the server assigns
+    /// the item id everything else on this screen writes to, and inventing one
+    /// locally would give the rating control something to change that does not
+    /// exist.
+    func addToLibrary(_ title: TitleResponse) async {
+        guard !isMarking else { return }
+
+        isMarking = true
+        defer { isMarking = false }
+
+        let request = AddToWatchlist(
+            providerId: title.providerId,
+            titleType: AddToWatchlist.TitleType(rawValue: title.titleType.rawValue) ?? .movie
+        )
+        if case .failed = await offline.addToLibrary(request) { return }
+        await load()
+    }
+
+    func setStatus(itemId: Int64, status: UpdateWatchlistItem.Status) async {
+        await updateEntry(itemId: itemId, UpdateWatchlistItem(status: status))
+    }
+
+    /// Records what the user thought of it, out of ten.
+    ///
+    /// Ten rather than five stars because that is the scale the column has held
+    /// since the first migration, and the one the TMDB and IMDb figures beside
+    /// it are on — three scales on one screen is two too many.
+    func setRating(itemId: Int64, rating: Int) async {
+        await updateEntry(itemId: itemId, UpdateWatchlistItem(rating: Double(rating)))
+    }
+
+    func removeFromLibrary(itemId: Int64) async {
+        guard !isMarking else { return }
+
+        isMarking = true
+        defer { isMarking = false }
+
+        if case .failed = await offline.removeFromLibrary(itemId: itemId) { return }
+        await load()
+    }
+
+    private func updateEntry(itemId: Int64, _ update: UpdateWatchlistItem) async {
+        guard !isMarking else { return }
+
+        isMarking = true
+        defer { isMarking = false }
+
+        if case .failed = await offline.updateLibraryItem(itemId: itemId, update) { return }
+        await load()
+    }
+
     /// Dismisses the confirmation, so it does not outlive the moment.
     func clearFilmLog() {
         filmLog = nil

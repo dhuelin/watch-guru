@@ -4,7 +4,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dev.dhuelin.watchguru.api.models.AddToWatchlist
 import dev.dhuelin.watchguru.api.models.SeasonsResponse
+import dev.dhuelin.watchguru.api.models.UpdateWatchlistItem
 import dev.dhuelin.watchguru.api.models.TitleProgress
 import dev.dhuelin.watchguru.api.models.TitleResponse
 import dev.dhuelin.watchguru.data.ApiResult
@@ -158,6 +160,59 @@ class TitleDetailViewModel @Inject constructor(
                 is OfflineRepository.Written.Queued -> FilmLog.Queued(on)
                 is OfflineRepository.Written.Failed -> FilmLog.Failed(written.failure)
             }
+            _marking.value = false
+        }
+    }
+
+    /**
+     * Adds this title to the library.
+     *
+     * Reloads afterwards rather than guessing the entry: the server assigns the
+     * item id everything else on this screen needs, and inventing one locally
+     * would give the rating control something to write to that does not exist.
+     */
+    fun addToLibrary(title: TitleResponse) {
+        if (_marking.value) return
+        viewModelScope.launch {
+            _marking.value = true
+            val request = AddToWatchlist(
+                providerId = title.providerId,
+                titleType = AddToWatchlist.TitleType.valueOf(title.titleType.value),
+            )
+            if (offline.addToLibrary(request) !is OfflineRepository.Written.Failed) load()
+            _marking.value = false
+        }
+    }
+
+    fun setStatus(itemId: Long, status: UpdateWatchlistItem.Status) {
+        updateEntry(itemId, UpdateWatchlistItem(status = status))
+    }
+
+    /**
+     * Records what the user thought of it, out of ten.
+     *
+     * Ten rather than five stars because that is the scale the column has held
+     * since the first migration, and the one both the TMDB and IMDb figures
+     * beside it are on -- three scales on one screen is two too many.
+     */
+    fun setRating(itemId: Long, rating: Int) {
+        updateEntry(itemId, UpdateWatchlistItem(rating = rating.toBigDecimal()))
+    }
+
+    fun removeFromLibrary(itemId: Long) {
+        if (_marking.value) return
+        viewModelScope.launch {
+            _marking.value = true
+            if (offline.removeFromLibrary(itemId) !is OfflineRepository.Written.Failed) load()
+            _marking.value = false
+        }
+    }
+
+    private fun updateEntry(itemId: Long, update: UpdateWatchlistItem) {
+        if (_marking.value) return
+        viewModelScope.launch {
+            _marking.value = true
+            if (offline.updateLibraryItem(itemId, update) !is OfflineRepository.Written.Failed) load()
             _marking.value = false
         }
     }
