@@ -29,6 +29,7 @@ object Routes {
     /** One route for every media server; the slug says which. */
     const val MEDIA_SERVER = "server/{service}"
     const val TRAKT = "trakt"
+    const val IMPORT = "import"
 
     fun titleDetail(titleId: Long) = "title/$titleId"
 

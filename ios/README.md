@@ -165,6 +165,26 @@ It fails when a literal on a screen has no entry, and when the file has the
 same key twice. To add a language, copy `en.lproj/Localizable.strings` to
 `<code>.lproj/` and translate the values, leaving the keys alone.
 
+A sentence a model produces cannot be a literal in a view, so it asks for its
+key explicitly with `String(localized:)` -- which the check reads too.
+
+## Calls to the generated models
+
+Swift requires named arguments in the order the initialiser declares them, and
+the generator declares model fields **alphabetically**. So an argument list
+that reads naturally is a compile error, one that reads like a filing cabinet
+is correct, and nothing but a Swift toolchain will say which you have written.
+That is a macOS-only answer, which makes CI the first thing to see the mistake.
+
+```bash
+python3 tools/check-generated-call-sites.py
+```
+
+It reads each generated model's `public init(...)` and every call to it in
+`WatchGuru/Sources`, and fails on an argument the initialiser has no parameter
+for, or arguments given out of declaration order. Kotlin needs no equivalent:
+named arguments there may appear in any order.
+
 ## The app icon
 
 The icon is drawn by a script rather than exported from a design tool:

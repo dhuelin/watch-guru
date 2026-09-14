@@ -71,6 +71,13 @@ struct ProfileView: View {
                         NavigationLink("Connect Trakt") {
                             TraktView()
                         }
+                        // Below the connections rather than above them: a live
+                        // connection is the better answer for anyone who has
+                        // one, and a file import is what is left for everybody
+                        // else.
+                        NavigationLink("Import a watch history") {
+                            ImportView()
+                        }
                     }
                     Section {
                         Button("Sign out") { session.signIn.signOut() }

@@ -49,6 +49,13 @@ LITERAL_PATTERNS = [
     r'\bTextField\("([^"\\]+)"',
     r'prompt: "([^"\\]+)"',
     r'description: Text\("([^"\\]+)"\)',
+    # A NavigationLink's title is a LocalizedStringKey like any other, and the
+    # Profile screen is almost entirely made of them -- this pattern's absence
+    # is how "Viewing history" sat outside the catalogue unnoticed.
+    r'\bNavigationLink\("([^"\\]+)"',
+    # The one lookup that is explicit rather than implicit: a sentence a model
+    # produces cannot be a literal in a view, so it asks for its own key.
+    r'\bString\(localized: "([^"\\]+)"\)',
 ]
 
 ENTRY = re.compile(r'^\s*"((?:[^"\\]|\\.)*)"\s*=\s*"((?:[^"\\]|\\.)*)"\s*;\s*$')

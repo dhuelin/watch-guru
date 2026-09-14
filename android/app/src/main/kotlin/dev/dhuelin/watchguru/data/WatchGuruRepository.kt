@@ -1,5 +1,6 @@
 package dev.dhuelin.watchguru.data
 
+import dev.dhuelin.watchguru.api.apis.ImportControllerApi
 import dev.dhuelin.watchguru.api.apis.MeControllerApi
 import dev.dhuelin.watchguru.api.apis.MediaServerControllerApi
 import dev.dhuelin.watchguru.api.apis.StreamingControllerApi
@@ -11,7 +12,11 @@ import dev.dhuelin.watchguru.api.models.AddToWatchlist
 import dev.dhuelin.watchguru.api.models.BulkMarkResponse
 import dev.dhuelin.watchguru.api.models.LogEpisodeWatched
 import dev.dhuelin.watchguru.api.models.LogMovieWatched
+import dev.dhuelin.watchguru.api.models.CommitImport
 import dev.dhuelin.watchguru.api.models.ConnectMediaServer
+import dev.dhuelin.watchguru.api.models.ImportPreviewResponse
+import dev.dhuelin.watchguru.api.models.ImportResultResponse
+import dev.dhuelin.watchguru.api.models.PreviewImport
 import dev.dhuelin.watchguru.api.models.MarkWatchedUpTo
 import dev.dhuelin.watchguru.api.models.MediaServerConnectionResponse
 import dev.dhuelin.watchguru.api.models.MediaServerStatusResponse
@@ -57,6 +62,7 @@ class WatchGuruRepository(
     private val servers: MediaServerControllerApi,
     private val streaming: StreamingControllerApi,
     private val trakt: TraktControllerApi,
+    private val imports: ImportControllerApi,
     private val io: CoroutineDispatcher,
 ) {
 
@@ -257,6 +263,22 @@ class WatchGuruRepository(
     suspend fun syncTrakt(): ApiResult<SyncResultResponse> = call { trakt.syncTrakt() }
 
     suspend fun disconnectTrakt(): ApiResult<Unit> = call { trakt.disconnectTrakt() }
+
+    /**
+     * Says what a file would do, without doing any of it.
+     *
+     * The whole file goes up as text rather than as an upload, because it is a
+     * CSV of a few hundred kilobytes and a multipart body would buy nothing
+     * but a second content type to get wrong. The server caps the length; the
+     * caller checks it first so an oversized file is refused on the device
+     * rather than after a slow upload.
+     */
+    suspend fun previewImport(content: String): ApiResult<ImportPreviewResponse> =
+        call { imports.previewImport(PreviewImport(content = content)) }
+
+    /** Writes the rows the user accepted, and nothing else. */
+    suspend fun commitImport(request: CommitImport): ApiResult<ImportResultResponse> =
+        call { imports.commitImport(request) }
 
     /**
      * Runs one call on the IO dispatcher.

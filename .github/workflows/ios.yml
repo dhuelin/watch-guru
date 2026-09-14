@@ -48,6 +48,14 @@ jobs:
         working-directory: .
         run: python3 tools/check-ios-strings.py
 
+      # Same reason, one round earlier: Swift wants named arguments in the
+      # order the initialiser declares them, the generator declares model
+      # fields alphabetically, and a call that reads naturally is therefore a
+      # compile error nobody can see without a Swift toolchain.
+      - name: Check calls to the generated models
+        working-directory: .
+        run: python3 tools/check-generated-call-sites.py
+
       - name: Install XcodeGen
         run: brew install xcodegen
 

@@ -101,6 +101,32 @@ than offered with candidates: picking between them would mean importing all of
 them into the catalogue first, and an import that adds four films to answer a
 question about one is not a preview.
 
+## Where it is in the app
+
+**Profile → Import a watch history**, on both platforms, below the
+media-server and Trakt connections. That ordering is deliberate: a live
+connection is the better answer for anybody who has one, and a file is what is
+left for everybody else.
+
+The screen is the two steps, in order. Choose a file; it is read and shown back
+as a list; what is still selected when the button is pressed is what gets
+written. Rows are grouped by what they need from the reader rather than left in
+file order:
+
+| Group | What it needs | Starts |
+|---|---|---|
+| **Ready to import** | A glance | Selected |
+| **Needs a choice** | One of the candidates picked | Unselected, until picked |
+| **Not found** | Nothing — it cannot be imported | Not selectable |
+
+Matched rows start selected because agreeing with four hundred correct rows one
+at a time is not a review, it is a chore. Ambiguous ones start unselected
+because the app choosing on somebody's behalf, and them not noticing, is
+exactly how a library ends up with the wrong *Fargo* in it.
+
+The parser's own complaints — unreadable rows, and the caveats above about what
+each source is less than it looks — are shown rather than swallowed.
+
 ## Running the same file twice
 
 Nothing is duplicated. Every row carries a reference derived from its contents

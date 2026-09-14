@@ -85,6 +85,51 @@
 "Start a series and it will show up here." = "Start a series and it will show up here.";
 "Up Next" = "Up Next";
 
+/* MARK: Import */
+"Bring in what you have already watched. Nothing is added to your library until you have seen what the file contains and said yes." = "Bring in what you have already watched. Nothing is added to your library until you have seen what the file contains and said yes.";
+"Choose a file" = "Choose a file";
+"Files this reads" = "Files this reads";
+"IMDb (Lists or Ratings → Export), Letterboxd (Settings → Import & Export), Netflix (Viewing activity → Download all), and Watch Guru's own CSV. The format is worked out from the file, so there is nothing to pick." = "IMDb (Lists or Ratings → Export), Letterboxd (Settings → Import & Export), Netflix (Viewing activity → Download all), and Watch Guru's own CSV. The format is worked out from the file, so there is nothing to pick.";
+"Import" = "Import";
+"Import a watch history" = "Import a watch history";
+"Import another file" = "Import another file";
+"Imported" = "Imported";
+"Importing…" = "Importing…";
+"More than one title matches. Pick the right one, or leave it out." = "More than one title matches. Pick the right one, or leave it out.";
+"Needs a choice" = "Needs a choice";
+"Not found" = "Not found";
+"Nothing in this file could be read as a watch history." = "Nothing in this file could be read as a watch history.";
+"Nothing selected" = "Nothing selected";
+"Reading the file…" = "Reading the file…";
+"Ready to import" = "Ready to import";
+"Rows that could not be read" = "Rows that could not be read";
+"These could not be matched to a title, so they cannot be imported. Nothing is lost — you can add them by hand later." = "These could not be matched to a title, so they cannot be imported. Nothing is lost — you can add them by hand later.";
+"Worth knowing about this file" = "Worth knowing about this file";
+
+/* Which export the file turned out to be. One key each rather than a name
+   substituted into a sentence: "Read as %@" reads badly in languages that
+   decline the noun, and there are only five of them. */
+"Read as a Watch Guru export" = "Read as a Watch Guru export";
+"Read as an IMDb export" = "Read as an IMDb export";
+"Read as a Letterboxd export" = "Read as a Letterboxd export";
+"Read as a Netflix export" = "Read as a Netflix export";
+"Read as an unrecognised file" = "Read as an unrecognised file";
+
+/* Interpolated, so the key is the format SwiftUI derives from the literal
+   rather than the literal itself. Listed by hand because the check cannot
+   compute these safely -- an interpolation's type decides its specifier. */
+"Import %lld" = "Import %lld";
+"%lld already imported. These are skipped." = "%lld already imported. These are skipped.";
+"%lld added, %lld already there." = "%lld added, %lld already there.";
+"%lld could not be written." = "%lld could not be written.";
+
+/* Sentences a model produces, so they are looked up explicitly rather than
+   written as a literal in a view. */
+"That file could not be read." = "That file could not be read.";
+"That file is too large to import." = "That file is too large to import.";
+"The file could not be checked. Try again." = "The file could not be checked. Try again.";
+"That import did not go through. Nothing was added." = "That import did not go through. Nothing was added.";
+
 /* MARK: Library */
 "All" = "All";
 "Filter" = "Filter";
@@ -97,6 +142,9 @@
 
 /* MARK: Profile */
 "Choose your region" = "Choose your region";
+"Connect Emby" = "Connect Emby";
+"Connect Jellyfin" = "Connect Jellyfin";
+"Connect Plex" = "Connect Plex";
 "Delete account" = "Delete account";
 "Deleting your account removes your library, progress and history permanently." = "Deleting your account removes your library, progress and history permanently.";
 "Preferences" = "Preferences";
@@ -104,6 +152,7 @@
 "Sign out" = "Sign out";
 "Streaming offers are shown for this country." = "Streaming offers are shown for this country.";
 "This removes your library, progress and history permanently. It cannot be undone." = "This removes your library, progress and history permanently. It cannot be undone.";
+"Viewing history" = "Viewing history";
 "Your region is unchanged. Please try again." = "Your region is unchanged. Please try again.";
 
 /* MARK: Search */

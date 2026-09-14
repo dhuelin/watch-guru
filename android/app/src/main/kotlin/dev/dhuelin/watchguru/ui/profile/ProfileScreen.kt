@@ -56,6 +56,7 @@ fun ProfileScreen(
     onOpenStats: () -> Unit,
     onOpenServer: (String) -> Unit,
     onOpenTrakt: () -> Unit,
+    onOpenImport: () -> Unit,
     signIn: SignInViewModel,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
@@ -164,6 +165,12 @@ fun ProfileScreen(
                 }
                 TextButton(onClick = onOpenTrakt) {
                     Text(stringResource(R.string.action_connect_trakt))
+                }
+                // Below the connections rather than above them: a live
+                // connection is the better answer for anyone who has one, and
+                // a file import is what is left for everybody else.
+                TextButton(onClick = onOpenImport) {
+                    Text(stringResource(R.string.action_import_history))
                 }
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
