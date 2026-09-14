@@ -181,10 +181,13 @@ actor WatchGuruClient {
     ) async throws(APIFailure) -> WatchEventResponse {
         try await run {
             try await WatchHistoryControllerAPI.logEpisodeWatched(
+                // Alphabetical, because the generator declares them that way
+                // and Swift requires named arguments in declaration order --
+                // it will not reorder them for you the way Kotlin does.
                 logEpisodeWatched: LogEpisodeWatched(
+                    clientRef: clientRef,
                     episodeId: episodeId,
-                    watchedAt: watchedAt,
-                    clientRef: clientRef
+                    watchedAt: watchedAt
                 ),
                 apiConfiguration: $0
             )
@@ -209,9 +212,9 @@ actor WatchGuruClient {
         try await run {
             try await WatchHistoryControllerAPI.logMovieWatched(
                 logMovieWatched: LogMovieWatched(
+                    clientRef: clientRef,
                     titleId: titleId,
-                    watchedAt: watchedAt,
-                    clientRef: clientRef
+                    watchedAt: watchedAt
                 ),
                 apiConfiguration: $0
             )
@@ -298,8 +301,8 @@ actor WatchGuruClient {
             try await WatchHistoryControllerAPI.getHistory(
                 page: page,
                 size: size,
-                from: from.map(Self.asDayInUTC),
-                to: to.map(Self.asDayInUTC),
+                from: from.map { Self.asDayInUTC($0) },
+                to: to.map { Self.asDayInUTC($0) },
                 type: type,
                 serviceId: serviceId,
                 query: (trimmed?.isEmpty ?? true) ? nil : trimmed,
