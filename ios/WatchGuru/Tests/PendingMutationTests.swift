@@ -15,6 +15,27 @@ struct PendingMutationTests {
         try JSONEncoder().encode(mutations)
     }
 
+    /// Re-encodes without one associated value, whatever it was called.
+    ///
+    /// Editing the JSON as text does not survive contact with the encoder:
+    /// it writes the fields in no order this test may assume, so cutting a
+    /// key out of the middle of the string leaves a stray comma and the
+    /// result is not JSON at all. Removing it from the parsed object asks
+    /// nothing of the spelling or the ordering.
+    private func removing(_ field: String, from data: Data) throws -> Data {
+        var entries = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] ?? []
+        for index in entries.indices {
+            // One key per entry, named for the case; taken as found rather
+            // than hardcoded, since the name is the compiler's business.
+            for (caseName, payload) in entries[index] {
+                guard var fields = payload as? [String: Any] else { continue }
+                fields.removeValue(forKey: field)
+                entries[index][caseName] = fields
+            }
+        }
+        return try JSONSerialization.data(withJSONObject: entries)
+    }
+
     @Test("a mark queued before references existed still decodes")
     func olderEntriesStillDecode() throws {
         // The old shape is derived by removing the field rather than written
@@ -23,13 +44,9 @@ struct PendingMutationTests {
         let current = try encoded([
             .markEpisodeWatched(id: 1, episodeId: 4, titleId: 9, watchedAt: .now, clientRef: "dropped")
         ])
-        let withoutRef = String(decoding: current, as: UTF8.self)
-            .replacingOccurrences(of: "\"clientRef\":\"dropped\"", with: "")
-            .replacingOccurrences(of: ",,", with: ",")
-            .replacingOccurrences(of: ",}", with: "}")
 
         let decoded = try JSONDecoder().decode(
-            [PendingMutation].self, from: Data(withoutRef.utf8))
+            [PendingMutation].self, from: removing("clientRef", from: current))
 
         #expect(decoded.count == 1)
         guard case .markEpisodeWatched(_, let episodeId, _, _, let clientRef) = decoded[0] else {
@@ -108,16 +125,9 @@ struct PendingMutationTests {
         let current = try encoded([
             .updateLibraryItem(id: 1, itemId: 7, status: "COMPLETED", rating: 8)
         ])
-        // Both spellings, because whether a whole Double encodes as 8 or 8.0
-        // is the encoder's business and not what this test is about.
-        let withoutRating = String(decoding: current, as: UTF8.self)
-            .replacingOccurrences(of: "\"rating\":8.0", with: "")
-            .replacingOccurrences(of: "\"rating\":8", with: "")
-            .replacingOccurrences(of: ",,", with: ",")
-            .replacingOccurrences(of: ",}", with: "}")
 
         let decoded = try JSONDecoder().decode(
-            [PendingMutation].self, from: Data(withoutRating.utf8))
+            [PendingMutation].self, from: removing("rating", from: current))
 
         guard case .updateLibraryItem(_, _, let status, let rating) = decoded[0] else {
             Issue.record("expected a library update, got \(decoded[0])")
