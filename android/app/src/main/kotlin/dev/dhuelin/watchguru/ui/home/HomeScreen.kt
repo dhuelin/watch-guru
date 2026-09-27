@@ -124,27 +124,29 @@ private fun UpNextCard(
                 )
 
                 if (entry.airedEpisodes > 0) {
+                    val progressLabel = stringResource(
+                        R.string.cd_progress, entry.watchedEpisodes, entry.airedEpisodes,
+                    )
                     LinearProgressIndicator(
                         progress = { entry.watchedEpisodes.toFloat() / entry.airedEpisodes },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 8.dp)
-                            .semantics {
-                                contentDescription = "${entry.watchedEpisodes} of " +
-                                        "${entry.airedEpisodes} episodes watched"
-                            },
+                            .semantics { contentDescription = progressLabel },
                     )
                 }
 
+                val markLabel = stringResource(
+                    R.string.cd_mark_next_episode,
+                    entry.nextEpisodeCode,
+                    entry.primaryTitle,
+                )
                 FilledTonalButton(
                     onClick = onMarkWatched,
                     enabled = !busy,
                     modifier = Modifier
                         .padding(top = 8.dp)
-                        .semantics {
-                            contentDescription = "Mark ${entry.nextEpisodeCode} of " +
-                                    "${entry.primaryTitle} watched"
-                        },
+                        .semantics { contentDescription = markLabel },
                 ) {
                     Icon(Icons.Filled.PlayArrow, contentDescription = null)
                     Text(

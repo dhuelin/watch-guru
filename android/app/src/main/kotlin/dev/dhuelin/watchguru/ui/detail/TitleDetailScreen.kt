@@ -62,7 +62,7 @@ fun TitleDetailScreen(
                 title = { Text((title as? UiState.Content)?.value?.primaryTitle.orEmpty()) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
             )
@@ -147,17 +147,26 @@ private fun TitleDetailContent(
                     Text("${it.year}", style = MaterialTheme.typography.bodyMedium)
                 }
                 title.runtimeMinutes?.let {
-                    Text("$it min", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = stringResource(R.string.detail_runtime_minutes, it),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
                 }
 
                 // Two rating sources, always labelled so they cannot be
                 // confused, and each omitted entirely when absent rather than
                 // rendered as 0.0.
                 title.providerRating?.let {
-                    Text("TMDB ${it.toPlainString()}", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = stringResource(R.string.detail_rating_tmdb, it.toPlainString()),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
                 }
                 title.imdbRating?.let {
-                    Text("IMDb ${it.toPlainString()}", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = stringResource(R.string.detail_rating_imdb, it.toPlainString()),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
                 }
             }
         }
@@ -287,15 +296,18 @@ private fun EpisodeProgress(
                 modifier = Modifier.padding(top = 12.dp),
             )
 
+            // The label names the episode, so TalkBack announces which one is
+            // about to be marked rather than just "button". Hoisted because
+            // the semantics lambda cannot call a composable.
+            val markLabel = stringResource(R.string.cd_mark_episode_watched, nextCode)
+
             Button(
                 onClick = onMarkNext,
                 enabled = !marking,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp)
-                    // The label names the episode, so TalkBack announces which
-                    // one is about to be marked rather than just "button".
-                    .semantics { contentDescription = "Mark $nextCode watched" },
+                    .semantics { contentDescription = markLabel },
             ) {
                 Icon(Icons.Filled.PlayArrow, contentDescription = null)
                 Text(

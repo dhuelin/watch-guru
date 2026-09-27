@@ -12,7 +12,7 @@ to be playing the episode.
 | Component | State |
 |---|---|
 | Backend (Spring Boot) | Catalog and trending, watchlist and ratings, episode progress, history with filters and editing, stats and streaks, streaming availability, CSV import, new-episode notifications, Plex/Jellyfin/Emby/Trakt sync, OIDC authentication, published API contract, IMDb ratings enrichment. |
-| iOS app (SwiftUI) | Every screen built: sign-in, trending and search, library, title detail with progress and rating, history, stats, media-server and Trakt connections. Works offline with a replayed mutation queue. |
+| iOS app (SwiftUI) | Every screen built: sign-in, trending and search, library, title detail with progress and rating, history, stats, importing a history from a file, media-server and Trakt connections. Works offline with a replayed mutation queue. |
 | Android app (Jetpack Compose) | The same, screen for screen. |
 
 **Neither app has been run by a human.** Both compile in CI on every push and

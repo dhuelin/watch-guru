@@ -416,6 +416,28 @@ actor WatchGuruClient {
         try await runVoid { try await TraktControllerAPI.disconnectTrakt(apiConfiguration: $0) }
     }
 
+    // MARK: - Import
+
+    /// Says what a file would do, without doing any of it.
+    ///
+    /// The whole file travels as text rather than as an upload: it is a CSV of
+    /// a few hundred kilobytes, and a multipart body would buy nothing but a
+    /// second content type to get wrong.
+    func previewImport(content: String) async throws(APIFailure) -> ImportPreviewResponse {
+        try await run {
+            try await ImportControllerAPI.previewImport(
+                previewImport: PreviewImport(content: content), apiConfiguration: $0)
+        }
+    }
+
+    /// Writes the rows the user accepted, and nothing else.
+    func commitImport(rows: [ImportSelection]) async throws(APIFailure) -> ImportResultResponse {
+        try await run {
+            try await ImportControllerAPI.commitImport(
+                commitImport: CommitImport(rows: rows), apiConfiguration: $0)
+        }
+    }
+
     // MARK: - Failure mapping
 
     /// Runs one call, renewing the session once if the API says the access

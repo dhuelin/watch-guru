@@ -27,8 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -64,7 +63,7 @@ fun StatsScreen(
                 title = { Text(stringResource(R.string.title_stats)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_back))
                     }
                 },
             )
@@ -269,7 +268,13 @@ private fun Breakdown(heading: String, buckets: List<Bucket>) {
                     .padding(top = 4.dp)
                     // The bar is a picture of the figure beside it, so it says
                     // nothing extra to a screen reader.
-                    .semantics { contentDescription = "" },
+                    //
+                    // clearAndSetSemantics rather than an empty description:
+                    // an empty one leaves the node in the tree, and the
+                    // progress indicator's own range info with it, so the
+                    // reader still stops on a decorative bar and reads a
+                    // percentage nobody needs. This drops the node entirely.
+                    .clearAndSetSemantics { },
             )
         }
     }

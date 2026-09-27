@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import dev.dhuelin.watchguru.ui.detail.TitleDetailScreen
 import dev.dhuelin.watchguru.ui.history.HistoryScreen
+import dev.dhuelin.watchguru.ui.imports.ImportScreen
 import dev.dhuelin.watchguru.ui.stats.StatsScreen
 import dev.dhuelin.watchguru.ui.home.HomeScreen
 import dev.dhuelin.watchguru.ui.library.LibraryScreen
@@ -44,6 +45,7 @@ fun WatchGuruNavHost(
                 onOpenStats = { navController.navigate(Routes.STATS) },
                 onOpenServer = { navController.navigate(Routes.mediaServer(it)) },
                 onOpenTrakt = { navController.navigate(Routes.TRAKT) },
+                onOpenImport = { navController.navigate(Routes.IMPORT) },
                 signIn = signIn,
             )
         }
@@ -62,6 +64,9 @@ fun WatchGuruNavHost(
         }
         composable(Routes.TRAKT) {
             TraktScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Routes.IMPORT) {
+            ImportScreen(onBack = { navController.popBackStack() })
         }
         composable(
             route = Routes.TITLE_DETAIL,

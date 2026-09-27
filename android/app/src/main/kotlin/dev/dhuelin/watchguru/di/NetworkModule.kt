@@ -8,6 +8,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dev.dhuelin.watchguru.BuildConfig
 import dev.dhuelin.watchguru.api.apis.AuthenticationApi
+import dev.dhuelin.watchguru.api.apis.ImportControllerApi
 import dev.dhuelin.watchguru.api.apis.MeControllerApi
 import dev.dhuelin.watchguru.api.apis.MediaServerControllerApi
 import dev.dhuelin.watchguru.api.apis.StreamingControllerApi
@@ -158,6 +159,7 @@ object NetworkModule {
     @Provides @Singleton
     fun streamingApi(retrofit: Retrofit): StreamingControllerApi = retrofit.create()
     @Provides @Singleton fun traktApi(retrofit: Retrofit): TraktControllerApi = retrofit.create()
+    @Provides @Singleton fun importApi(retrofit: Retrofit): ImportControllerApi = retrofit.create()
 
     @Provides
     @Singleton
@@ -169,8 +171,10 @@ object NetworkModule {
         servers: MediaServerControllerApi,
         streaming: StreamingControllerApi,
         trakt: TraktControllerApi,
-    ): WatchGuruRepository =
-        WatchGuruRepository(titles, watchlist, history, me, servers, streaming, trakt, ioDispatcher())
+        imports: ImportControllerApi,
+    ): WatchGuruRepository = WatchGuruRepository(
+        titles, watchlist, history, me, servers, streaming, trakt, imports, ioDispatcher(),
+    )
 
     private fun ioDispatcher(): CoroutineDispatcher = Dispatchers.IO
 }

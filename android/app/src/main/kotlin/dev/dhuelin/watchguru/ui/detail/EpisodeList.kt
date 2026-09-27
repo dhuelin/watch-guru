@@ -78,7 +78,9 @@ fun SeasonSection(
             }
             Icon(
                 imageVector = if (expanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-                contentDescription = if (expanded) "Collapse season" else "Expand season",
+                contentDescription = stringResource(
+                    if (expanded) R.string.cd_collapse_season else R.string.cd_expand_season,
+                ),
             )
         }
 
@@ -118,6 +120,11 @@ private fun EpisodeRow(
             .padding(start = 8.dp, top = 4.dp, bottom = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // Hoisted: stringResource is composable and the semantics lambda is
+        // not, so the label has to be resolved before the modifier is built.
+        val watchLabel = stringResource(R.string.cd_mark_episode_watched, episode.code)
+        val unwatchLabel = stringResource(R.string.cd_mark_episode_unwatched, episode.code)
+
         IconButton(
             onClick = onToggle,
             // An unaired episode cannot be watched, so the control is disabled
@@ -129,9 +136,9 @@ private fun EpisodeRow(
                 .size(48.dp)
                 .semantics {
                     contentDescription = if (episode.watched) {
-                        "Mark ${episode.code} unwatched"
+                        unwatchLabel
                     } else {
-                        "Mark ${episode.code} watched"
+                        watchLabel
                     }
                 },
         ) {
@@ -178,7 +185,7 @@ private fun EpisodeRow(
                 IconButton(onClick = { menuOpen = true }) {
                     Icon(
                         imageVector = Icons.Outlined.ExpandMore,
-                        contentDescription = "More actions for ${episode.code}",
+                        contentDescription = stringResource(R.string.cd_more_actions, episode.code),
                     )
                 }
                 DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {

@@ -9,6 +9,9 @@ it that way, and both are cheap to catch here:
   legal-looking and which aapt rejects outright.
 - Two resources with the same name in one file. The XML is perfectly valid;
   the merger fails with "Found item String/x more than one time".
+- A reference to a string resource that does not exist. That one is a genuine
+  compile error rather than a merge failure, but it costs the same CI round,
+  and it is the mistake you make while moving copy out of the code.
 
     python3 tools/check-android-resources.py
 
@@ -17,12 +20,15 @@ Exits non-zero and names the file and resource on the first problem found.
 
 from __future__ import annotations
 
+import re
 import sys
 import xml.dom.minidom
 from collections import defaultdict
 from pathlib import Path
 
-RES = Path(__file__).resolve().parent.parent / "android/app/src/main/res"
+ROOT = Path(__file__).resolve().parent.parent
+RES = ROOT / "android/app/src/main/res"
+KOTLIN = ROOT / "android/app/src/main/kotlin"
 
 
 def problems_in(path: Path) -> list[str]:
@@ -52,6 +58,37 @@ def problems_in(path: Path) -> list[str]:
     ]
 
 
+def declared_strings() -> set[str]:
+    """Every string name the app's own resources define, in any locale."""
+    names: set[str] = set()
+    for path in RES.rglob("*.xml"):
+        try:
+            document = xml.dom.minidom.parse(str(path))
+        except Exception:  # noqa: BLE001 - reported separately by problems_in
+            continue
+        root = document.documentElement
+        if root is None or root.tagName != "resources":
+            continue
+        for node in root.childNodes:
+            if node.nodeType == node.ELEMENT_NODE and node.tagName in ("string", "plurals"):
+                name = node.getAttribute("name")
+                if name:
+                    names.add(name)
+    return names
+
+
+def missing_references() -> list[str]:
+    """R.string.x used in Kotlin with no such resource."""
+    declared = declared_strings()
+    problems = []
+    for path in sorted(KOTLIN.rglob("*.kt")):
+        for number, line in enumerate(path.read_text().splitlines(), start=1):
+            for name in re.findall(r"\bR\.string\.(\w+)", line):
+                if name not in declared:
+                    problems.append(f"{path}:{number}: R.string.{name} is not declared")
+    return problems
+
+
 def main() -> int:
     files = sorted(RES.rglob("*.xml"))
     if not files:
@@ -59,12 +96,14 @@ def main() -> int:
         return 1
 
     found = [problem for path in files for problem in problems_in(path)]
+    found += missing_references()
     for problem in found:
         print(problem, file=sys.stderr)
 
     if found:
         return 1
-    print(f"{len(files)} resource files are well formed with no duplicate names")
+    print(f"{len(files)} resource files are well formed with no duplicate names, "
+          f"and every R.string reference resolves")
     return 0
 
 
