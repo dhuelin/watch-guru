@@ -250,4 +250,16 @@
     <string name="error_import_too_large">That file is too large to import.</string>
     <string name="error_import_preview">The file could not be checked. Try again.</string>
     <string name="error_import_commit">That import did not go through. Nothing was added.</string>
+
+    <!-- The home-screen widget. Short on purpose: a widget has room for a line,
+         and a sentence that wraps three times is worse than no sentence. -->
+    <string name="widget_label">Watch Guru</string>
+    <string name="widget_description">What to watch next, markable without opening the app.</string>
+    <string name="widget_up_next">Up next</string>
+    <string name="widget_mark_watched">Watched</string>
+    <string name="widget_signed_out">Sign in to see what is next.</string>
+    <string name="widget_nothing_next">Nothing waiting. Tap to find something.</string>
+    <string name="widget_offline">No connection. Showing nothing rather than something wrong.</string>
+    <string name="widget_unavailable">Could not load this just now.</string>
+    <string name="widget_episode_named">%1$s · %2$s</string>
 </resources>

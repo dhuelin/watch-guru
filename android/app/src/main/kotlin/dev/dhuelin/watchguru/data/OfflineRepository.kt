@@ -36,6 +36,16 @@ class OfflineRepository(
     private val cache: SnapshotCache,
     private val queue: MutationQueue,
     private val clock: () -> Instant = Instant::now,
+    /**
+     * Called after any write, sent or queued.
+     *
+     * The home-screen widget draws the same Up Next this repository serves, and
+     * a widget still showing an episode the user marked half an hour ago is the
+     * complaint that gets a widget removed. A callback rather than a dependency
+     * on Glance: this class stays free of Android, which is what keeps it under
+     * test on a plain JVM.
+     */
+    private val onWrite: () -> Unit = {},
 ) {
 
     private val sync = SyncEngine(queue) { mutation -> replay(mutation) }
@@ -200,13 +210,18 @@ class OfflineRepository(
 
     private fun write(result: ApiResult<*>, build: (Long) -> PendingMutation): Written =
         when (result) {
-            is ApiResult.Success -> Written.Sent
+            is ApiResult.Success -> {
+                onWrite()
+                Written.Sent
+            }
             is ApiResult.Failure.Offline -> {
                 queue.enqueue(build)
+                onWrite()
                 Written.Queued
             }
             // Anything the server actually answered is a real failure. Queueing
-            // a rejected change would replay it later and reject it again.
+            // a rejected change would replay it later and reject it again, and
+            // nothing local changed, so nothing needs redrawing.
             is ApiResult.Failure -> Written.Failed(result)
         }
 

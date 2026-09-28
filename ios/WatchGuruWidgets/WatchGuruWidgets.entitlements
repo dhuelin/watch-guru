@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  The same App Group as the app, which is the only way this process can read
+	  the feed the app writes. A mismatch between the two files is not a build
+	  error: the container lookup returns nil and the widget is simply empty.
+	-->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.dev.dhuelin.watchguru</string>
+	</array>
+	<!--
+	  And the same Keychain group, so the widget can read the session the app
+	  saved. No access group is passed in code: an item with none goes to the
+	  first group listed here, and both targets list the same one.
+	-->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)dev.dhuelin.watchguru</string>
+	</array>
+</dict>
+</plist>

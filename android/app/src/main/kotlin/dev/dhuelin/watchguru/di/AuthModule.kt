@@ -1,6 +1,7 @@
 package dev.dhuelin.watchguru.di
 
 import android.content.Context
+import androidx.glance.appwidget.updateAll
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,6 +18,11 @@ import dev.dhuelin.watchguru.data.offline.AndroidFileStore
 import dev.dhuelin.watchguru.data.offline.FileStore
 import dev.dhuelin.watchguru.data.offline.MutationQueue
 import dev.dhuelin.watchguru.data.offline.SnapshotCache
+import dev.dhuelin.watchguru.widget.UpNextWidget
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import javax.inject.Singleton
 
@@ -73,5 +79,22 @@ object AuthModule {
         network: WatchGuruRepository,
         cache: SnapshotCache,
         queue: MutationQueue,
-    ): OfflineRepository = OfflineRepository(network, cache, queue)
+        @ApplicationContext context: Context,
+    ): OfflineRepository = OfflineRepository(network, cache, queue) {
+        // Fire and forget, on a scope that outlives whichever screen made the
+        // write: the user may well be leaving the app at that moment, and a
+        // redraw cancelled by their own navigation is the widget going stale
+        // for no reason. Failures are swallowed -- the launcher may have no
+        // widget placed at all, and that is not an error.
+        widgetScope.launch { runCatching { UpNextWidget().updateAll(context) } }
+    }
+
+    /**
+     * Where a widget redraw runs.
+     *
+     * Deliberately not a `@Provides`: nothing else should get hold of a scope
+     * with no lifecycle. It exists because updating a widget is suspending and
+     * the thing that triggers it -- a write completing -- is not.
+     */
+    private val widgetScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 }

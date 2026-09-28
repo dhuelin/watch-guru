@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The launcher's description of the widget.
+
+  updatePeriodMillis is 0 on purpose. The framework's own period cannot be
+  shorter than thirty minutes, and it wakes the device to honour it; this widget
+  does not need it, because every change that matters already refreshes it: a
+  mark from the widget, and any write from inside the app. Leaving a period set
+  would buy a battery cost and nothing else.
+
+  targetCellWidth/Height are the Android 12+ way of asking for a size and are
+  what the launcher actually uses; minWidth/minHeight remain for older ones.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_description"
+    android:minWidth="140dp"
+    android:minHeight="100dp"
+    android:minResizeWidth="140dp"
+    android:minResizeHeight="100dp"
+    android:targetCellWidth="3"
+    android:targetCellHeight="2"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen"
+    android:initialLayout="@layout/glance_default_loading_layout" />

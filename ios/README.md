@@ -168,6 +168,38 @@ same key twice. To add a language, copy `en.lproj/Localizable.strings` to
 A sentence a model produces cannot be a literal in a view, so it asks for its
 key explicitly with `String(localized:)` -- which the check reads too.
 
+## The home-screen widget
+
+`WatchGuruWidgets` is a WidgetKit extension: a **separate process**, which is the
+fact every decision about it follows from.
+
+It cannot see the app's memory, its container or its Keychain items, so three
+things are shared deliberately and nothing else is:
+
+| Shared | How | Why |
+|---|---|---|
+| The feed it draws | App Group `group.dev.dhuelin.watchguru` | The app writes it on every Up Next fetch |
+| The session | Keychain group `$(AppIdentifierPrefix)dev.dhuelin.watchguru` | So one POST can be authenticated |
+| The pending queue | The same App Group | So a mark the widget could not send is not lost |
+
+Both entitlements files must agree. A mismatch is **not a build error**: the
+container lookup returns nil, the Keychain query finds nothing, and the widget is
+simply empty — which reads as a WidgetKit problem and is not one.
+
+The extension deliberately does **not** depend on `WatchGuruAPI`. A widget has a
+hard memory budget and is killed rather than warned; linking the generated client
+to read six fields is how widgets become blank rectangles. It compiles the few app
+files it genuinely needs, listed one by one in `project.yml` so that list stays a
+decision rather than an accident.
+
+### Its copy is a second catalogue
+
+`WatchGuruWidgets/Resources/en.lproj/Localizable.strings`, not the app's. A
+literal is looked up in the bundle it was compiled into, and an extension is its
+own bundle — pointing it at the app's catalogue is not possible.
+`tools/check-ios-strings.py` checks both, and reports which bundle a missing key
+belongs to.
+
 ## Calls to the generated models
 
 Swift requires named arguments in the order the initialiser declares them, and

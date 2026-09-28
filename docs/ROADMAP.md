@@ -159,7 +159,7 @@ library rots.
 | [#18](https://github.com/dhuelin/watch-guru/issues/18) | Where to watch, and deep links | Turns a ledger into a guide. The backend data already exists and is unused. |
 | [#19](https://github.com/dhuelin/watch-guru/issues/19) | New-episode notifications | The strongest reason to reopen the app |
 | [#21](https://github.com/dhuelin/watch-guru/issues/21) | Import from Trakt, CSV, Netflix | Nobody starts from zero; an empty library is why tracking apps get deleted on day one |
-| [#20](https://github.com/dhuelin/watch-guru/issues/20) | Home screen widgets | Next episode, markable, without opening the app |
+| [#20](https://github.com/dhuelin/watch-guru/issues/20) | Home screen widgets | Next episode, markable, without opening the app. Done on both platforms; the poster is not there yet, see below |
 | [#17](https://github.com/dhuelin/watch-guru/issues/17) | Stats and streaks | Already computed server-side, never rendered |
 | [#22](https://github.com/dhuelin/watch-guru/issues/22) | History timeline and editing | Where mistakes get corrected, and backdated entries get logged. Done: filters, search, date range, editing, and logging a film for any past date |
 | [#23](https://github.com/dhuelin/watch-guru/issues/23) | Accessibility and localisation | Filed separately because that is the only way it does not get skipped |
@@ -196,3 +196,35 @@ calling code.
   is a liability with no good version. Official APIs and user-initiated exports
   only.
 - **Video playback.** Watch Guru tracks and points at; it does not play.
+
+---
+
+## The widget, and the one thing it does not show
+
+[#20](https://github.com/dhuelin/watch-guru/issues/20) ships on both platforms:
+next episode, series, code and progress, at every size, markable from the home
+screen without launching anything, with a prompt rather than an error while
+signed out.
+
+**No artwork yet.** Neither framework can render a URL. Glance needs a decoded
+`Bitmap`; WidgetKit needs the image already in the timeline entry, because
+`AsyncImage` does not load in a widget. So a poster means fetching, decoding and
+caching inside two extensions that are killed rather than warned when they exceed
+their memory budget — a change of its own, not a line in this one. The series,
+the episode and the progress are what the widget is *for*, and they are there.
+
+**How each platform gets its data differs, and it is not drift.** On Android a
+Glance widget runs inside the app's own process, so it uses the very repository
+the screens use. On iOS a widget is a separate process that can read neither the
+app's memory nor its container, so the app writes a small feed into a shared App
+Group and the widget draws that. Giving iOS the Android design would mean linking
+the whole generated API client into an extension to read six fields; giving
+Android the iOS design would mean maintaining a feed file for no reason.
+
+**Marking, when the session has expired.** The iOS widget deliberately cannot
+refresh a session — that is a second endpoint, a rotating refresh token, and a
+Keychain write racing the app. Instead the mark joins the queue the app already
+replays. It is safe to send it twice because every mark carries a `clientRef` and
+the server treats a repeat as the same event
+([#21](https://github.com/dhuelin/watch-guru/issues/21)); without that this
+design would turn a flaky connection into rewatches.

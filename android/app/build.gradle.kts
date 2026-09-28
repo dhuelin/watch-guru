@@ -103,6 +103,9 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.kotlinx.coroutines)
 
+    implementation(libs.glance.appwidget)
+    implementation(libs.glance.material3)
+
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)

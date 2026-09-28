@@ -20,7 +20,10 @@ import androidx.compose.ui.platform.LocalContext
  * shares colour *roles* between platforms rather than values.
  */
 
-private val LightScheme = lightColorScheme(
+// Internal rather than private: the home-screen widget builds its own
+// pre-Android-12 fallback from these same values, and a second copy of the
+// palette is a second thing to forget to change.
+internal val LightScheme = lightColorScheme(
     primary = Color(0xFF3F5BA9),
     onPrimary = Color.White,
     secondary = Color(0xFF585E71),
@@ -32,7 +35,7 @@ private val LightScheme = lightColorScheme(
     onSurfaceVariant = Color(0xFF44464F),
 )
 
-private val DarkScheme = darkColorScheme(
+internal val DarkScheme = darkColorScheme(
     primary = Color(0xFFB4C4FF),
     onPrimary = Color(0xFF082978),
     secondary = Color(0xFFC0C6DC),
