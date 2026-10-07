@@ -43,6 +43,16 @@ final class SignInModel {
     @ObservationIgnored
     var onSignedOut: (@Sendable () -> Void)?
 
+    /// Run while the session is still usable, before the token is cleared.
+    ///
+    /// For the one piece of sign-out that is an authenticated request rather
+    /// than a local wipe: telling the backend to forget this device, which
+    /// cannot be done once the token has gone.
+    var onSigningOut: (@Sendable () async -> Void)?
+
+    /// Run once a session exists, for work that needs one.
+    var onSignedIn: (@Sendable () async -> Void)?
+
     private let tokens: TokenStore
     private let client: WatchGuruClient
     private let sessions: SessionClient
@@ -107,6 +117,7 @@ final class SignInModel {
         }
 
         state = .signedIn
+        await onSignedIn?()
     }
 
     /// Clears the token, and everything derived from it.
@@ -115,16 +126,26 @@ final class SignInModel {
     /// is not only about the token.
     func signOut() {
         let refreshToken = tokens.tokens()?.refreshToken
-        tokens.clear()
+        // The screen changes now and the local data goes now; the token itself
+        // survives a moment longer, because the hook below is a request that
+        // needs the session it is ending. Nothing on the sign-in screen makes a
+        // request, so the user waits for nothing.
         URLCache.shared.removeAllCachedResponses()
         onSignedOut?()
         state = .signedOut
 
-        // Revoking server-side is best-effort and deliberately after the local
-        // clear: a user who taps sign out on a plane must still be signed out.
-        // The refresh token expires on its own if this never reaches us.
-        if let refreshToken {
-            Task { [sessions] in await sessions.logout(refreshToken: refreshToken) }
+        Task { [tokens, sessions, onSigningOut] in
+            // Bounded by the hook itself, so a dead network cannot leave a
+            // usable token in the Keychain of a phone just handed over.
+            await onSigningOut?()
+            tokens.clear()
+
+            // Revoking server-side is best-effort and deliberately last: a
+            // user who taps sign out on a plane must still be signed out. The
+            // refresh token expires on its own if this never reaches us.
+            if let refreshToken {
+                await sessions.logout(refreshToken: refreshToken)
+            }
         }
     }
 

@@ -12,8 +12,13 @@ to be playing the episode.
 | Component | State |
 |---|---|
 | Backend (Spring Boot) | Catalog and trending, watchlist and ratings, episode progress, history with filters and editing, stats and streaks, streaming availability, CSV import, new-episode notifications, Plex/Jellyfin/Emby/Trakt sync, OIDC authentication, published API contract, IMDb ratings enrichment. |
-| iOS app (SwiftUI) | Every screen built: sign-in, trending and search, library, title detail with progress and rating, history, stats, importing a history from a file, media-server and Trakt connections. A home-screen and lock-screen widget that marks an episode watched without opening the app. Works offline with a replayed mutation queue. |
+| iOS app (SwiftUI) | Every screen built: sign-in, trending and search, library, title detail with progress and rating, history, stats, importing a history from a file, media-server and Trakt connections. A home-screen and lock-screen widget that marks an episode watched without opening the app. New-episode notification settings, global and per series. Works offline with a replayed mutation queue. |
 | Android app (Jetpack Compose) | The same, screen for screen. |
+
+Notifications are the one feature that is built end to end and still cannot
+deliver: that needs an APNs key and a Firebase project, neither of which is code.
+The apps say so on the settings screen rather than showing switches that do
+nothing — see [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 **Neither app has been run by a human.** Both compile in CI on every push and
 their unit tests pass; nobody has yet installed either on a device or a

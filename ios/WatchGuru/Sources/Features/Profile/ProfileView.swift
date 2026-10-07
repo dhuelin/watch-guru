@@ -78,6 +78,12 @@ struct ProfileView: View {
                         NavigationLink("Import a watch history") {
                             ImportView()
                         }
+                        // Its own screen rather than a switch here: there is a
+                        // global setting and one per series, and a list of
+                        // series does not belong on the profile screen.
+                        NavigationLink("Notifications") {
+                            NotificationSettingsView()
+                        }
                     }
                     Section {
                         Button("Sign out") { session.signIn.signOut() }

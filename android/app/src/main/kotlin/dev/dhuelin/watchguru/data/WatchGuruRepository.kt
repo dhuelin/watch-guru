@@ -3,6 +3,7 @@ package dev.dhuelin.watchguru.data
 import dev.dhuelin.watchguru.api.apis.ImportControllerApi
 import dev.dhuelin.watchguru.api.apis.MeControllerApi
 import dev.dhuelin.watchguru.api.apis.MediaServerControllerApi
+import dev.dhuelin.watchguru.api.apis.NotificationControllerApi
 import dev.dhuelin.watchguru.api.apis.StreamingControllerApi
 import dev.dhuelin.watchguru.api.apis.TraktControllerApi
 import dev.dhuelin.watchguru.api.apis.TitleControllerApi
@@ -20,6 +21,8 @@ import dev.dhuelin.watchguru.api.models.PreviewImport
 import dev.dhuelin.watchguru.api.models.MarkWatchedUpTo
 import dev.dhuelin.watchguru.api.models.MediaServerConnectionResponse
 import dev.dhuelin.watchguru.api.models.MediaServerStatusResponse
+import dev.dhuelin.watchguru.api.models.NotificationSettingsResponse
+import dev.dhuelin.watchguru.api.models.RegisterDevice
 import dev.dhuelin.watchguru.api.models.StreamingServiceResponse
 import dev.dhuelin.watchguru.api.models.SyncResultResponse
 import dev.dhuelin.watchguru.api.models.UpdateWatchEvent
@@ -30,7 +33,9 @@ import dev.dhuelin.watchguru.api.models.UpNextResponse
 import dev.dhuelin.watchguru.api.models.SearchResponse
 import dev.dhuelin.watchguru.api.models.TitleProgress
 import dev.dhuelin.watchguru.api.models.TitleResponse
+import dev.dhuelin.watchguru.api.models.UpdateNotificationSettings
 import dev.dhuelin.watchguru.api.models.UpdateProfile
+import dev.dhuelin.watchguru.api.models.UpdateSeriesNotification
 import dev.dhuelin.watchguru.api.models.UpdateWatchlistItem
 import dev.dhuelin.watchguru.api.models.UserResponse
 import dev.dhuelin.watchguru.api.models.WatchEventResponse
@@ -63,6 +68,7 @@ class WatchGuruRepository(
     private val streaming: StreamingControllerApi,
     private val trakt: TraktControllerApi,
     private val imports: ImportControllerApi,
+    private val notifications: NotificationControllerApi,
     private val io: CoroutineDispatcher,
 ) {
 
@@ -279,6 +285,44 @@ class WatchGuruRepository(
     /** Writes the rows the user accepted, and nothing else. */
     suspend fun commitImport(request: CommitImport): ApiResult<ImportResultResponse> =
         call { imports.commitImport(request) }
+
+    /**
+     * Registers this install for push, or refreshes a token already known.
+     *
+     * Safe to repeat: the server treats a token it has already seen as the
+     * same device, which is what lets the app send this on every launch
+     * without first working out whether anything changed.
+     */
+    suspend fun registerDevice(request: RegisterDevice): ApiResult<Unit> =
+        call { notifications.registerDevice(request) }
+
+    /** Forgets one device. Used on sign-out, while the session still exists. */
+    suspend fun unregisterDevice(token: String): ApiResult<Unit> =
+        call { notifications.unregisterDevice(token) }
+
+    suspend fun notificationSettings(): ApiResult<NotificationSettingsResponse> =
+        call { notifications.getNotificationSettings() }
+
+    /** The global switch. Off here beats any per-series setting. */
+    suspend fun setNotificationsEnabled(enabled: Boolean): ApiResult<NotificationSettingsResponse> =
+        call { notifications.updateNotificationSettings(UpdateNotificationSettings(enabled = enabled)) }
+
+    /**
+     * Whether one series may produce new-episode notifications.
+     *
+     * Returns the whole settings object rather than the one series, so a screen
+     * showing both switches cannot end up with a stale global one.
+     */
+    suspend fun setSeriesNotification(
+        titleId: Long,
+        newEpisodes: Boolean,
+    ): ApiResult<NotificationSettingsResponse> =
+        call {
+            notifications.updateSeriesNotification(
+                titleId = titleId,
+                updateSeriesNotification = UpdateSeriesNotification(newEpisodes = newEpisodes),
+            )
+        }
 
     /**
      * Runs one call on the IO dispatcher.

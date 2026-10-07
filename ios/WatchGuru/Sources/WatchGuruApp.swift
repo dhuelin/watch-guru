@@ -3,6 +3,13 @@ import SwiftUI
 @main
 struct WatchGuruApp: App {
 
+    /// Only here to receive the APNs device token.
+    ///
+    /// A token cannot be awaited: UIKit hands it back on a delegate method and
+    /// nowhere else, so a SwiftUI app that wants one needs an adaptor. See
+    /// `PushDelegate`, which does nothing else.
+    @UIApplicationDelegateAdaptor(PushDelegate.self) private var pushDelegate
+
     @State private var session = Session()
 
     var body: some Scene {
@@ -83,6 +90,40 @@ final class Session {
         // signs in next -- attributing one person's viewing to another.
         signIn.onSignedOut = { @Sendable in
             Task { await offline.clearLocalData() }
+        }
+
+        // Where this user's new-episode notifications go (#19).
+        let devices = DeviceRegistrar(client: client)
+
+        // On every launch that has a session, and again after each sign-in.
+        // APNs reissues tokens without saying which launch was the one that
+        // changed, so the only reliable policy is to send whatever this device
+        // has each time; the server treats a token it knows as the same device.
+        signIn.onSignedIn = { @Sendable in
+            guard let token = await PushTokens.shared.token else { return }
+            await devices.register(token: token)
+        }
+
+        // Before the token is cleared, because forgetting a device is an
+        // authenticated call about the caller's own device. On a shared phone
+        // this is what stops the next user being notified about the last one's
+        // series.
+        signIn.onSigningOut = { @Sendable in
+            guard let token = await PushTokens.shared.token else { return }
+            await devices.unregister(token: token)
+        }
+
+        // A launch that is already signed in never passes through sign-in, so
+        // it needs asking here. Only when iOS has already agreed: registering
+        // with APNs is what prompts, and a prompt on first launch — before the
+        // user has seen what the app is — is the one that gets refused.
+        if signIn.state == .signedIn {
+            Task { @MainActor in
+                if await PushTokens.shared.authorized() {
+                    PushTokens.shared.registerWithAPNs()
+                }
+                await signIn.onSignedIn?()
+            }
         }
     }
 

@@ -13,6 +13,7 @@ import dev.dhuelin.watchguru.ui.imports.ImportScreen
 import dev.dhuelin.watchguru.ui.stats.StatsScreen
 import dev.dhuelin.watchguru.ui.home.HomeScreen
 import dev.dhuelin.watchguru.ui.library.LibraryScreen
+import dev.dhuelin.watchguru.ui.notifications.NotificationSettingsScreen
 import dev.dhuelin.watchguru.ui.server.MediaServerScreen
 import dev.dhuelin.watchguru.ui.profile.ProfileScreen
 import dev.dhuelin.watchguru.ui.trakt.TraktScreen
@@ -46,6 +47,7 @@ fun WatchGuruNavHost(
                 onOpenServer = { navController.navigate(Routes.mediaServer(it)) },
                 onOpenTrakt = { navController.navigate(Routes.TRAKT) },
                 onOpenImport = { navController.navigate(Routes.IMPORT) },
+                onOpenNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
                 signIn = signIn,
             )
         }
@@ -67,6 +69,9 @@ fun WatchGuruNavHost(
         }
         composable(Routes.IMPORT) {
             ImportScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Routes.NOTIFICATIONS) {
+            NotificationSettingsScreen(onBack = { navController.popBackStack() })
         }
         composable(
             route = Routes.TITLE_DETAIL,

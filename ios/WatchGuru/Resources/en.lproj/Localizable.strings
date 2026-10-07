@@ -185,3 +185,15 @@
 "Recent syncs" = "Recent syncs";
 "Sync now" = "Sync now";
 "Trakt" = "Trakt";
+
+/* MARK: Notifications */
+"Allow notifications" = "Allow notifications";
+"New episodes" = "New episodes";
+"Nothing in your library is a series that is still running." = "Nothing in your library is a series that is still running.";
+"Notifications" = "Notifications";
+"Open Settings" = "Open Settings";
+"Series" = "Series";
+"This device has no push token, so nothing can be delivered to it." = "This device has no push token, so nothing can be delivered to it.";
+"This device is not registered for notifications yet." = "This device is not registered for notifications yet.";
+"Told when a new episode of something you are watching airs." = "Told when a new episode of something you are watching airs.";
+"iOS is not allowing Watch Guru to notify you." = "iOS is not allowing Watch Guru to notify you.";

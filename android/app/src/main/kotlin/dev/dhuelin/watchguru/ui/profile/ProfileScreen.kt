@@ -57,6 +57,7 @@ fun ProfileScreen(
     onOpenServer: (String) -> Unit,
     onOpenTrakt: () -> Unit,
     onOpenImport: () -> Unit,
+    onOpenNotifications: () -> Unit,
     signIn: SignInViewModel,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
@@ -171,6 +172,13 @@ fun ProfileScreen(
                 // a file import is what is left for everybody else.
                 TextButton(onClick = onOpenImport) {
                     Text(stringResource(R.string.action_import_history))
+                }
+
+                // Its own row rather than a switch here: there is a global
+                // setting and one per series, and a list of series does not
+                // belong on the profile screen.
+                TextButton(onClick = onOpenNotifications) {
+                    Text(stringResource(R.string.action_notification_settings))
                 }
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
