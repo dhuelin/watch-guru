@@ -12,6 +12,10 @@ activityCompose = "1.9.3"
 lifecycle = "2.8.7"
 navigation = "2.8.5"
 coil = "2.7.0"
+# Glance, for the home-screen widget. 1.1.1 is the current stable line and the
+# last that targets the Compose compiler this project already applies; the 1.2
+# alphas move to a different state API.
+glance = "1.1.1"
 # 2.56+ because KSP 2.x runs KSP2 (the Analysis API backend) by default, and
 # Hilt only gained KSP2 support in 2.56. On 2.53 the processor could not see the
 # value that Hilt's own Gradle plugin writes into @AndroidEntryPoint, and the
@@ -67,6 +71,12 @@ androidx-credentials-play-services = { module = "androidx.credentials:credential
 googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+
+glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = "glance" }
+# Material 3 for Glance: what makes the widget take the wallpaper's colours
+# rather than shipping its own palette and looking like a stranger on the home
+# screen.
+glance-material3 = { module = "androidx.glance:glance-material3", version.ref = "glance" }
 
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt" }

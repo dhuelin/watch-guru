@@ -27,10 +27,38 @@ import re
 import sys
 from collections import Counter
 from pathlib import Path
+from typing import NamedTuple
 
 ROOT = Path(__file__).resolve().parent.parent
-SOURCES = ROOT / "ios/WatchGuru/Sources"
-CATALOGUE = ROOT / "ios/WatchGuru/Resources/en.lproj/Localizable.strings"
+
+
+class Bundle(NamedTuple):
+    """One thing that ships with its own catalogue.
+
+    There are two, and there have to be: a literal is looked up in the bundle it
+    was compiled into, so the widget extension cannot read the app's catalogue.
+    Checking only the app would leave every string on the home screen
+    untranslatable with nothing to say so -- which is the exact failure this
+    script exists to prevent, one bundle over.
+    """
+
+    name: str
+    sources: Path
+    catalogue: Path
+
+
+BUNDLES = (
+    Bundle(
+        name="app",
+        sources=ROOT / "ios/WatchGuru/Sources",
+        catalogue=ROOT / "ios/WatchGuru/Resources/en.lproj/Localizable.strings",
+    ),
+    Bundle(
+        name="widget",
+        sources=ROOT / "ios/WatchGuruWidgets",
+        catalogue=ROOT / "ios/WatchGuruWidgets/Resources/en.lproj/Localizable.strings",
+    ),
+)
 
 # The initialisers that take a LocalizedStringKey, so their literal is a key.
 # A literal carrying interpolation is deliberately not matched: it is not a
@@ -56,27 +84,49 @@ LITERAL_PATTERNS = [
     # The one lookup that is explicit rather than implicit: a sentence a model
     # produces cannot be a literal in a view, so it asks for its own key.
     r'\bString\(localized: "([^"\\]+)"\)',
+    # The widget's own. A widget's copy appears in three places the app's never
+    # does -- the widget gallery, the Shortcuts app, and a Siri phrase -- and all
+    # three take a LocalizedStringResource built from a literal.
+    r'\bconfigurationDisplayName\("([^"\\]+)"\)',
+    r'\.description\("([^"\\]+)"\)',
+    r'\bIntentDescription\("([^"\\]+)"\)',
+    r'\bLocalizedStringResource = "([^"\\]+)"',
+    r'@Parameter\(title: "([^"\\]+)"\)',
+    # This project's own wrapper around the empty and signed-out states. It takes
+    # a LocalizedStringKey, so its argument is a key like any other.
+    r'\bMessage\("([^"\\]+)"\)',
 ]
 
 ENTRY = re.compile(r'^\s*"((?:[^"\\]|\\.)*)"\s*=\s*"((?:[^"\\]|\\.)*)"\s*;\s*$')
 
 
-def literals_in_sources() -> set[str]:
+def literals_in(bundle: Bundle) -> set[str]:
     found: set[str] = set()
-    for path in sorted(SOURCES.rglob("*.swift")):
+    for path in swift_files(bundle):
         text = path.read_text()
         for pattern in LITERAL_PATTERNS:
             found.update(re.findall(pattern, text, re.S))
     return found
 
 
-def entries_in_catalogue() -> tuple[Counter[str], list[str]]:
+def swift_files(bundle: Bundle) -> list[Path]:
+    """This bundle's own sources.
+
+    Not the app files the widget target also compiles: those carry no user-facing
+    copy, and the app's scan already covers them. If one ever grows a literal,
+    the app's catalogue is where it belongs -- the widget compiles them for their
+    logic, not their words.
+    """
+    return sorted(bundle.sources.rglob("*.swift"))
+
+
+def entries_in(catalogue: Path) -> tuple[Counter[str], list[str]]:
     """Declared keys with their counts, and any lines that are not entries."""
     keys: Counter[str] = Counter()
     unparsed: list[str] = []
     inside_comment = False
 
-    for number, raw in enumerate(CATALOGUE.read_text().splitlines(), start=1):
+    for number, raw in enumerate(catalogue.read_text().splitlines(), start=1):
         line = raw.strip()
         if inside_comment:
             inside_comment = "*/" not in line
@@ -91,34 +141,55 @@ def entries_in_catalogue() -> tuple[Counter[str], list[str]]:
         if match:
             keys[match.group(1).replace('\\"', '"').replace("\\\\", "\\")] += 1
         else:
-            unparsed.append(f"{CATALOGUE}:{number}: not an entry: {line}")
+            unparsed.append(f"{catalogue}:{number}: not an entry: {line}")
     return keys, unparsed
 
 
-def main() -> int:
-    if not CATALOGUE.exists():
-        print(f"No catalogue at {CATALOGUE}", file=sys.stderr)
-        return 1
+def check(bundle: Bundle) -> tuple[list[str], list[str], int, int]:
+    """Problems, notes, key count and file count for one bundle."""
+    if not bundle.catalogue.exists():
+        return [f"No catalogue at {bundle.catalogue}"], [], 0, 0
 
-    keys, problems = entries_in_catalogue()
-    problems += [f"{CATALOGUE}: {key!r} is declared {n} times" for key, n in keys.items() if n > 1]
-
-    literals = literals_in_sources()
+    keys, problems = entries_in(bundle.catalogue)
     problems += [
-        f"{key!r} is shown in the app but has no entry in {CATALOGUE.name}"
+        f"{bundle.catalogue}: {key!r} is declared {n} times"
+        for key, n in keys.items()
+        if n > 1
+    ]
+
+    literals = literals_in(bundle)
+    problems += [
+        f"[{bundle.name}] {key!r} is shown in the app but has no entry in "
+        f"{bundle.catalogue.parent.parent.parent.name}/{bundle.catalogue.name}"
         for key in sorted(literals - set(keys))
     ]
+
+    notes = [
+        f"note: [{bundle.name}] {key!r} is in the catalogue but no literal uses it"
+        for key in sorted(set(keys) - literals)
+    ]
+    return problems, notes, len(keys), len(swift_files(bundle))
+
+
+def main() -> int:
+    problems: list[str] = []
+    notes: list[str] = []
+    summary: list[str] = []
+
+    for bundle in BUNDLES:
+        found, said, keys, files = check(bundle)
+        problems += found
+        notes += said
+        summary.append(f"{bundle.name}: {keys} keys over {files} source files")
 
     for problem in problems:
         print(problem, file=sys.stderr)
     if problems:
         return 1
 
-    unused = sorted(set(keys) - literals)
-    for key in unused:
-        print(f"note: {key!r} is in the catalogue but no literal uses it")
-    print(f"{len(keys)} keys, every literal in {len(list(SOURCES.rglob('*.swift')))} "
-          f"source files accounted for")
+    for note in notes:
+        print(note)
+    print("every literal accounted for — " + "; ".join(summary))
     return 0
 
 

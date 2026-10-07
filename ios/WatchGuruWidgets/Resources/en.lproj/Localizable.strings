@@ -1,0 +1,41 @@
+/*
+  Localizable.strings — the widget extension.
+
+  A separate file from the app's, and it has to be: a widget extension is its
+  own bundle, and a literal in `Text` or `LocalizedStringResource` is looked up
+  in the bundle it was compiled into. Pointing the widget at the app's catalogue
+  is not possible; sharing one file between two bundles would mean shipping every
+  screen's copy inside the widget.
+
+  The same rules as the app's: keys are the English text, and a key with no entry
+  falls back to what is written in the code.
+
+  To add a language: copy this directory to <code>.lproj/ and translate the
+  values. It is a separate translation job from the app's, which is the honest
+  consequence of it being a separate bundle.
+*/
+
+/* MARK: The widget, in the gallery */
+"Up Next" = "Up Next";
+"The next episode of what you are watching, markable from here." = "The next episode of what you are watching, markable from here.";
+
+/* MARK: The one button */
+"Watched" = "Watched";
+
+/* MARK: Everything that is not a list of episodes */
+"Sign in to see what's next" = "Sign in to see what's next";
+"Open Watch Guru to get started" = "Open Watch Guru to get started";
+"Nothing waiting" = "Nothing waiting";
+
+/* MARK: The App Intent, which also appears in Shortcuts */
+"Mark watched" = "Mark watched";
+"Marks the next episode of a series as watched." = "Marks the next episode of a series as watched.";
+"Episode" = "Episode";
+"Series" = "Series";
+
+/* Interpolated, so the key is the format SwiftUI derives from the literal
+   rather than the literal itself. Listed by hand because the check cannot
+   compute these safely -- an interpolation's type decides its specifier. */
+"As of %@" = "As of %@";
+"Mark %@ of %@ watched" = "Mark %@ of %@ watched";
+"%lld of %lld episodes watched" = "%lld of %lld episodes watched";

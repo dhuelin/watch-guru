@@ -164,3 +164,26 @@ library ever outgrows loading it whole.
 ```bash
 ./tools/generate-clients.sh    # from the repository root
 ```
+
+## The home-screen widget
+
+Glance, in `ui`'s sibling package `widget`. Unlike iOS, a Glance widget runs
+**inside this app's own process**, so it does not need a shared container, a
+shared Keychain group or a feed file of its own: it uses `OfflineRepository`
+directly, which means it shows exactly what the screens show and a mark from the
+widget takes the same route to the server, queue included.
+
+Hilt cannot inject a `GlanceAppWidget` — it is not an Android component with a
+lifecycle Hilt hooks — so the graph is entered through an `@EntryPoint`
+(`WidgetDependencies`) rather than with `@AndroidEntryPoint`.
+
+Two things worth knowing if you change it:
+
+- **`updatePeriodMillis` is 0**, on purpose. The framework's minimum is thirty
+  minutes and it wakes the device to honour it. Every change that matters already
+  refreshes the widget: a mark from the widget itself, and any write from inside
+  the app, through the `onWrite` callback `OfflineRepository` is constructed with.
+- **Colour comes from the wallpaper** on Android 12 and up, which is Glance's
+  default. Below that it falls back to this app's own scheme rather than Glance's
+  baseline, so the widget does not look like it belongs to a different app on an
+  older phone.

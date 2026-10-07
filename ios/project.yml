@@ -35,6 +35,10 @@ targets:
       - path: WatchGuru/Resources
     dependencies:
       - package: WatchGuruAPI
+      # Embeds the extension in the app bundle. Without this the widget builds
+      # and is then nowhere to be found on the device, which looks like a
+      # WidgetKit problem and is not.
+      - target: WatchGuruWidgets
     entitlements:
       path: WatchGuru/WatchGuru.entitlements
     # An explicit Info.plist rather than INFOPLIST_KEY_* build settings.
@@ -79,6 +83,53 @@ targets:
         SWIFT_STRICT_CONCURRENCY: complete
         ENABLE_USER_SCRIPT_SANDBOXING: YES
 
+  # The home-screen widget (#20).
+  #
+  # Deliberately does NOT depend on WatchGuruAPI. A widget extension has a hard
+  # memory budget -- it is killed rather than warned -- and the whole generated
+  # client would be linked to read six fields. Instead it compiles the handful
+  # of app files it genuinely needs, listed one by one below so that list is a
+  # decision rather than an accident:
+  #
+  #   Shared/            the App Group, the feed shape, the base URL
+  #   Data/TokenStore    the session, read from the shared Keychain group
+  #   Data/Offline/*     the queue a mark falls back to when the session is old
+  #
+  # Anything else the widget appears to need is a sign it is doing too much.
+  WatchGuruWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      # Includes Resources/en.lproj: its own catalogue, not the app's, because
+      # a literal is looked up in the bundle it was compiled into and an
+      # extension is a separate bundle.
+      - path: WatchGuruWidgets
+      - path: WatchGuru/Sources/Shared
+      - path: WatchGuru/Sources/Data/TokenStore.swift
+      - path: WatchGuru/Sources/Data/Offline/OfflineStore.swift
+      - path: WatchGuru/Sources/Data/Offline/MutationQueue.swift
+      - path: WatchGuru/Sources/Data/Offline/PendingMutation.swift
+    entitlements:
+      path: WatchGuruWidgets/WatchGuruWidgets.entitlements
+    info:
+      path: WatchGuruWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: Watch Guru
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.dhuelin.watchguru.widgets
+        # Must match the app's, or the extension is rejected at install time
+        # for having a version its container does not.
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete
+        ENABLE_USER_SCRIPT_SANDBOXING: YES
+        # An extension has no main() of its own to run.
+        SKIP_INSTALL: YES
+
   WatchGuruTests:
     type: bundle.unit-test
     platform: iOS
@@ -100,6 +151,7 @@ schemes:
     build:
       targets:
         WatchGuru: all
+        WatchGuruWidgets: all
         WatchGuruTests: [test]
     test:
       targets:

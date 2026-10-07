@@ -1,5 +1,6 @@
 import Foundation
 import WatchGuruAPI
+import WidgetKit
 
 /// The client, with the train journey accounted for (#14).
 ///
@@ -31,10 +32,24 @@ actor OfflineClient {
     private let cache: SnapshotCache
     private let queue: MutationQueue
 
-    init(client: WatchGuruClient, cache: SnapshotCache, queue: MutationQueue) {
+    /// What the home-screen widget reads.
+    ///
+    /// Written from here rather than from a screen, because the widget has to be
+    /// right whether the user opened Home, came back from the background, or
+    /// marked something from the widget itself — and this is the one place all
+    /// three pass through.
+    private let feed: WidgetFeedStore
+
+    init(
+        client: WatchGuruClient,
+        cache: SnapshotCache,
+        queue: MutationQueue,
+        feed: WidgetFeedStore = WidgetFeedStore()
+    ) {
         self.client = client
         self.cache = cache
         self.queue = queue
+        self.feed = feed
     }
 
     // MARK: - Reads
@@ -68,6 +83,7 @@ actor OfflineClient {
         do {
             let entries = try await client.upNext(limit: limit)
             cache.put(SnapshotCache.Key.upNext, entries)
+            publishToWidget(entries)
             return entries
         } catch {
             if case .offline = error,
@@ -87,7 +103,7 @@ actor OfflineClient {
         // reference made at send time would be a new one each try, which is the
         // same as having none.
         let clientRef = Self.newClientRef()
-        return await write {
+        let written = await write {
             _ = try await client.markEpisodeWatched(
                 episodeId: episodeId, watchedAt: watchedAt, clientRef: clientRef)
         } queueing: { id in
@@ -95,6 +111,14 @@ actor OfflineClient {
                 id: id, episodeId: episodeId, titleId: titleId,
                 watchedAt: watchedAt, clientRef: clientRef)
         }
+        // Sent and queued both mean the user is done with this episode. A
+        // refusal does not: the episode really is still next, and advancing the
+        // home screen would hide that.
+        switch written {
+        case .sent, .queued: advanceWidget(past: episodeId)
+        case .failed: break
+        }
+        return written
     }
 
     /// Logs a film, on the date the user says they watched it.
@@ -189,6 +213,60 @@ actor OfflineClient {
         cache.evict(SnapshotCache.Key.library)
         cache.evict(SnapshotCache.Key.upNext)
         queue.clear()
+        // The feed is one signed-out user's viewing sitting on the home screen
+        // of a phone the next one is holding. It goes with everything else.
+        feed.clear()
+        reloadWidget()
+    }
+
+    /// Asks the system to redraw the widget.
+    ///
+    /// Hopped to the main actor rather than called from this one. `WidgetCenter`
+    /// is a singleton from before Swift concurrency, and reaching it across an
+    /// arbitrary actor boundary is exactly what complete checking rejects;
+    /// reading `.shared` inside the hop means nothing crosses.
+    ///
+    /// `reloadAllTimelines` is the only way the app can reach a widget, and it
+    /// is what makes "marked in the app, gone from the home screen" immediate
+    /// rather than a matter of whenever the system next feels like it.
+    private func reloadWidget() {
+        Task { @MainActor in WidgetCenter.shared.reloadAllTimelines() }
+    }
+
+    /// Drops one episode from the feed and redraws, without a fetch.
+    ///
+    /// Marking from a title screen changes what Up Next would return, but
+    /// nothing refetches it — so without this the home screen keeps offering an
+    /// episode the user has just finished until they happen to open Home. The
+    /// next real fetch replaces the whole feed; this only has to be right until
+    /// then.
+    private func advanceWidget(past episodeId: Int64) {
+        feed.advance(past: episodeId)
+        reloadWidget()
+    }
+
+    /// Hands the widget what it draws.
+    ///
+    /// Only the fields the widget shows: it is a separate process with a small
+    /// memory budget and no reason to decode a full API response.
+    private func publishToWidget(_ entries: [UpNextResponse]) {
+        feed.write(
+            WidgetFeed(
+                entries: entries.map {
+                    WidgetFeed.Episode(
+                        titleId: $0.titleId,
+                        episodeId: $0.nextEpisodeId,
+                        title: $0.primaryTitle,
+                        episodeCode: $0.nextEpisodeCode,
+                        episodeName: $0.nextEpisodeName,
+                        watchedEpisodes: $0.watchedEpisodes,
+                        airedEpisodes: $0.airedEpisodes
+                    )
+                },
+                storedAt: .now
+            )
+        )
+        reloadWidget()
     }
 
     // MARK: - Internals

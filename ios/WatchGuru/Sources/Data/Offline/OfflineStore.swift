@@ -19,17 +19,24 @@ protocol OfflineStore: Sendable {
     func delete(_ name: String)
 }
 
-/// Files in the app's caches directory.
+/// Files in the App Group container shared with the widget.
 ///
-/// Caches rather than Documents for the snapshots — the system may reclaim them
-/// under pressure, and losing a cached library costs a refresh. The pending
-/// queue is the exception and says so.
+/// The group container rather than Caches, which is where these lived before the
+/// home-screen widget existed. Two reasons, and the second is the one that
+/// matters: a widget is a separate process and can only read a shared
+/// container, and the pending queue must not be reclaimed by the system under
+/// pressure — losing it loses marks the user was told had been accepted. The
+/// snapshots could still afford to be reclaimable; splitting them across two
+/// directories to express that would buy nothing.
+///
+/// Falls back to this process's own caches directory when no group is
+/// available, which is the case in tests.
 struct FileOfflineStore: OfflineStore {
 
     private let directory: URL
 
     init(directory: URL? = nil) {
-        let base = directory ?? URL.cachesDirectory.appending(path: "offline")
+        let base = directory ?? WidgetSharing.offlineDirectory
         try? FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
         self.directory = base
     }

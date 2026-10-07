@@ -12,5 +12,28 @@
 	<array>
 		<string>Default</string>
 	</array>
+	<!--
+	  Shared with the widget extension, which is a separate process and would
+	  otherwise see none of this app's files. Everything the offline layer
+	  writes lives in this container now; see FileOfflineStore.
+	-->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.dev.dhuelin.watchguru</string>
+	</array>
+	<!--
+	  So the widget can read the session this app saved.
+
+	  Adding this moves where new Keychain items go: an item saved with no
+	  explicit access group lands in the first group listed here rather than in
+	  the app's default one. An install that predates this entitlement therefore
+	  has a session the app can no longer see, and asks the user to sign in once.
+	  Nobody has run this app yet, so that costs nothing today; it would need a
+	  migration if it were already shipping.
+	-->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>$(AppIdentifierPrefix)dev.dhuelin.watchguru</string>
+	</array>
 </dict>
 </plist>

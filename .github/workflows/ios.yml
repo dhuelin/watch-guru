@@ -5,10 +5,12 @@ on:
     branches: [main]
     paths:
       - 'ios/**'
+      - 'tools/**'
       - '.github/workflows/ios.yml'
   pull_request:
     paths:
       - 'ios/**'
+      - 'tools/**'
       - '.github/workflows/ios.yml'
 
 concurrency:
