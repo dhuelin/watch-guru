@@ -80,7 +80,6 @@ struct WidgetFeedTests {
         // concatenation gives you when the optional is empty.
         #expect(episode(name: nil).subtitle == "S2E4")
     }
-}
 
     @Test("marking advances past that episode and leaves the others")
     func advancesPastOneEpisode() {
