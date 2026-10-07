@@ -20,6 +20,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -55,6 +56,7 @@ fun TitleDetailScreen(
     val seasons by viewModel.seasons.collectAsStateWithLifecycle()
     val expandedSeason by viewModel.expandedSeason.collectAsStateWithLifecycle()
     val filmLog by viewModel.filmLog.collectAsStateWithLifecycle()
+    val notifyNewEpisodes by viewModel.notifyNewEpisodes.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -100,6 +102,8 @@ fun TitleDetailScreen(
                     viewModel.toggleEpisode(episode.id, episode.watched)
                 },
                 onMarkUpTo = { episode -> viewModel.markUpTo(episode.id) },
+                notifyNewEpisodes = notifyNewEpisodes,
+                onNotifyNewEpisodes = viewModel::setNotifyNewEpisodes,
                 modifier = Modifier.padding(padding),
             )
 
@@ -126,6 +130,8 @@ private fun TitleDetailContent(
     onToggleSeason: (Int) -> Unit,
     onToggleEpisode: (EpisodeResponse) -> Unit,
     onMarkUpTo: (EpisodeResponse) -> Unit,
+    notifyNewEpisodes: Boolean?,
+    onNotifyNewEpisodes: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -204,6 +210,33 @@ private fun TitleDetailContent(
                 onMarkNext = onMarkNext,
                 modifier = Modifier.padding(top = 24.dp),
             )
+        }
+
+        // The only place a series can be muted. The settings screen lists what
+        // the server holds a row for, and an un-muted series has no row, so it
+        // can only undo what is done here.
+        //
+        // Null means no switch: a film has no next episode to be told about,
+        // and a setting that could not be read would make this a guess.
+        notifyNewEpisodes?.let { notifying ->
+            // One label for both, so the switch is announced by the same words
+            // that are printed beside it rather than as a bare "switch".
+            val label = stringResource(R.string.detail_notify_new_episodes)
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.weight(1f),
+                )
+                Switch(
+                    checked = notifying,
+                    onCheckedChange = onNotifyNewEpisodes,
+                    modifier = Modifier.semantics { contentDescription = label },
+                )
+            }
         }
 
         title.overview?.let {

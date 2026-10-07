@@ -197,6 +197,16 @@ deliver nothing — so the settings screen would claim notifications were workin
 while no notification could possibly arrive. Null makes the screen say the true
 thing: this device is not registered, and nothing can reach it.
 
+One consequence of the server's storage worth knowing, because it decides where
+the per-series switch has to live: a preference row exists only when a series has
+been **muted**, and switching one back on deletes the row rather than storing
+true. So "no row" and "notify me" are the same state, and the list the settings
+screen can show is the muted ones. An un-muted series has no row to list — which
+means the settings screen can only ever *un*-mute, and the title screen is the
+only place a series can be muted at all. The settings screen says so and names
+the default; a client that read a missing row as "off" would show every series
+muted and offer to un-mute series nobody had touched.
+
 That is why the screen reports *which* of the three prerequisites is missing
 rather than only showing switches. Permission, a token, and the backend knowing
 that token fail independently, and a screen that showed switches alone would

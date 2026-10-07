@@ -74,9 +74,14 @@ struct NotificationSettingsView: View {
                 }
             }
 
-            Section("Series") {
+            // Muted, not "all series". The server stores a row only when the
+            // user has said no — switching one back on deletes it — so this
+            // list is the exceptions, and every series without a row notifies
+            // by default. Calling it "Series" would make an empty list read as
+            // "you have no series", which is a different and untrue thing.
+            Section {
                 if settings.series.isEmpty {
-                    Text("Nothing in your library is a series that is still running.")
+                    Text("You have not muted anything. Every series in your library can notify you.")
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(settings.series, id: \.titleId) { series in
@@ -91,6 +96,10 @@ struct NotificationSettingsView: View {
                         .disabled(model.isBusy || !settings.enabled)
                     }
                 }
+            } header: {
+                Text("Muted series")
+            } footer: {
+                Text("Turn a series off on its own screen. Switching one back on here removes it from this list.")
             }
         }
     }

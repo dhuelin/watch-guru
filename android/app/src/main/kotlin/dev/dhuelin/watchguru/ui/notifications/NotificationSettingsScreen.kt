@@ -202,9 +202,19 @@ private fun Settings(
 
         HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
+        // Muted, not "all series". The server stores a row only when the user
+        // has said no -- switching one back on deletes it -- so this list is
+        // the exceptions, and every series without a row notifies by default.
+        // Calling this "Series" would make an empty list read as "you have no
+        // series", which is a different and untrue thing.
         Text(
             text = stringResource(R.string.notifications_series_heading),
             style = MaterialTheme.typography.titleMedium,
+        )
+        Text(
+            text = stringResource(R.string.notifications_series_detail),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         if (settings.series.isEmpty()) {

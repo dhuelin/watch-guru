@@ -17,6 +17,18 @@ final class TitleDetailModel {
     /// What happened to the last film viewing logged here, if any.
     private(set) var filmLog: FilmLog?
 
+    /// Whether new episodes of this series are announced, or nil for no switch.
+    ///
+    /// Nil for a film, and for a series whose settings could not be read: a
+    /// switch whose position is a guess is worse than no switch. Anything
+    /// else is true unless the user has said otherwise, because that is the
+    /// server's default — it keeps a row only for a series somebody muted.
+    ///
+    /// This screen is the only place a series can be muted. The settings
+    /// screen lists the rows the server holds, and an un-muted series has no
+    /// row, so it can only ever undo what is done here.
+    private(set) var notifyNewEpisodes: Bool?
+
     private let client: WatchGuruClient
     private let offline: OfflineClient
     private let titleId: Int64
@@ -42,6 +54,50 @@ final class TitleDetailModel {
         }
         await refreshProgress()
         await refreshSeasons()
+        await refreshNotification()
+    }
+
+    /// Reads this series' notification setting.
+    ///
+    /// One extra request, and only for a series: a film has no next episode
+    /// to be told about. The setting is not on the title response because it
+    /// is a property of the user, not the title, and putting it there would
+    /// add a per-user field to an otherwise shared, cacheable resource.
+    private func refreshNotification() async {
+        guard state.value?.titleType == .tvSeries else { return }
+        do {
+            let settings = try await client.notificationSettings()
+            // Absent means un-muted, which is the default: the server keeps
+            // a row only for a series the user has turned off.
+            notifyNewEpisodes = Self.setting(for: titleId, in: settings)
+        } catch {
+            notifyNewEpisodes = nil
+        }
+    }
+
+    /// Mutes or un-mutes new-episode notifications for this series.
+    func setNotifyNewEpisodes(_ on: Bool) async {
+        let previous = notifyNewEpisodes
+        do {
+            let settings = try await client.setSeriesNotification(
+                titleId: titleId, newEpisodes: on)
+            notifyNewEpisodes = Self.setting(for: titleId, in: settings)
+        } catch {
+            // Put it back rather than leaving a switch that says something
+            // the server does not.
+            notifyNewEpisodes = previous
+        }
+    }
+
+    /// One series' setting, defaulting to on when the server holds no row.
+    ///
+    /// Shared by the read and the write so they cannot disagree about what
+    /// an absent row means.
+    static func setting(
+        for titleId: Int64,
+        in settings: NotificationSettingsResponse
+    ) -> Bool {
+        settings.series.first { $0.titleId == titleId }?.newEpisodes ?? true
     }
 
     /// Toggles one episode's watched state.
