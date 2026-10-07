@@ -14,6 +14,7 @@ import dev.dhuelin.watchguru.data.OfflineRepository
 import dev.dhuelin.watchguru.data.ProfileEvents
 import dev.dhuelin.watchguru.data.WatchGuruRepository
 import dev.dhuelin.watchguru.ui.components.UiState
+import dev.dhuelin.watchguru.ui.components.contentOrNull
 import dev.dhuelin.watchguru.ui.navigation.Routes
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
