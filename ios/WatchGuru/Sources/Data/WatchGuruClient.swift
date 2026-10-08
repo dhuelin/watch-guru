@@ -438,6 +438,74 @@ actor WatchGuruClient {
         }
     }
 
+    // MARK: - Notifications
+
+    /// Registers this install for push, or refreshes a token already known.
+    ///
+    /// Safe to repeat, because the server treats a token it has already seen as
+    /// the same device. That is what lets the app send this on every launch
+    /// without first working out whether APNs changed anything -- which it does
+    /// not say.
+    ///
+    /// The device's time zone rides along: this is the only call that knows it,
+    /// and without it the backend's quiet hours would be Greenwich's for
+    /// everybody.
+    func registerDevice(token: String) async throws(APIFailure) {
+        try await runVoid {
+            try await NotificationControllerAPI.registerDevice(
+                registerDevice: RegisterDevice(
+                    platform: .ios,
+                    timeZone: TimeZone.current.identifier,
+                    token: token
+                ),
+                apiConfiguration: $0
+            )
+        }
+    }
+
+    /// Forgets one device, so the next user of this phone is not notified about
+    /// the last one's series.
+    func unregisterDevice(token: String) async throws(APIFailure) {
+        try await runVoid {
+            try await NotificationControllerAPI.unregisterDevice(token: token, apiConfiguration: $0)
+        }
+    }
+
+    func notificationSettings() async throws(APIFailure) -> NotificationSettingsResponse {
+        try await run {
+            try await NotificationControllerAPI.getNotificationSettings(apiConfiguration: $0)
+        }
+    }
+
+    /// The global switch. Off here beats any per-series setting.
+    func setNotificationsEnabled(
+        _ enabled: Bool
+    ) async throws(APIFailure) -> NotificationSettingsResponse {
+        try await run {
+            try await NotificationControllerAPI.updateNotificationSettings(
+                updateNotificationSettings: UpdateNotificationSettings(enabled: enabled),
+                apiConfiguration: $0
+            )
+        }
+    }
+
+    /// Whether one series may produce new-episode notifications.
+    ///
+    /// Answers with the whole settings object rather than the one series, so a
+    /// screen showing both switches cannot end up with a stale global one.
+    func setSeriesNotification(
+        titleId: Int64,
+        newEpisodes: Bool
+    ) async throws(APIFailure) -> NotificationSettingsResponse {
+        try await run {
+            try await NotificationControllerAPI.updateSeriesNotification(
+                titleId: titleId,
+                updateSeriesNotification: UpdateSeriesNotification(newEpisodes: newEpisodes),
+                apiConfiguration: $0
+            )
+        }
+    }
+
     // MARK: - Failure mapping
 
     /// Runs one call, renewing the session once if the API says the access

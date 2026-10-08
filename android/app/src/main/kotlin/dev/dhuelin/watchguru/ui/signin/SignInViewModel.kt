@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.dhuelin.watchguru.data.ApiResult
+import dev.dhuelin.watchguru.data.DeviceRegistrar
 import dev.dhuelin.watchguru.data.GoogleSignIn
 import dev.dhuelin.watchguru.data.LocalDataCleaner
 import dev.dhuelin.watchguru.data.SessionEvents
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import javax.inject.Inject
 
 /** Where the app stands with respect to having a usable token. */
@@ -51,6 +53,7 @@ class SignInViewModel @Inject constructor(
     private val sessions: SessionRepository,
     private val sessionEvents: SessionEvents,
     private val localData: LocalDataCleaner,
+    private val devices: DeviceRegistrar,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<AuthState>(AuthState.Checking)
@@ -68,6 +71,12 @@ class SignInViewModel @Inject constructor(
 
     init {
         _state.value = if (tokens.tokens() == null) AuthState.SignedOut else AuthState.SignedIn
+
+        // Every launch, not only the one after signing in: push services
+        // reissue tokens without telling the app, so the only reliable policy
+        // is to send whatever this device has each time. The server treats a
+        // token it already knows as the same device.
+        if (_state.value == AuthState.SignedIn) registerDevice()
 
         // A renewal refused mid-request clears the tokens on a background
         // thread. Without this the app would stay on the signed-in screens and
@@ -117,6 +126,7 @@ class SignInViewModel @Inject constructor(
         when (val result = sessions.exchange(providerToken)) {
             is ApiResult.Success -> {
                 tokens.save(result.value)
+                registerDevice()
                 AuthState.SignedIn
             }
             // Google accepted the user, we did not. Almost always a
@@ -140,16 +150,35 @@ class SignInViewModel @Inject constructor(
      */
     fun signOut() {
         val refreshToken = tokens.tokens()?.refreshToken
-        tokens.clear()
+        // The screen changes now; the token survives a moment longer. Nothing
+        // on the sign-in screen makes a request, so the user waits for nothing
+        // -- and the one call below genuinely needs the session it is ending.
         _state.value = AuthState.SignedOut
         viewModelScope.launch {
-            // Revoking server-side is best-effort and deliberately after the
-            // local clear: a user who taps sign out on a plane must still be
-            // signed out. The refresh token expires on its own if this never
-            // reaches the server.
+            // Before the token is cleared, because forgetting this device is an
+            // authenticated call about the caller's own device. It matters on a
+            // shared phone: a device left registered sends the next user
+            // notifications about the last one's series. Best-effort like the
+            // rest -- signing out must work on a plane -- and bounded, so a
+            // dead network cannot leave the token in place indefinitely.
+            withTimeoutOrNull(UnregisterTimeoutMillis) { devices.unregister() }
+            tokens.clear()
+            // Revoking server-side is best-effort too. The refresh token
+            // expires on its own if this never reaches the server.
             refreshToken?.let { sessions.logout(it) }
             localData.clear()
         }
+    }
+
+    /**
+     * Registers this device, without letting a failure touch the auth state.
+     *
+     * Notifications are not what the user came for: somebody signing in wants
+     * to be signed in, and a push token that could not be obtained or sent is
+     * not a reason to tell them anything.
+     */
+    private fun registerDevice() {
+        viewModelScope.launch { runCatching { devices.register() } }
     }
 
     /**
@@ -176,5 +205,10 @@ class SignInViewModel @Inject constructor(
     /** Acknowledges the snackbar shown for [accountError]. */
     fun dismissAccountError() {
         _accountError.value = null
+    }
+
+    private companion object {
+        /** Long enough for one request, short enough not to strand a token. */
+        const val UnregisterTimeoutMillis = 5_000L
     }
 }

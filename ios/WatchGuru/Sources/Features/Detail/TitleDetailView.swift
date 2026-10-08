@@ -115,6 +115,20 @@ struct TitleDetailView: View {
                     }
                 }
 
+                // The only place a series can be muted. The settings screen
+                // lists what the server holds a row for, and an un-muted series
+                // has no row, so it can only undo what is done here.
+                //
+                // Nil means no switch: a film has no next episode to be told
+                // about, and a setting that could not be read would be a guess.
+                if let notifying = model.notifyNewEpisodes {
+                    Toggle("Notify me about new episodes", isOn: Binding(
+                        get: { notifying },
+                        set: { on in Task { await model.setNotifyNewEpisodes(on) } }
+                    ))
+                    .font(.subheadline)
+                }
+
                 if let overview = title.overview {
                     Text(overview).font(.body)
                 }

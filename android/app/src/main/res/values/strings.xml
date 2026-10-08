@@ -253,6 +253,20 @@
 
     <!-- The home-screen widget. Short on purpose: a widget has room for a line,
          and a sentence that wraps three times is worse than no sentence. -->
+    <!-- New-episode notifications (#19). -->
+    <string name="title_notifications">Notifications</string>
+    <string name="action_notification_settings">Notification settings</string>
+    <string name="notifications_new_episodes">New episodes</string>
+    <string name="notifications_new_episodes_detail">Told when a new episode of something you are watching airs.</string>
+    <string name="notifications_permission_needed">Android has not been asked yet whether Watch Guru may notify you.</string>
+    <string name="action_allow_notifications">Allow notifications</string>
+    <string name="notifications_no_devices">This device is not registered for notifications yet, so nothing can arrive on it.</string>
+    <string name="notifications_series_detail">Turn a series off on its own screen. Switching one back on here removes it from this list.</string>
+    <string name="notifications_series_heading">Muted series</string>
+    <string name="notifications_no_series">You have not muted anything. Every series in your library can notify you.</string>
+    <string name="detail_notify_new_episodes">Notify me about new episodes</string>
+    <string name="notifications_unavailable">Notification settings could not be loaded.</string>
+
     <string name="widget_label">Watch Guru</string>
     <string name="widget_description">What to watch next, markable without opening the app.</string>
     <string name="widget_up_next">Up next</string>

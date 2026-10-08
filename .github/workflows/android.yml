@@ -48,6 +48,14 @@ jobs:
         working-directory: .
         run: python3 tools/check-android-resources.py
 
+      # Kotlin imports one function at a time, not one package: importing
+      # UiState does not bring in contentOrNull, even though they share a file.
+      # Nothing says so but a full Gradle build, and the one that did say so
+      # cost a round.
+      - name: Check imports
+        working-directory: .
+        run: python3 tools/check-kotlin-imports.py
+
       # This is the first Gradle build these sources will ever have had. They
       # were written in an environment that could not reach Google's Maven, so
       # the plugin versions and everything under ui/ are unproven. The data

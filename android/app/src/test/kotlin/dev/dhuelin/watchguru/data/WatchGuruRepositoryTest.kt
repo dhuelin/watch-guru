@@ -132,6 +132,23 @@ class WatchGuruRepositoryTest {
             ) = fail()
             private fun fail(): Nothing = throw UnsupportedOperationException()
         },
+        notifications = object : dev.dhuelin.watchguru.api.apis.NotificationControllerApi {
+            override suspend fun getNotificationSettings() = fail()
+            override suspend fun registerDevice(
+                registerDevice: dev.dhuelin.watchguru.api.models.RegisterDevice,
+            ) = fail()
+            override suspend fun unregisterDevice(token: String) = fail()
+            override suspend fun updateNotificationSettings(
+                updateNotificationSettings:
+                    dev.dhuelin.watchguru.api.models.UpdateNotificationSettings,
+            ) = fail()
+            override suspend fun updateSeriesNotification(
+                titleId: Long,
+                updateSeriesNotification:
+                    dev.dhuelin.watchguru.api.models.UpdateSeriesNotification,
+            ) = fail()
+            private fun fail(): Nothing = throw UnsupportedOperationException()
+        },
         io = Dispatchers.Unconfined,
     )
 

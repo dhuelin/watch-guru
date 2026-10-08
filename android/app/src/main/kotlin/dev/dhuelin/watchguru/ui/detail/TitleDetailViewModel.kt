@@ -14,6 +14,7 @@ import dev.dhuelin.watchguru.data.OfflineRepository
 import dev.dhuelin.watchguru.data.ProfileEvents
 import dev.dhuelin.watchguru.data.WatchGuruRepository
 import dev.dhuelin.watchguru.ui.components.UiState
+import dev.dhuelin.watchguru.ui.components.contentOrNull
 import dev.dhuelin.watchguru.ui.navigation.Routes
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,6 +46,21 @@ class TitleDetailViewModel @Inject constructor(
 
     private val _marking = MutableStateFlow(false)
     val marking: StateFlow<Boolean> = _marking.asStateFlow()
+
+    /**
+     * Whether new episodes of this series are announced, or null for no switch.
+     *
+     * Null for a film, and for a series whose settings could not be read: a
+     * switch whose position is a guess is worse than no switch. Anything else
+     * is true unless the user has said otherwise, because that is the server's
+     * default -- it keeps a row only for a series somebody has muted.
+     *
+     * This screen is the only place a series can be muted. The settings screen
+     * lists the rows the server holds, and an un-muted series has no row to
+     * list, so it can only ever undo what is done here.
+     */
+    private val _notifyNewEpisodes = MutableStateFlow<Boolean?>(null)
+    val notifyNewEpisodes: StateFlow<Boolean?> = _notifyNewEpisodes.asStateFlow()
 
     /** What happened to the last film viewing logged here, if any. */
     private val _filmLog = MutableStateFlow<FilmLog?>(null)
@@ -91,6 +107,42 @@ class TitleDetailViewModel @Inject constructor(
             }
             refreshProgress()
             refreshSeasons()
+            refreshNotification()
+        }
+    }
+
+    /**
+     * Reads this series' notification setting.
+     *
+     * One extra request, and only for a series: a film has no next episode to
+     * be told about. The setting is not on the title response because it is a
+     * property of the user, not the title, and adding it there would put a
+     * per-user field on an otherwise cacheable shared resource.
+     */
+    private suspend fun refreshNotification() {
+        val title = _title.value.contentOrNull() ?: return
+        if (title.titleType != TitleResponse.TitleType.TV_SERIES) return
+
+        _notifyNewEpisodes.value = when (val result = repository.notificationSettings()) {
+            // Absent means un-muted, which is the default: the server keeps a
+            // row only for a series the user has turned off.
+            is ApiResult.Success ->
+                result.value.series.firstOrNull { it.titleId == titleId }?.newEpisodes ?: true
+            is ApiResult.Failure -> null
+        }
+    }
+
+    /** Mutes or un-mutes new-episode notifications for this series. */
+    fun setNotifyNewEpisodes(on: Boolean) {
+        val previous = _notifyNewEpisodes.value
+        viewModelScope.launch {
+            when (val result = repository.setSeriesNotification(titleId, on)) {
+                is ApiResult.Success -> _notifyNewEpisodes.value =
+                    result.value.series.firstOrNull { it.titleId == titleId }?.newEpisodes ?: true
+                // Put it back rather than leaving a switch that says something
+                // the server does not.
+                is ApiResult.Failure -> _notifyNewEpisodes.value = previous
+            }
         }
     }
 

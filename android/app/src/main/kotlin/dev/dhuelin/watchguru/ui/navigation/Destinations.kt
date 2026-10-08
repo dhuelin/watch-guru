@@ -30,6 +30,7 @@ object Routes {
     const val MEDIA_SERVER = "server/{service}"
     const val TRAKT = "trakt"
     const val IMPORT = "import"
+    const val NOTIFICATIONS = "notifications"
 
     fun titleDetail(titleId: Long) = "title/$titleId"
 

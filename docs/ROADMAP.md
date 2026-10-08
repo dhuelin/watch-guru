@@ -157,7 +157,7 @@ library rots.
 | # | Issue | Why it matters |
 |---|---|---|
 | [#18](https://github.com/dhuelin/watch-guru/issues/18) | Where to watch, and deep links | Turns a ledger into a guide. The backend data already exists and is unused. |
-| [#19](https://github.com/dhuelin/watch-guru/issues/19) | New-episode notifications | The strongest reason to reopen the app |
+| [#19](https://github.com/dhuelin/watch-guru/issues/19) | New-episode notifications | The strongest reason to reopen the app. Backend and both apps are built; nothing is delivered until the push credentials in [#37](https://github.com/dhuelin/watch-guru/issues/37) exist, see below |
 | [#21](https://github.com/dhuelin/watch-guru/issues/21) | Import from Trakt, CSV, Netflix | Nobody starts from zero; an empty library is why tracking apps get deleted on day one |
 | [#20](https://github.com/dhuelin/watch-guru/issues/20) | Home screen widgets | Next episode, markable, without opening the app. Done on both platforms; the poster is not there yet, see below |
 | [#17](https://github.com/dhuelin/watch-guru/issues/17) | Stats and streaks | Already computed server-side, never rendered |
@@ -165,6 +165,54 @@ library rots.
 | [#23](https://github.com/dhuelin/watch-guru/issues/23) | Accessibility and localisation | Filed separately because that is the only way it does not get skipped |
 | [#24](https://github.com/dhuelin/watch-guru/issues/24) | IMDb licensing decision | Cheap to settle now, a compliance problem after launch |
 | [#39](https://github.com/dhuelin/watch-guru/issues/39) | Connect Plex, Jellyfin, Emby and Trakt | Watching something should record it without anybody marking anything. Plex, Jellyfin, Emby and Trakt are connected; see [`MEDIA-SERVERS.md`](MEDIA-SERVERS.md) and [`TRAKT.md`](TRAKT.md) |
+
+---
+
+## Notifications are built and cannot yet deliver
+
+Everything about #19 exists except the thing only an account can provide.
+
+The backend scans for new episodes, honours quiet hours in the user's own time
+zone, records deliveries, and exposes a global switch and one per series. Both
+apps ask for permission, register the device, show the switches, and forget the
+device on sign-out — before clearing the token, because that call needs the
+session it is ending. On a shared phone that is the difference between the next
+user being notified about their own series and about the last user's.
+
+What is missing is a credential on each platform, and they fail differently:
+
+- **iOS** gets a real APNs token the moment the App ID has the Push
+  Notifications capability and the profile is reissued (#30). Until then
+  `registerForRemoteNotifications` fails every launch, so `PushTokens` keeps the
+  system's reason and the settings screen shows it.
+- **Android** cannot get a token at all yet. FCM needs a `google-services.json`
+  from a Firebase project that does not exist (#37), and the Gradle plugin fails
+  the build outright when that file is absent. So `PushTokens` is an interface
+  with one implementation that returns null, and `NotificationModule` is the
+  single binding to change when the project exists.
+
+Returning null is deliberate rather than lazy. A plausible fake token would be
+accepted by the backend, counted as a registered device, and then silently
+deliver nothing — so the settings screen would claim notifications were working
+while no notification could possibly arrive. Null makes the screen say the true
+thing: this device is not registered, and nothing can reach it.
+
+One consequence of the server's storage worth knowing, because it decides where
+the per-series switch has to live: a preference row exists only when a series has
+been **muted**, and switching one back on deletes the row rather than storing
+true. So "no row" and "notify me" are the same state, and the list the settings
+screen can show is the muted ones. An un-muted series has no row to list — which
+means the settings screen can only ever *un*-mute, and the title screen is the
+only place a series can be muted at all. The settings screen says so and names
+the default; a client that read a missing row as "off" would show every series
+muted and offer to un-mute series nobody had touched.
+
+That is why the screen reports *which* of the three prerequisites is missing
+rather than only showing switches. Permission, a token, and the backend knowing
+that token fail independently, and a screen that showed switches alone would
+leave somebody toggling a setting that could never do anything. The ordering is
+tested, because reporting "not registered" to somebody who has not been asked
+for permission sends them looking in the wrong place.
 
 ---
 
