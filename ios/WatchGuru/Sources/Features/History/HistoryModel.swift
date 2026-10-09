@@ -10,11 +10,18 @@ enum HistoryType: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    /// The segmented control's title for this filter.
+    ///
+    /// Looked up rather than returned as a literal. `Text` localises a literal
+    /// it is handed directly, but not a `String` that arrives in a variable —
+    /// and this one arrives in a variable, so for as long as it was a plain
+    /// literal the filter stayed English in every language. Android localised
+    /// these from the start, so it was also the two apps disagreeing.
     var label: String {
         switch self {
-        case .all: "Everything"
-        case .films: "Films"
-        case .series: "Series"
+        case .all: String(localized: "Everything")
+        case .films: String(localized: "Films")
+        case .series: String(localized: "Series")
         }
     }
 

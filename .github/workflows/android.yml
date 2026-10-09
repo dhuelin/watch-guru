@@ -56,6 +56,13 @@ jobs:
         working-directory: .
         run: python3 tools/check-kotlin-imports.py
 
+      # A missing translation is invisible: Android falls back to the base
+      # language and says nothing, so half a German build looks like a German
+      # build with some English in it.
+      - name: Check translations
+        working-directory: .
+        run: python3 tools/check-translations.py
+
       # This is the first Gradle build these sources will ever have had. They
       # were written in an environment that could not reach Google's Maven, so
       # the plugin versions and everything under ui/ are unproven. The data

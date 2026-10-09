@@ -15,6 +15,11 @@ to be playing the episode.
 | iOS app (SwiftUI) | Every screen built: sign-in, trending and search, library, title detail with progress and rating, history, stats, importing a history from a file, media-server and Trakt connections. A home-screen and lock-screen widget that marks an episode watched without opening the app. New-episode notification settings, global and per series. Works offline with a replayed mutation queue. |
 | Android app (Jetpack Compose) | The same, screen for screen. |
 
+Both apps ship in **English and German** — the interface, not the catalogue:
+titles and plot overviews still arrive from TMDB in English, because the
+detail endpoint does not take a language yet. See
+[`docs/LOCALISATION.md`](docs/LOCALISATION.md).
+
 Notifications are the one feature that is built end to end and still cannot
 deliver: that needs an APNs key and a Firebase project, neither of which is code.
 The apps say so on the settings screen rather than showing switches that do

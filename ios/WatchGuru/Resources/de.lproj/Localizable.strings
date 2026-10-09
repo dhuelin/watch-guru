@@ -1,0 +1,207 @@
+/*
+  Localizable.strings — German.
+
+  Keys are the English text, exactly as in en.lproj. A key that does not match
+  character for character silently falls back to English, and nothing in the
+  build says so, which is why tools/check-translations.py compares the two key
+  sets rather than trusting that they match.
+
+  The wording is shared with android/app/src/main/res/values-de/strings.xml,
+  for the reason the English copy is shared: one product must not name a status
+  "Am Schauen" on one phone and something else on the other.
+
+  Two decisions, both explained in docs/LOCALISATION.md:
+
+  "Benachrichtigungen", not Apple's house term "Mitteilungen". The platforms
+  disagree about this word and this project's copy does not vary by platform;
+  the Android word is understood on both.
+
+  "du", not "Sie". The English copy is plain and direct, and "Sie" would turn
+  the same sentences into a bank's.
+*/
+
+/* MARK: Used on more than one screen */
+/* Detail, History, Profile */
+"Cancel" = "Abbrechen";
+/* Server, Trakt */
+"Disconnect" = "Trennen";
+/* Detail, History, Server */
+"Done" = "Fertig";
+/* Library, Navigation */
+"Library" = "Bibliothek";
+/* Detail, Home */
+"Mark watched" = "Als gesehen markieren";
+/* Profile, Server, Trakt */
+"OK" = "OK";
+/* Navigation, Profile */
+"Profile" = "Profil";
+/* Navigation, Search */
+"Search" = "Suche";
+/* Detail, Library */
+"Status" = "Status";
+/* Detail, Profile, SignIn */
+"This product uses the TMDB API but is not endorsed or certified by TMDB." = "Dieses Produkt nutzt die TMDB-API, wird aber von TMDB weder unterstützt noch zertifiziert.";
+/* Detail, History */
+"Watched on" = "Gesehen am";
+
+/* A title's type and the history filter's categories. "Serie" is one title,
+   "Serien" the category — one word in English, two in German, which is the
+   whole reason they are separate keys. */
+"Film" = "Film";
+"TV series" = "Serie";
+"Everything" = "Alles";
+"Films" = "Filme";
+
+/* MARK: History */
+"Any service" = "Jeder Dienst";
+"Clear dates" = "Daten zurücksetzen";
+"Correct this entry" = "Diesen Eintrag korrigieren";
+"Dates" = "Zeitraum";
+"Delete" = "Löschen";
+"From" = "Von";
+"From a date" = "Ab einem Datum";
+"History" = "Verlauf";
+"Not recorded" = "Nicht erfasst";
+"Nothing here" = "Nichts hier";
+"Save" = "Speichern";
+"Search your history" = "Verlauf durchsuchen";
+"Service" = "Dienst";
+"Show" = "Anzeigen";
+"Up to" = "Bis";
+"Up to a date" = "Bis zu einem Datum";
+"Watched where" = "Gesehen wo";
+
+/* MARK: Detail */
+"Add to library" = "Zur Bibliothek hinzufügen";
+"Episodes" = "Folgen";
+"Mark all up to here" = "Alle bis hierhin als gesehen markieren";
+"Not on any streaming service in your region." = "In deiner Region bei keinem Streamingdienst verfügbar.";
+"Offers for the country set in your profile." = "Angebote für das Land aus deinem Profil.";
+"Remove from library" = "Aus der Bibliothek entfernen";
+"Streaming availability data provided by JustWatch." = "Daten zur Streaming-Verfügbarkeit von JustWatch.";
+"Watched on a date…" = "An einem Datum gesehen…";
+"Watched today" = "Heute gesehen";
+"When did you watch it?" = "Wann hast du es gesehen?";
+"Where to watch" = "Wo zu sehen";
+"You are not tracking this yet." = "Das verfolgst du noch nicht.";
+"You're all caught up." = "Du bist auf dem neuesten Stand.";
+"Your library" = "Deine Bibliothek";
+"Your rating" = "Deine Bewertung";
+"Your rating out of ten" = "Deine Bewertung von zehn";
+
+/* MARK: Home */
+"Nothing on the go" = "Nichts angefangen";
+"Start a series and it will show up here." = "Starte eine Serie, dann erscheint sie hier.";
+"Up Next" = "Als Nächstes";
+
+/* MARK: Import */
+"Bring in what you have already watched. Nothing is added to your library until you have seen what the file contains and said yes." = "Bring mit, was du schon gesehen hast. Nichts kommt in deine Bibliothek, bevor du gesehen hast, was in der Datei steht, und zugestimmt hast.";
+"Choose a file" = "Datei wählen";
+"Files this reads" = "Diese Dateien werden gelesen";
+"IMDb (Lists or Ratings → Export), Letterboxd (Settings → Import & Export), Netflix (Viewing activity → Download all), and Watch Guru's own CSV. The format is worked out from the file, so there is nothing to pick." = "IMDb (Listen oder Bewertungen → Export), Letterboxd (Einstellungen → Import & Export), Netflix (Sehaktivität → Alle herunterladen) und Watch Gurus eigenes CSV. Das Format wird aus der Datei erkannt, es gibt also nichts auszuwählen.";
+"Import" = "Import";
+"Import a watch history" = "Sehverlauf importieren";
+"Import another file" = "Weitere Datei importieren";
+"Imported" = "Importiert";
+"Importing…" = "Wird importiert…";
+"More than one title matches. Pick the right one, or leave it out." = "Mehr als ein Titel passt. Wähle den richtigen oder lass ihn weg.";
+"Needs a choice" = "Braucht eine Entscheidung";
+"Not found" = "Nicht gefunden";
+"Nothing in this file could be read as a watch history." = "In dieser Datei war kein Sehverlauf zu erkennen.";
+"Nothing selected" = "Nichts ausgewählt";
+"Reading the file…" = "Datei wird gelesen…";
+"Ready to import" = "Bereit zum Import";
+"Rows that could not be read" = "Zeilen, die nicht gelesen werden konnten";
+"These could not be matched to a title, so they cannot be imported. Nothing is lost — you can add them by hand later." = "Diese konnten keinem Titel zugeordnet werden und lassen sich darum nicht importieren. Nichts geht verloren: du kannst sie später von Hand hinzufügen.";
+"Worth knowing about this file" = "Wissenswertes zu dieser Datei";
+
+/* Which export the file turned out to be. */
+"Read as a Watch Guru export" = "Gelesen als Watch-Guru-Export";
+"Read as an IMDb export" = "Gelesen als IMDb-Export";
+"Read as a Letterboxd export" = "Gelesen als Letterboxd-Export";
+"Read as a Netflix export" = "Gelesen als Netflix-Export";
+"Read as an unrecognised file" = "Gelesen als unbekannte Datei";
+
+/* Interpolated. The specifiers must survive translation exactly: %lld is a
+   64-bit integer, and dropping or reordering one is a crash, not a typo. */
+"Import %lld" = "%lld importieren";
+"%lld already imported. These are skipped." = "%lld schon importiert. Diese werden übersprungen.";
+"%lld added, %lld already there." = "%lld hinzugefügt, %lld schon vorhanden.";
+"%lld could not be written." = "%lld konnten nicht geschrieben werden.";
+
+/* Sentences a model produces. */
+"That file could not be read." = "Diese Datei konnte nicht gelesen werden.";
+"That file is too large to import." = "Diese Datei ist zu groß für einen Import.";
+"The file could not be checked. Try again." = "Die Datei konnte nicht geprüft werden. Versuche es erneut.";
+"That import did not go through. Nothing was added." = "Dieser Import ist nicht durchgegangen. Es wurde nichts hinzugefügt.";
+
+/* MARK: Library */
+"All" = "Alle";
+"Filter" = "Filter";
+"Nothing tracked yet" = "Noch nichts verfolgt";
+"Remove" = "Entfernen";
+"Search for a film or series to get started." = "Suche einen Film oder eine Serie, um anzufangen.";
+
+/* MARK: Navigation */
+"Home" = "Start";
+
+/* MARK: Profile */
+"Choose your region" = "Region wählen";
+"Connect Emby" = "Emby verbinden";
+"Connect Jellyfin" = "Jellyfin verbinden";
+"Connect Plex" = "Plex verbinden";
+"Delete account" = "Konto löschen";
+"Deleting your account removes your library, progress and history permanently." = "Das Löschen deines Kontos entfernt deine Bibliothek, deinen Fortschritt und deinen Verlauf dauerhaft.";
+"Preferences" = "Einstellungen";
+"Search countries" = "Länder suchen";
+"Sign out" = "Abmelden";
+"Streaming offers are shown for this country." = "Streaming-Angebote werden für dieses Land angezeigt.";
+"This removes your library, progress and history permanently. It cannot be undone." = "Das entfernt deine Bibliothek, deinen Fortschritt und deinen Verlauf dauerhaft. Es kann nicht rückgängig gemacht werden.";
+"Viewing history" = "Verlauf ansehen";
+"Your region is unchanged. Please try again." = "Deine Region ist unverändert. Bitte versuche es erneut.";
+
+/* MARK: Search */
+"Add" = "Hinzufügen";
+"Already in your library" = "Schon in deiner Bibliothek";
+"Search films and series" = "Filme und Serien suchen";
+"Search for something to watch" = "Suche etwas zum Schauen";
+"Trending this week" = "Diese Woche im Trend";
+
+/* MARK: Server */
+"Check the username and try again." = "Prüfe den Benutzernamen und versuche es erneut.";
+"Copy" = "Kopieren";
+"Recent deliveries" = "Letzte Zustellungen";
+"Your webhook URL" = "Deine Webhook-URL";
+
+/* MARK: SignIn */
+"Know what you've watched and where you left off." = "Wisse, was du gesehen hast und wo du stehengeblieben bist.";
+"Sign in with Apple" = "Mit Apple anmelden";
+"Watch Guru" = "Watch Guru";
+
+/* MARK: Stats */
+"Mark something watched and this fills in." = "Markiere etwas als gesehen, dann füllt sich das hier.";
+"Nothing watched in this period." = "In diesem Zeitraum nichts gesehen.";
+"Nothing watched yet" = "Noch nichts gesehen";
+"Period" = "Zeitraum";
+"Statistics" = "Statistik";
+
+/* MARK: Trakt */
+"Connect Trakt" = "Trakt verbinden";
+"Recent syncs" = "Letzte Synchronisierungen";
+"Sync now" = "Jetzt synchronisieren";
+"Trakt" = "Trakt";
+
+/* MARK: Notifications */
+"Allow notifications" = "Benachrichtigungen erlauben";
+"New episodes" = "Neue Folgen";
+"Notifications" = "Benachrichtigungen";
+"Open Settings" = "Einstellungen öffnen";
+"Series" = "Serien";
+"This device has no push token, so nothing can be delivered to it." = "Dieses Gerät hat kein Push-Token, hier kann also nichts zugestellt werden.";
+"This device is not registered for notifications yet." = "Dieses Gerät ist noch nicht für Benachrichtigungen registriert.";
+"Told when a new episode of something you are watching airs." = "Du erfährst es, wenn eine neue Folge von etwas läuft, das du schaust.";
+"iOS is not allowing Watch Guru to notify you." = "iOS erlaubt Watch Guru nicht, dich zu benachrichtigen.";
+"Muted series" = "Stummgeschaltete Serien";
+"Notify me about new episodes" = "Über neue Folgen benachrichtigen";
+"Turn a series off on its own screen. Switching one back on here removes it from this list." = "Eine Serie schaltest du auf ihrem eigenen Bildschirm ab. Schaltest du sie hier wieder ein, verschwindet sie aus dieser Liste.";
+"You have not muted anything. Every series in your library can notify you." = "Du hast nichts stummgeschaltet. Jede Serie in deiner Bibliothek kann dich benachrichtigen.";

@@ -61,6 +61,16 @@
 "Your rating" = "Your rating";
 "Your rating out of ten" = "Your rating out of ten";
 
+/* A title's type and the history filter's categories. Looked up through
+   String(localized:) because they reach Text in a variable, which does not
+   localise; as literals they stayed English everywhere. "TV series" is the
+   single title, "Series" the filter category: one word in English, two in
+   most other languages. */
+"Film" = "Film";
+"TV series" = "TV series";
+"Everything" = "Everything";
+"Films" = "Films";
+
 /* MARK: History */
 "Any service" = "Any service";
 "Clear dates" = "Clear dates";
@@ -189,7 +199,6 @@
 /* MARK: Notifications */
 "Allow notifications" = "Allow notifications";
 "New episodes" = "New episodes";
-"Nothing in your library is a series that is still running." = "Nothing in your library is a series that is still running.";
 "Notifications" = "Notifications";
 "Open Settings" = "Open Settings";
 "Series" = "Series";

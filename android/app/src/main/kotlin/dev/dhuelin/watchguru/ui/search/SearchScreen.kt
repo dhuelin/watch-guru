@@ -154,14 +154,18 @@ private fun SearchResultRow(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
+            // Read before buildString, not inside it: stringResource is a
+            // composable and buildString's lambda is not one, so the call has
+            // to happen out here.
+            val type = stringResource(
+                when (hit.titleType) {
+                    SearchHit.TitleType.MOVIE -> R.string.title_type_film
+                    SearchHit.TitleType.TV_SERIES -> R.string.title_type_series
+                },
+            )
             Text(
                 text = buildString {
-                    append(
-                        when (hit.titleType) {
-                            SearchHit.TitleType.MOVIE -> "Film"
-                            SearchHit.TitleType.TV_SERIES -> "Series"
-                        },
-                    )
+                    append(type)
                     hit.releaseDate?.let { append(" · ${it.year}") }
                     // A null rating is omitted rather than shown as 0.0: most
                     // titles genuinely have no rating yet.
