@@ -10,11 +10,18 @@ enum HistoryType: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
+    /// The segmented control's title for this filter.
+    ///
+    /// Looked up rather than returned as a literal. `Text` localises a literal
+    /// it is handed directly, but not a `String` that arrives in a variable —
+    /// and this one arrives in a variable, so for as long as it was a plain
+    /// literal the filter stayed English in every language. Android localised
+    /// these from the start, so it was also the two apps disagreeing.
     var label: String {
         switch self {
-        case .all: "Everything"
-        case .films: "Films"
-        case .series: "Series"
+        case .all: String(localized: "Everything")
+        case .films: String(localized: "Films")
+        case .series: String(localized: "Series")
         }
     }
 
@@ -40,14 +47,25 @@ struct DateRange: Equatable {
 
     /// What the filter chip says. An end alone is a bound too: "everything up
     /// to March" is a question people ask.
+    /// Looked up, not returned as a literal. This goes to `Label` in a
+    /// variable, and only a literal handed straight to a view is localised —
+    /// so as plain literals these three stayed English in every language while
+    /// Android localised all three. Same mistake as `HistoryType.label` and
+    /// the search badge, in the same file, found one sweep later.
+    ///
+    /// The two-date case has no copy in it at all: two formatted dates and an
+    /// en dash, both sides already locale-formatted, so there is nothing to
+    /// translate and no key for it.
     var label: String {
         switch (from, to) {
-        case (nil, nil): "Any time"
+        case (nil, nil): String(localized: "Any time")
         case (let from?, let to?):
             "\(from.formatted(date: .abbreviated, time: .omitted)) – "
                 + "\(to.formatted(date: .abbreviated, time: .omitted))"
-        case (let from?, nil): "Since \(from.formatted(date: .abbreviated, time: .omitted))"
-        case (nil, let to?): "Until \(to.formatted(date: .abbreviated, time: .omitted))"
+        case (let from?, nil):
+            String(localized: "Since \(from.formatted(date: .abbreviated, time: .omitted))")
+        case (nil, let to?):
+            String(localized: "Until \(to.formatted(date: .abbreviated, time: .omitted))")
         }
     }
 }

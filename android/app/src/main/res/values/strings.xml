@@ -208,6 +208,14 @@
     <string name="detail_rating_imdb">IMDb %1$s</string>
     <string name="library_filter_all">All</string>
 
+    <!-- A single title's type, on a search result. Resources rather than
+         literals: these were hardcoded in SearchScreen, which meant the badge
+         stayed English in every language. "TV series" rather than "Series" so
+         the key cannot collide with the history filter's plural category,
+         which is a different word in most languages. -->
+    <string name="title_type_film">Film</string>
+    <string name="title_type_series">TV series</string>
+
     <!-- Reading an existing history in from another service. Two steps, and
          the copy says so before a file is chosen: an import that wrote
          straight from the file would be the thing people are wary of. -->

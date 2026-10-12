@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The languages this app ships, declared so Android 13 and up can offer a
+  per-app language picker in system settings.
+
+  Without this the app simply follows the system language, and somebody whose
+  phone is in German but who would rather read the app in English has no way to
+  say so. With it, Watch Guru appears under Settings, App languages.
+
+  Order is not a preference: the system sorts the list itself. Below Android 13
+  the attribute is ignored and the system language decides, which is the same
+  behaviour as before.
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="de" />
+</locale-config>

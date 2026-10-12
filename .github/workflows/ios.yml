@@ -50,6 +50,13 @@ jobs:
         working-directory: .
         run: python3 tools/check-ios-strings.py
 
+      # And that every catalogue entry has a translation. On iOS the key IS the
+      # English sentence, so one changed character is indistinguishable from
+      # never having translated it.
+      - name: Check translations
+        working-directory: .
+        run: python3 tools/check-translations.py
+
       # Same reason, one round earlier: Swift wants named arguments in the
       # order the initialiser declares them, the generator declares model
       # fields alphabetically, and a call that reads naturally is therefore a

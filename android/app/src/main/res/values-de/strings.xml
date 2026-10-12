@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  German. Shares its wording with the iOS catalogue verbatim, for the same
+  reason the English ones do: one product must not call a status "Am Schauen"
+  on one phone and something else on the other.
+
+  Two decisions worth knowing about, both in docs/LOCALISATION.md:
+
+  "Benachrichtigungen" rather than Apple's "Mitteilungen", on both platforms.
+  The house terms differ, and this project's rule is that the copy is shared;
+  the Android word is the one a reader understands either way.
+
+  The formal "Sie" is not used. The English copy speaks plainly and directly
+  ("Know what you've watched"), and "du" keeps that; "Sie" would make the same
+  sentences sound like a bank's.
+-->
+<resources>
+    <string name="app_name">Watch Guru</string>
+
+    <string name="tab_home">Start</string>
+    <string name="tab_search">Suche</string>
+    <string name="tab_library">Bibliothek</string>
+    <string name="tab_profile">Profil</string>
+
+    <string name="status_watchlist">Merkliste</string>
+    <string name="status_watching">Am Schauen</string>
+    <string name="status_completed">Abgeschlossen</string>
+    <string name="status_on_hold">Pausiert</string>
+    <string name="status_dropped">Abgebrochen</string>
+
+    <string name="action_mark_watched">Als gesehen markieren</string>
+    <string name="action_mark_unwatched">Als ungesehen markieren</string>
+    <string name="action_mark_up_to_here">Alle bis hierhin als gesehen markieren</string>
+    <string name="action_add_to_library">Zur Bibliothek hinzufügen</string>
+    <string name="action_retry">Erneut versuchen</string>
+
+    <string name="empty_up_next">Nichts angefangen. Starte eine Serie, dann erscheint sie hier.</string>
+    <string name="title_history">Verlauf</string>
+    <string name="empty_history">Noch nichts gesehen. Markiere eine Folge, dann steht sie hier.</string>
+    <string name="action_view_history">Verlauf ansehen</string>
+    <string name="empty_library">Noch nichts verfolgt. Suche einen Film oder eine Serie, um anzufangen.</string>
+    <string name="empty_search">Keine Ergebnisse für \"%1$s\".</string>
+    <string name="search_hint">Filme und Serien suchen</string>
+    <string name="search_prompt">Suche etwas zum Schauen.</string>
+    <string name="trending_this_week">Diese Woche im Trend</string>
+
+    <string name="library_your_entry">Deine Bibliothek</string>
+    <string name="library_not_tracked">Das verfolgst du noch nicht.</string>
+    <string name="action_remove_from_library">Aus der Bibliothek entfernen</string>
+    <string name="library_your_rating">Deine Bewertung</string>
+    <string name="library_not_rated">Nicht bewertet</string>
+    <string name="library_rating_value">%1$d / 10</string>
+
+    <string name="error_offline">Offline — Änderungen werden synchronisiert, sobald du wieder verbunden bist.</string>
+    <string name="error_provider_down">Der Katalog war nicht erreichbar. Deine Bibliothek ist trotzdem aktuell.</string>
+    <string name="error_generic">Etwas ist schiefgelaufen.</string>
+
+    <string name="sign_in_tagline">Wisse, was du gesehen hast und wo du stehengeblieben bist.</string>
+    <string name="action_sign_in_google">Mit Google anmelden</string>
+    <string name="action_sign_out">Abmelden</string>
+    <string name="action_delete_account">Konto löschen</string>
+    <string name="action_cancel">Abbrechen</string>
+    <string name="delete_account_title">Konto löschen?</string>
+    <string name="delete_account_message">Das entfernt deine Bibliothek, deinen Fortschritt und deinen Verlauf dauerhaft. Es kann nicht rückgängig gemacht werden.</string>
+    <string name="delete_account_footer">Das Löschen deines Kontos entfernt deine Bibliothek, deinen Fortschritt und deinen Verlauf dauerhaft.</string>
+
+    <string name="region_label">Region</string>
+    <string name="region_picker_title">Region wählen</string>
+    <string name="region_search_hint">Länder suchen</string>
+    <string name="region_explainer">Streaming-Angebote werden für dieses Land angezeigt.</string>
+    <string name="error_region_update">Die Region konnte nicht geändert werden. Bitte versuche es erneut.</string>
+
+    <string name="where_to_watch">Wo zu sehen</string>
+    <string name="offer_flatrate">Abo</string>
+    <string name="offer_free">Gratis</string>
+    <string name="offer_ads">Gratis mit Werbung</string>
+    <string name="offer_rent">Leihen</string>
+    <string name="offer_buy">Kaufen</string>
+    <string name="action_watch_options">Alle Optionen ansehen</string>
+    <string name="where_to_watch_region">Angebote für das Land aus deinem Profil.</string>
+    <string name="where_to_watch_none">In deiner Region bei keinem Streamingdienst verfügbar.</string>
+    <string name="where_to_watch_updated">Geprüft %1$s</string>
+    <string name="justwatch_attribution">Daten zur Streaming-Verfügbarkeit von JustWatch.</string>
+
+    <string name="title_stats">Statistik</string>
+    <string name="action_view_stats">Statistik</string>
+    <string name="empty_stats">Noch nichts gesehen. Markiere etwas als gesehen, dann füllt sich das hier.</string>
+    <string name="empty_stats_period">In diesem Zeitraum nichts gesehen.</string>
+    <string name="stats_period_month">Dieser Monat</string>
+    <string name="stats_period_year">Dieses Jahr</string>
+    <string name="stats_period_all">Gesamt</string>
+    <string name="stats_hero_detail">%1$d Titel · %2$d Filme · %3$d Folgen</string>
+    <string name="stats_current_streak">Tage in Folge</string>
+    <string name="stats_longest_streak">Längste Serie</string>
+    <string name="stats_streak_rule">Gezählt werden aufeinanderfolgende Tage mit mindestens einer Sichtung. Gestern zählt noch mit, die Serie reißt also nicht, bevor der Tag vorbei ist.</string>
+    <string name="stats_by_month">Nach Monat</string>
+    <string name="stats_by_genre">Nach Genre</string>
+    <string name="stats_by_service">Nach Dienst</string>
+    <string name="stats_top_titles">Am meisten gesehen</string>
+    <string name="stats_hours">%1$d h</string>
+
+    <string name="action_back">Zurück</string>
+    <string name="action_copy">Kopieren</string>
+    <string name="action_done">Fertig</string>
+    <string name="server_explainer">Wenn du auf deinem eigenen %1$s-Server etwas schaust, wird es hier festgehalten, ohne dass du etwas markierst. Dein Server ruft Watch Guru auf, es gibt also kein Passwort anzugeben: du fügst eine URL in seine Einstellungen ein, den Rest macht er selbst.</string>
+    <string name="server_username_optional_label">%1$s-Benutzername (optional)</string>
+    <string name="server_username_required_label">%1$s-Benutzername</string>
+    <string name="server_username_optional_explainer">Nur nötig, wenn andere Leute auf demselben Server schauen. Ohne ihn wird nur festgehalten, was dein Server dir zuordnet.</string>
+    <string name="server_username_required_explainer">Erforderlich: dieser Server sendet einen Webhook für alle auf ihm, der Benutzername trennt also deine Sichtungen von denen der anderen.</string>
+    <string name="action_server_connect">Verbinden</string>
+    <string name="action_server_reconnect">Neue URL ausstellen</string>
+    <string name="action_server_disconnect">Trennen</string>
+    <string name="server_reconnect_explainer">Eine neue URL setzt die alte außer Kraft — der Ausweg, falls deine irgendwo öffentlich gelandet ist.</string>
+    <string name="server_url_heading">Deine Webhook-URL</string>
+    <string name="server_waiting">Warte auf deinen %1$s-Server. Füge die Webhook-URL dort ein und schaue dann etwas.</string>
+    <string name="server_last_heard">Zuletzt von deinem Server gehört %1$s</string>
+    <string name="server_recent_deliveries">Letzte Zustellungen</string>
+    <string name="server_other_services">Netflix, Prime Video und Apple TV können das nicht: keiner von ihnen bietet eine Möglichkeit zu erfragen, was du gesehen hast. Importiere stattdessen deren Export — ein erneuter Import erzeugt keine Duplikate.</string>
+    <string name="action_connect_plex">Plex verbinden</string>
+    <string name="action_connect_jellyfin">Jellyfin verbinden</string>
+    <string name="action_connect_emby">Emby verbinden</string>
+
+    <string name="title_trakt">Trakt</string>
+    <string name="trakt_explainer">Wenn du schon zu Trakt scrobbelst — aus Plex, Kodi, Infuse oder woanders — bringt eine Verbindung das alles hierher. Du bestätigst es auf trakt.tv in deinem Browser; Watch Guru sieht dein Trakt-Passwort nie.</string>
+    <string name="action_trakt_connect">Trakt verbinden</string>
+    <string name="action_trakt_sync">Jetzt synchronisieren</string>
+    <string name="action_trakt_disconnect">Trennen</string>
+    <string name="trakt_waiting">Bestätige die Verbindung in deinem Browser und komm dann hierher zurück.</string>
+    <string name="trakt_last_synced">Zuletzt synchronisiert %1$s</string>
+    <string name="trakt_recent_syncs">Letzte Synchronisierungen</string>
+    <string name="trakt_sync_problems">Konnte nicht zugeordnet werden: %1$s</string>
+    <string name="trakt_no_browser">Es ist kein Browser verfügbar, um die Trakt-Seite zu öffnen.</string>
+    <string name="trakt_privacy_note">Watch Guru speichert den Zugriff, den Trakt ihm gibt, verschlüsselt — und nie dein Passwort. Beim Trennen wird er auch bei Trakt widerrufen.</string>
+    <plurals name="trakt_sync_result">
+        <item quantity="one">%1$d Sichtung übernommen.</item>
+        <item quantity="other">%1$d Sichtungen übernommen.</item>
+    </plurals>
+    <string name="action_connect_trakt">Trakt verbinden</string>
+
+    <string name="history_search_label">Verlauf durchsuchen</string>
+    <string name="history_filter_all">Alles</string>
+    <string name="history_filter_films">Filme</string>
+    <string name="history_filter_series">Serien</string>
+    <string name="history_any_service">Jeder Dienst</string>
+    <string name="history_any_time">Jederzeit</string>
+    <string name="history_since">Seit %1$s</string>
+    <string name="history_until">Bis %1$s</string>
+    <string name="history_clear_dates">Daten zurücksetzen</string>
+    <string name="history_watched_on">Gesehen am</string>
+    <string name="history_watched_where">Gesehen wo</string>
+    <string name="action_save">Speichern</string>
+
+    <string name="action_log_film_today">Heute gesehen</string>
+    <string name="action_log_film_on_a_date">An einem Datum gesehen</string>
+    <string name="film_logged_on">Für %1$s in deinem Verlauf eingetragen.</string>
+    <string name="film_log_queued">Für %1$s gespeichert. Wird gesendet, sobald du wieder online bist.</string>
+
+    <string name="tmdb_attribution">Dieses Produkt nutzt die TMDB-API, wird aber von TMDB weder unterstützt noch zertifiziert.</string>
+
+    <plurals name="pending_changes">
+        <item quantity="one">%1$d Änderung wartet auf Synchronisierung</item>
+        <item quantity="other">%1$d Änderungen warten auf Synchronisierung</item>
+    </plurals>
+
+    <string name="cd_mark_episode_watched">%1$s als gesehen markieren</string>
+    <string name="cd_mark_episode_unwatched">%1$s als ungesehen markieren</string>
+    <string name="cd_poster">Poster von %1$s</string>
+    <string name="cd_progress">%1$d von %2$d Folgen gesehen</string>
+    <string name="cd_mark_next_episode">%1$s von %2$s als gesehen markieren</string>
+    <string name="cd_expand_season">Staffel aufklappen</string>
+    <string name="cd_collapse_season">Staffel zuklappen</string>
+    <string name="cd_more_actions">Weitere Aktionen für %1$s</string>
+    <string name="cd_your_rating">Deine Bewertung von zehn</string>
+    <string name="cd_delete_entry">Diesen Eintrag für %1$s löschen</string>
+
+    <string name="detail_runtime_minutes">%1$d Min.</string>
+    <string name="detail_rating_tmdb">TMDB %1$s</string>
+    <string name="detail_rating_imdb">IMDb %1$s</string>
+    <string name="library_filter_all">Alle</string>
+
+    <string name="title_type_film">Film</string>
+    <!-- Singular: this describes one title. The history filter's "Serien" is
+         the plural category, which is why they are two keys. -->
+    <string name="title_type_series">Serie</string>
+
+    <string name="action_import_history">Sehverlauf importieren</string>
+    <string name="import_title">Import</string>
+    <string name="import_intro">Bring mit, was du schon gesehen hast. Nichts kommt in deine Bibliothek, bevor du gesehen hast, was in der Datei steht, und zugestimmt hast.</string>
+    <string name="import_sources_title">Diese Dateien werden gelesen</string>
+    <string name="import_sources_body">IMDb (Listen oder Bewertungen → Export), Letterboxd (Einstellungen → Import &amp; Export), Netflix (Sehaktivität → Alle herunterladen) und Watch Gurus eigenes CSV. Das Format wird aus der Datei erkannt, es gibt also nichts auszuwählen.</string>
+    <string name="action_choose_file">Datei wählen</string>
+    <string name="import_reading">Datei wird gelesen…</string>
+    <string name="import_source_label">Gelesen als %1$s</string>
+    <string name="import_source_watch_guru">Watch-Guru-Export</string>
+    <string name="import_source_imdb">IMDb-Export</string>
+    <string name="import_source_letterboxd">Letterboxd-Export</string>
+    <string name="import_source_netflix">Netflix-Export</string>
+    <string name="import_source_unknown">unbekannte Datei</string>
+    <string name="import_nothing_found">In dieser Datei war kein Sehverlauf zu erkennen.</string>
+    <string name="import_already_imported">%1$d schon importiert. Diese werden übersprungen.</string>
+    <string name="import_section_matched">Bereit zum Import</string>
+    <string name="import_section_ambiguous">Braucht eine Entscheidung</string>
+    <string name="import_section_unmatched">Nicht gefunden</string>
+    <string name="import_ambiguous_hint">Mehr als ein Titel passt. Wähle den richtigen oder lass ihn weg.</string>
+    <string name="import_unmatched_hint">Diese konnten keinem Titel zugeordnet werden und lassen sich darum nicht importieren. Nichts geht verloren: du kannst sie später von Hand hinzufügen.</string>
+    <string name="import_row_watched_on">Gesehen %1$s</string>
+    <string name="import_row_rating">Bewertet %1$s</string>
+    <string name="import_candidate_year">%1$s (%2$d)</string>
+    <string name="import_problems_title">Zeilen, die nicht gelesen werden konnten</string>
+    <string name="import_warnings_title">Wissenswertes zu dieser Datei</string>
+    <string name="action_import_selected">%1$d importieren</string>
+    <string name="import_none_selected">Nichts ausgewählt</string>
+    <string name="import_committing">Wird importiert…</string>
+    <string name="import_done_title">Importiert</string>
+    <string name="import_done_body">%1$d hinzugefügt, %2$d schon vorhanden.</string>
+    <string name="import_done_failed">%1$d konnten nicht geschrieben werden.</string>
+    <string name="action_import_another">Weitere Datei importieren</string>
+    <string name="error_import_unreadable">Diese Datei konnte nicht gelesen werden.</string>
+    <string name="error_import_too_large">Diese Datei ist zu groß für einen Import.</string>
+    <string name="error_import_preview">Die Datei konnte nicht geprüft werden. Versuche es erneut.</string>
+    <string name="error_import_commit">Dieser Import ist nicht durchgegangen. Es wurde nichts hinzugefügt.</string>
+
+    <string name="title_notifications">Benachrichtigungen</string>
+    <string name="action_notification_settings">Benachrichtigungen</string>
+    <string name="notifications_new_episodes">Neue Folgen</string>
+    <string name="notifications_new_episodes_detail">Du erfährst es, wenn eine neue Folge von etwas läuft, das du schaust.</string>
+    <string name="notifications_permission_needed">Android wurde noch nicht gefragt, ob Watch Guru dich benachrichtigen darf.</string>
+    <string name="action_allow_notifications">Benachrichtigungen erlauben</string>
+    <string name="notifications_no_devices">Dieses Gerät ist noch nicht für Benachrichtigungen registriert, hier kann also nichts ankommen.</string>
+    <string name="notifications_series_detail">Eine Serie schaltest du auf ihrem eigenen Bildschirm ab. Schaltest du sie hier wieder ein, verschwindet sie aus dieser Liste.</string>
+    <string name="notifications_series_heading">Stummgeschaltete Serien</string>
+    <string name="notifications_no_series">Du hast nichts stummgeschaltet. Jede Serie in deiner Bibliothek kann dich benachrichtigen.</string>
+    <string name="detail_notify_new_episodes">Über neue Folgen benachrichtigen</string>
+    <string name="notifications_unavailable">Die Benachrichtigungseinstellungen konnten nicht geladen werden.</string>
+
+    <string name="widget_label">Watch Guru</string>
+    <string name="widget_description">Was als Nächstes dran ist, markierbar ohne die App zu öffnen.</string>
+    <string name="widget_up_next">Als Nächstes</string>
+    <string name="widget_mark_watched">Gesehen</string>
+    <string name="widget_signed_out">Melde dich an, um zu sehen, was als Nächstes dran ist.</string>
+    <string name="widget_nothing_next">Nichts offen. Tippe, um etwas zu finden.</string>
+    <string name="widget_offline">Keine Verbindung. Lieber nichts anzeigen als etwas Falsches.</string>
+    <string name="widget_unavailable">Das konnte gerade nicht geladen werden.</string>
+    <string name="widget_episode_named">%1$s · %2$s</string>
+</resources>

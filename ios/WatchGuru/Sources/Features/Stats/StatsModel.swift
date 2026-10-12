@@ -12,9 +12,9 @@ enum StatsPeriod: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .month: "This month"
-        case .year: "This year"
-        case .allTime: "All time"
+        case .month: String(localized: "This month")
+        case .year: String(localized: "This year")
+        case .allTime: String(localized: "All time")
         }
     }
 

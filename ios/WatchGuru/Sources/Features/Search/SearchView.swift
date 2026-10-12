@@ -121,7 +121,15 @@ private struct SearchResultRow: View {
     }
 
     private var subtitle: String {
-        var parts: [String] = [hit.titleType == .movie ? "Film" : "Series"]
+        // Looked up, not a literal: this is joined into a String and handed
+        // to Text in a variable, which does not localise. "TV series" rather
+        // than "Series" so the key cannot collide with the history filter's
+        // plural category — one title is a Serie, the category is Serien.
+        var parts: [String] = [
+            hit.titleType == .movie
+                ? String(localized: "Film")
+                : String(localized: "TV series")
+        ]
         if let date = hit.releaseDate {
             parts.append(date.formatted(.dateTime.year()))
         }

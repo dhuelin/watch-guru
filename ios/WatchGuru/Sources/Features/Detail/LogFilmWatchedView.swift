@@ -78,10 +78,14 @@ struct LogFilmWatchedView: View {
     private func message(for outcome: TitleDetailModel.FilmLog) -> String {
         switch outcome {
         case .logged(let day):
-            "Added to your history for \(day.formatted(date: .abbreviated, time: .omitted))."
+            String(localized:
+                "Added to your history for \(day.formatted(date: .abbreviated, time: .omitted)).")
         case .queued(let day):
-            "Saved for \(day.formatted(date: .abbreviated, time: .omitted)). "
-                + "It will be sent when you are back online."
+            // One key, not two joined: a translation has to be able to put the
+            // date where its language puts it, and a sentence split in half
+            // cannot be reordered.
+            String(localized:
+                "Saved for \(day.formatted(date: .abbreviated, time: .omitted)). It will be sent when you are back online.")
         case .failed(let failure):
             failure.message
         }

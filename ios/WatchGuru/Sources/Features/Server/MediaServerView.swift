@@ -140,18 +140,18 @@ struct MediaServerView: View {
     }
 
     private func footer(for status: MediaServerStatusResponse) -> String {
+        // One key per sentence, not a concatenation of halves. A key has to be
+        // the whole sentence for a translator to be able to reorder it, and
+        // these were each split across two literals purely to fit the line.
         if status.connected {
-            return "A new URL retires the old one, which is the way out if yours ended up "
-                + "somewhere public."
+            return String(localized: "A new URL retires the old one, which is the way out if yours ended up somewhere public.")
         }
         // Jellyfin and Emby fire one webhook for everybody on the server, so
         // the username is the only thing keeping a housemate's evening out of
         // this library.
         return status.requiresAccountName
-            ? "Required: this server sends one webhook for everybody on it, so the username is "
-                + "what separates your viewing from theirs."
-            : "The username is only needed if other people watch things on the same server. "
-                + "Without it, only viewing your server marks as yours is recorded."
+            ? String(localized: "Required: this server sends one webhook for everybody on it, so the username is what separates your viewing from theirs.")
+            : String(localized: "The username is only needed if other people watch things on the same server. Without it, only viewing your server marks as yours is recorded.")
     }
 }
 

@@ -25,10 +25,16 @@ enum MonthlyBreakdown {
     /// A chart owes its readers a table; on a phone this sentence is it.
     static func spokenSummary(_ months: [MonthBucket], locale: Locale = .current) -> String {
         guard !months.isEmpty else {
-            return "No viewing recorded in this period."
+            return String(localized: "No viewing recorded in this period.")
         }
-        let parts = months.map { "\(label($0, locale: locale)), \($0.minutes) minutes" }
-        return "Minutes watched by month: " + parts.joined(separator: ", ")
+        // One key per month rather than per word: "Oktober, 120 Minuten" is a
+        // sentence, and a language that puts the unit elsewhere needs to be
+        // able to move it.
+        let parts = months.map {
+            String(localized: "\(label($0, locale: locale)), \($0.minutes) minutes")
+        }
+        return String(localized: "Minutes watched by month: ")
+            + parts.joined(separator: ", ")
     }
 
     /// The month with the most watched, or nil when nothing was.

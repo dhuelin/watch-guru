@@ -27,11 +27,11 @@ extension APIFailure {
     var message: String {
         switch self {
         case .offline:
-            "Offline — changes will sync when you reconnect."
+            String(localized: "Offline — changes will sync when you reconnect.")
         case .upstream:
-            "Couldn't reach the catalogue. Your library is still up to date."
+            String(localized: "Couldn't reach the catalogue. Your library is still up to date.")
         case .unauthorised, .notFound, .unexpected:
-            "Something went wrong."
+            String(localized: "Something went wrong.")
         }
     }
 

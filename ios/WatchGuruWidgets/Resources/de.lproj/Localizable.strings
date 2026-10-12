@@ -1,0 +1,39 @@
+/*
+  Localizable.strings — the widget extension, German.
+
+  A separate translation job from the app's, which is the honest consequence of
+  the widget being a separate bundle: a literal is looked up in the bundle it
+  was compiled into, so the app's de.lproj is not reachable from here.
+
+  Wording is shared with the app's catalogue where the same words appear —
+  "Als Nächstes" and "Gesehen" are the same on the home screen as in the app.
+*/
+
+/* MARK: The widget, in the gallery */
+"Up Next" = "Als Nächstes";
+"The next episode of what you are watching, markable from here." = "Die nächste Folge von dem, was du schaust — direkt von hier als gesehen markierbar.";
+
+/* MARK: The one button */
+"Watched" = "Gesehen";
+
+/* MARK: Everything that is not a list of episodes */
+"Sign in to see what's next" = "Melde dich an, um zu sehen, was als Nächstes dran ist";
+"Open Watch Guru to get started" = "Öffne Watch Guru, um anzufangen";
+"Nothing waiting" = "Nichts offen";
+
+/* MARK: The App Intent, which also appears in Shortcuts */
+"Mark watched" = "Als gesehen markieren";
+"Marks the next episode of a series as watched." = "Markiert die nächste Folge einer Serie als gesehen.";
+"Episode" = "Folge";
+"Series" = "Serie";
+
+/* Interpolated. The specifiers must survive translation exactly, and in this
+   order: the first %@ is the episode and the second the series, so swapping
+   them would announce "Severance von S2E4 als gesehen markieren".
+
+   German happens to want the same order as English here, so these stay
+   unnumbered like the source. A language that needs the other order writes
+   "%2$@ … %1$@" — that is the tool for it, and nothing here needs it yet. */
+"As of %@" = "Stand %@";
+"Mark %@ of %@ watched" = "%@ von %@ als gesehen markieren";
+"%lld of %lld episodes watched" = "%lld von %lld Folgen gesehen";

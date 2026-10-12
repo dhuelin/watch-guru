@@ -46,11 +46,16 @@ enum ConnectionActivity {
     /// reading it — "open the series once so its episodes are fetched" is
     /// something they can act on, which "PARTIAL" is not.
     static func describe(_ run: SyncRunResponse) -> String {
-        if run.itemsImported > 0 { return "Recorded \(run.itemsImported)" }
-        if run.itemsSkipped > 0 { return "Nothing new" }
+        if run.itemsImported > 0 {
+            return String(localized: "Recorded \(run.itemsImported)")
+        }
+        if run.itemsSkipped > 0 { return String(localized: "Nothing new") }
+        // The server's own message, already written for the reader. Not
+        // localisable here, and the backend does not translate it either —
+        // noted in docs/LOCALISATION.md.
         if let error = run.errorMessage, !error.isEmpty { return error }
-        if run.status == .running { return "In progress" }
-        return "Nothing to record"
+        if run.status == .running { return String(localized: "In progress") }
+        return String(localized: "Nothing to record")
     }
 
     /// The headline sentence for a connection.
@@ -67,14 +72,14 @@ enum ConnectionActivity {
     ) -> String {
         switch health(connected: connected, account: account) {
         case .notConnected:
-            "Not connected."
+            String(localized: "Not connected.")
         case .waiting:
             waiting
         case .working:
-            "Connected and recording."
+            String(localized: "Connected and recording.")
         case .needsAttention:
             account?.lastSyncError.flatMap { $0.isEmpty ? nil : $0 }
-                ?? "Connected, but the last attempt could not be completed."
+                ?? String(localized: "Connected, but the last attempt could not be completed.")
         }
     }
 }

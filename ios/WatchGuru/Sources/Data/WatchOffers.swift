@@ -67,11 +67,11 @@ enum WatchOffers {
     /// The heading for a group. Shared with the Android app verbatim.
     static func label(for type: AvailabilityResponse.OfferType) -> String {
         switch type {
-        case .flatrate: "Stream"
-        case .free: "Free"
-        case .ads: "Free with ads"
-        case .rent: "Rent"
-        case .buy: "Buy"
+        case .flatrate: String(localized: "Stream")
+        case .free: String(localized: "Free")
+        case .ads: String(localized: "Free with ads")
+        case .rent: String(localized: "Rent")
+        case .buy: String(localized: "Buy")
         }
     }
 }
