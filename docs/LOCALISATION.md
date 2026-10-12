@@ -90,7 +90,54 @@ Finding that was the direct result of translating. It is the usual way these
 come to light: English collapses a distinction, and the first other language
 pulls it apart.
 
-## Two bugs German exposed
+## The bug that was most of the app: copy a model produces
+
+`Text("Save")` localises. `Text(someString)` does not. The two are
+indistinguishable in review, and that one asymmetry accounted for **46
+unlocalised strings** — the five watch statuses (twice over), all five
+where-to-watch labels, the three failure messages every error screen shows,
+the stats periods, the media-server explainers, the season headers, the
+film-logged confirmations and the accessibility summaries.
+
+None of them were in this file. They could not have been: the first version of
+`check-ios-strings.py` looked for literals *already in a localising position*
+and asked whether each had an entry. It had no way to notice copy that was
+never in such a position to begin with. So the catalogue looked complete at 139
+keys while roughly a quarter of the app's copy was not in it.
+
+It is now 176 keys, and the check has a second half that finds this class:
+inside any `var x: String` or `-> String` body, a literal that looks like copy
+and is not wrapped in `String(localized:)` fails the build. Three refinements
+were needed before it could be trusted, each found by running it:
+
+- **Interpolations are not copy.** `"\(code) · \(name)"` is two runtime values
+  and a separator. The rule is that only what sits *outside* the interpolations
+  can be copy, so a literal with no letters left after stripping them is
+  skipped — otherwise the fix would be to invent a key whose every part is an
+  argument.
+- **Comments had to be stripped.** This project's comments quote the copy they
+  are about, and a comment explaining why "TV series" is not "Series" was
+  reported twice. They are blanked to spaces rather than deleted, so the line
+  numbers still point at real source.
+- **The wrapped form can span lines.** A long key forces `String(` and
+  `localized:` onto separate lines, and the first pattern only matched them
+  adjacent — so it kept reporting a string that was already fixed.
+
+Two notes on what the fix had to change beyond wrapping:
+
+**Sentences split across two literals were joined into one key.** Several were
+`"first half " + "second half"` purely to fit the line length. A translator
+cannot reorder half a sentence, so each is now a single key even though the
+line is now long.
+
+**One string is deliberately not localised.** `ConnectionActivity.describe`
+returns the server's own `errorMessage` verbatim where there is one, because a
+message like "open the series once so its episodes are fetched" is the only
+part that tells the user what to do. The backend does not translate it, so on a
+German device that one line is English. Replacing it with a generic translated
+sentence would lose the actionable part, which is the worse trade.
+
+## Two more bugs German exposed
 
 Both pre-dated the translation and were fixed with it. Both were a label that
 reached the UI as a `String` **variable** rather than a literal, which means
@@ -128,9 +175,15 @@ reported by name.
 
 ## Formatted by the platform
 
-Dates, times and numbers are formatted from the device locale by the platform,
-which is why none of them are assembled by hand anywhere in either app. A
-German device gets `27.09.2026` with no code of ours involved.
+Dates, times and numbers are formatted from the device locale by the platform.
+
+That is now true. It was not: four Android screens used
+`DateTimeFormatter.ofPattern("d MMM yyyy")`, which takes its month *name* from
+the locale but keeps English field order and punctuation — so a German device
+read "12 Okt. 2026" where German writes "12. Okt. 2026". They now use
+`ofLocalizedDate(FormatStyle.MEDIUM)`, which asks the locale for the whole
+arrangement. iOS had always used `.formatted(date: .abbreviated)` and was
+correct, so this was also the two apps rendering the same date differently.
 
 ## Still English: everything that comes from TMDB
 

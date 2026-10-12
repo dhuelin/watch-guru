@@ -12,3 +12,7 @@ Thumbs.db
 
 ### Local tooling ###
 *.log
+
+# Python bytecode, from running the tools/ checkers.
+__pycache__/
+*.pyc

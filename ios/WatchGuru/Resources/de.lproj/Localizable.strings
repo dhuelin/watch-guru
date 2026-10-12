@@ -54,6 +54,7 @@
 
 /* MARK: History */
 "Any service" = "Jeder Dienst";
+"Any time" = "Jederzeit";
 "Clear dates" = "Daten zurücksetzen";
 "Correct this entry" = "Diesen Eintrag korrigieren";
 "Dates" = "Zeitraum";
@@ -70,6 +71,8 @@
 "Up to" = "Bis";
 "Up to a date" = "Bis zu einem Datum";
 "Watched where" = "Gesehen wo";
+"Since %@" = "Seit %@";
+"Until %@" = "Bis %@";
 
 /* MARK: Detail */
 "Add to library" = "Zur Bibliothek hinzufügen";
@@ -205,3 +208,50 @@
 "Notify me about new episodes" = "Über neue Folgen benachrichtigen";
 "Turn a series off on its own screen. Switching one back on here removes it from this list." = "Eine Serie schaltest du auf ihrem eigenen Bildschirm ab. Schaltest du sie hier wieder ein, verschwindet sie aus dieser Liste.";
 "You have not muted anything. Every series in your library can notify you." = "Du hast nichts stummgeschaltet. Jede Serie in deiner Bibliothek kann dich benachrichtigen.";
+
+/* MARK: Copy a model produces
+
+   These reach a view as a String rather than a literal, so nothing localises
+   them automatically and none of them were in this file until the check that
+   finds them existed. See docs/LOCALISATION.md. */
+"Offline — changes will sync when you reconnect." = "Offline — Änderungen werden synchronisiert, sobald du wieder verbunden bist.";
+"Couldn't reach the catalogue. Your library is still up to date." = "Der Katalog war nicht erreichbar. Deine Bibliothek ist trotzdem aktuell.";
+"Something went wrong." = "Etwas ist schiefgelaufen.";
+"Watchlist" = "Merkliste";
+"Watching" = "Am Schauen";
+"Completed" = "Abgeschlossen";
+"On hold" = "Pausiert";
+"Dropped" = "Abgebrochen";
+"Stream" = "Abo";
+"Free" = "Gratis";
+"Free with ads" = "Gratis mit Werbung";
+"Rent" = "Leihen";
+"Buy" = "Kaufen";
+"This month" = "Dieser Monat";
+"This year" = "Dieses Jahr";
+"All time" = "Gesamt";
+"Nothing new" = "Nichts Neues";
+"In progress" = "Läuft";
+"Nothing to record" = "Nichts zu erfassen";
+"Not connected." = "Nicht verbunden.";
+"Connected and recording." = "Verbunden und zeichnet auf.";
+"Connected, but the last attempt could not be completed." = "Verbunden, aber der letzte Versuch konnte nicht abgeschlossen werden.";
+"A new URL retires the old one, which is the way out if yours ended up somewhere public." = "Eine neue URL setzt die alte außer Kraft — der Ausweg, falls deine irgendwo öffentlich gelandet ist.";
+"Required: this server sends one webhook for everybody on it, so the username is what separates your viewing from theirs." = "Erforderlich: dieser Server sendet einen Webhook für alle auf ihm, der Benutzername trennt also deine Sichtungen von denen der anderen.";
+"The username is only needed if other people watch things on the same server. Without it, only viewing your server marks as yours is recorded." = "Der Benutzername ist nur nötig, wenn andere Leute auf demselben Server schauen. Ohne ihn wird nur festgehalten, was dein Server dir zuordnet.";
+"Specials" = "Specials";
+"1 viewing" = "1 Sichtung";
+"No viewing recorded in this period." = "In diesem Zeitraum keine Sichtung erfasst.";
+"Minutes watched by month: " = "Gesehene Minuten pro Monat: ";
+
+/* Interpolated, so the key is the format Swift derives from the literal. Hand
+   listed because the check cannot compute these: an interpolation's type
+   decides its specifier, and an Int becomes %lld. */
+"Recorded %lld" = "%lld erfasst";
+"%lld viewings" = "%lld Sichtungen";
+"%@, %lld minutes" = "%@, %lld Minuten";
+"Added to your history for %@." = "Für %@ in deinem Verlauf eingetragen.";
+"Saved for %@. It will be sent when you are back online." = "Für %@ gespeichert. Wird gesendet, sobald du wieder online bist.";
+"Season %lld" = "Staffel %lld";
+"%lld of %lld watched" = "%lld von %lld gesehen";
+"%@ · not counted towards progress" = "%@ · zählt nicht zum Fortschritt";

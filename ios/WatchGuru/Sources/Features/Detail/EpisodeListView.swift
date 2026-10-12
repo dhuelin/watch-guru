@@ -47,15 +47,24 @@ struct SeasonSection: View {
     }
 
     private var title: String {
-        if season.seasonNumber == 0 { return "Specials" }
-        return season.name ?? "Season \(season.seasonNumber)"
+        if season.seasonNumber == 0 { return String(localized: "Specials") }
+        // The provider's own season name where it has one; it arrives in
+        // whatever language the catalogue was requested in.
+        return season.name ?? String(localized: "Season \(season.seasonNumber)")
     }
 
     private var subtitle: String {
-        let counts = "\(season.watchedEpisodes) of \(season.airedEpisodes) watched"
+        let counts = String(
+            localized: "\(season.watchedEpisodes) of \(season.airedEpisodes) watched")
         // Specials are shown but excluded from series progress; saying so keeps
         // the numbers from looking wrong.
-        return season.seasonNumber == 0 ? counts + " · not counted towards progress" : counts
+        //
+        // One key for the whole line rather than a suffix concatenated on: a
+        // translation needs to be able to put the clause where its language
+        // wants it, and half a sentence cannot be moved.
+        return season.seasonNumber == 0
+            ? String(localized: "\(counts) · not counted towards progress")
+            : counts
     }
 }
 

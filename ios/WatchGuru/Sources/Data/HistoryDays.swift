@@ -50,7 +50,16 @@ enum HistoryDays {
     /// A count rather than a list of titles: the titles are directly
     /// underneath, and repeating them in the header would be noise a screen
     /// reader has to hear twice.
+    /// Two keys and a ternary rather than a stringsdict.
+    ///
+    /// English and German both use the one/other pair, so this is exact for
+    /// both. It is the cheap form: a language with a `few` or `many` class
+    /// cannot be expressed this way and needs a real `.stringsdict`, which is
+    /// the note in docs/LOCALISATION.md about plural classes being the one
+    /// part of adding a language that is not mechanical.
     static func spokenSummary(_ day: Day) -> String {
-        day.events.count == 1 ? "1 viewing" : "\(day.events.count) viewings"
+        day.events.count == 1
+            ? String(localized: "1 viewing")
+            : String(localized: "\(day.events.count) viewings")
     }
 }

@@ -100,11 +100,11 @@ struct LibraryEntryView: View {
 
     private static func label(for status: UpdateWatchlistItem.Status) -> String {
         switch status {
-        case .watchlist: "Watchlist"
-        case .watching: "Watching"
-        case .completed: "Completed"
-        case .onHold: "On hold"
-        case .dropped: "Dropped"
+        case .watchlist: String(localized: "Watchlist")
+        case .watching: String(localized: "Watching")
+        case .completed: String(localized: "Completed")
+        case .onHold: String(localized: "On hold")
+        case .dropped: String(localized: "Dropped")
         }
     }
 }

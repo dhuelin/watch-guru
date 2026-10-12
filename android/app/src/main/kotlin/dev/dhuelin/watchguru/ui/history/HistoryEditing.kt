@@ -36,8 +36,16 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
-private val EditDayFormat = DateTimeFormatter.ofPattern("d MMM yyyy")
+// Localised rather than patterned. ofPattern("d MMM yyyy") takes its month
+// NAME from the default locale but keeps English field order and punctuation,
+// so a German device read "12 Okt. 2026" where German writes "12. Okt. 2026".
+// ofLocalizedDate asks the locale for the whole arrangement, which is also
+// what the iOS app has always done -- there it is .formatted(date:
+// .abbreviated), and the two apps were rendering the same date differently.
+private val EditDayFormat: DateTimeFormatter =
+    DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)
 
 /**
  * One filter row, above everything it scopes.

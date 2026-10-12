@@ -73,6 +73,7 @@
 
 /* MARK: History */
 "Any service" = "Any service";
+"Any time" = "Any time";
 "Clear dates" = "Clear dates";
 "Correct this entry" = "Correct this entry";
 "Dates" = "Dates";
@@ -89,6 +90,11 @@
 "Up to" = "Up to";
 "Up to a date" = "Up to a date";
 "Watched where" = "Watched where";
+
+/* Interpolated: the key is the format, and the argument is an
+   already-locale-formatted date. */
+"Since %@" = "Since %@";
+"Until %@" = "Until %@";
 
 /* MARK: Home */
 "Nothing on the go" = "Nothing on the go";
@@ -210,3 +216,50 @@
 "Notify me about new episodes" = "Notify me about new episodes";
 "Turn a series off on its own screen. Switching one back on here removes it from this list." = "Turn a series off on its own screen. Switching one back on here removes it from this list.";
 "You have not muted anything. Every series in your library can notify you." = "You have not muted anything. Every series in your library can notify you.";
+
+/* MARK: Copy a model produces
+
+   These reach a view as a String rather than a literal, so nothing localises
+   them automatically and none of them were in this file until the check that
+   finds them existed. See docs/LOCALISATION.md. */
+"Offline — changes will sync when you reconnect." = "Offline — changes will sync when you reconnect.";
+"Couldn't reach the catalogue. Your library is still up to date." = "Couldn't reach the catalogue. Your library is still up to date.";
+"Something went wrong." = "Something went wrong.";
+"Watchlist" = "Watchlist";
+"Watching" = "Watching";
+"Completed" = "Completed";
+"On hold" = "On hold";
+"Dropped" = "Dropped";
+"Stream" = "Stream";
+"Free" = "Free";
+"Free with ads" = "Free with ads";
+"Rent" = "Rent";
+"Buy" = "Buy";
+"This month" = "This month";
+"This year" = "This year";
+"All time" = "All time";
+"Nothing new" = "Nothing new";
+"In progress" = "In progress";
+"Nothing to record" = "Nothing to record";
+"Not connected." = "Not connected.";
+"Connected and recording." = "Connected and recording.";
+"Connected, but the last attempt could not be completed." = "Connected, but the last attempt could not be completed.";
+"A new URL retires the old one, which is the way out if yours ended up somewhere public." = "A new URL retires the old one, which is the way out if yours ended up somewhere public.";
+"Required: this server sends one webhook for everybody on it, so the username is what separates your viewing from theirs." = "Required: this server sends one webhook for everybody on it, so the username is what separates your viewing from theirs.";
+"The username is only needed if other people watch things on the same server. Without it, only viewing your server marks as yours is recorded." = "The username is only needed if other people watch things on the same server. Without it, only viewing your server marks as yours is recorded.";
+"Specials" = "Specials";
+"1 viewing" = "1 viewing";
+"No viewing recorded in this period." = "No viewing recorded in this period.";
+"Minutes watched by month: " = "Minutes watched by month: ";
+
+/* Interpolated, so the key is the format Swift derives from the literal. Hand
+   listed because the check cannot compute these: an interpolation's type
+   decides its specifier, and an Int becomes %lld. */
+"Recorded %lld" = "Recorded %lld";
+"%lld viewings" = "%lld viewings";
+"%@, %lld minutes" = "%@, %lld minutes";
+"Added to your history for %@." = "Added to your history for %@.";
+"Saved for %@. It will be sent when you are back online." = "Saved for %@. It will be sent when you are back online.";
+"Season %lld" = "Season %lld";
+"%lld of %lld watched" = "%lld of %lld watched";
+"%@ · not counted towards progress" = "%@ · not counted towards progress";

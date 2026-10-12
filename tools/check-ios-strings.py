@@ -171,6 +171,123 @@ def check(bundle: Bundle) -> tuple[list[str], list[str], int, int]:
     return problems, notes, len(keys), len(swift_files(bundle))
 
 
+
+# A computed property or function that produces a String, which is where the
+# copy that never localises hides. `Text("Save")` localises; `Text(someString)`
+# does not, and the two are indistinguishable in review -- so a literal
+# returned from one of these reaches a view as a variable and stays English in
+# every language. This has happened three times in this app: HistoryType.label,
+# SearchView.subtitle and DateRange.label, each found only by translating.
+#
+# The fix at the call site is always the same: String(localized:), which is
+# Foundation's own lookup. So this flags a literal that looks like copy inside
+# a String-producing body and is not wrapped in it.
+STRING_PRODUCER = re.compile(r"(?:var\s+\w+\s*:\s*String|->\s*String)\s*\{")
+
+# Parameter labels whose argument is never user-facing copy.
+NOT_COPY = re.compile(
+    r"(?:systemImage|forKey|key|named|table|identifier|withIdentifier|path|"
+    r"scheme|host|bundle|comment|rawValue|value)\s*:\s*$"
+)
+
+LITERAL = re.compile(r'"((?:[^"\\]|\\.)*)"')
+
+
+
+def without_comments(source: str) -> str:
+    """Blanks out comments, keeping every byte offset intact.
+
+    Needed because this project's comments quote the copy they are about -- a
+    comment explaining why "TV series" is not "Series" was itself reported
+    twice. Offsets are preserved by replacing with spaces rather than deleting,
+    so line numbers computed afterwards still point at the real source.
+    """
+    out = list(source)
+    index = 0
+    length = len(source)
+    while index < length:
+        char = source[index]
+        if char == '"':                       # skip the whole literal
+            index += 1
+            while index < length:
+                if source[index] == "\\":
+                    index += 2
+                    continue
+                if source[index] == '"':
+                    index += 1
+                    break
+                index += 1
+            continue
+        if source.startswith("//", index):
+            while index < length and source[index] != "\n":
+                out[index] = " "
+                index += 1
+            continue
+        if source.startswith("/*", index):
+            while index < length and not source.startswith("*/", index):
+                if source[index] != "\n":
+                    out[index] = " "
+                index += 1
+            continue
+        index += 1
+    return "".join(out)
+
+def string_producing_bodies(text: str) -> list[tuple[int, str]]:
+    """Each String-producing body, as (line number of its start, source)."""
+    bodies: list[tuple[int, str]] = []
+    for match in STRING_PRODUCER.finditer(text):
+        start = match.end() - 1          # the opening brace
+        depth = 0
+        for index in range(start, len(text)):
+            if text[index] == "{":
+                depth += 1
+            elif text[index] == "}":
+                depth -= 1
+                if depth == 0:
+                    bodies.append((text.count("\n", 0, start) + 1, text[start:index]))
+                    break
+    return bodies
+
+
+def unlocalised_copy(bundle: Bundle) -> list[str]:
+    found: list[str] = []
+    for path in swift_files(bundle):
+        real = path.read_text()
+        text = without_comments(real)
+        # Where String(localized:) already wraps a literal, so those are fine.
+        localised = {
+            m.start(1) for m in re.finditer(r'String\(\s*localized:\s*(")', text)
+        }
+        for line_number, body in string_producing_bodies(text):
+            offset = text.index(body)
+            for literal in LITERAL.finditer(body):
+                absolute = offset + literal.start()
+                if absolute in localised:
+                    continue
+                value = literal.group(1)
+                # Only what is OUTSIDE the interpolations can be copy. A
+                # literal like "\(code) · \(name)" is two values and a
+                # separator -- there is nothing in it to translate, and
+                # wrapping it would invent a key whose every part is a runtime
+                # argument.
+                outside = re.sub(r"\\\([^)]*\)", "", value)
+                if not re.search(r"[A-Za-z]", outside):
+                    continue
+                # Copy starts with a capital or contains a space; a bare
+                # lowercase word is an identifier or a symbol name.
+                if not (value[0].isupper() or " " in value):
+                    continue
+                before = body[: literal.start()].rstrip()
+                if NOT_COPY.search(before + ":") or NOT_COPY.search(before):
+                    continue
+                line = text.count("\n", 0, absolute) + 1
+                found.append(
+                    f"{path.relative_to(ROOT)}:{line}: {value!r} is returned as a "
+                    f"String, so no view will localise it — wrap it in "
+                    f"String(localized:)"
+                )
+    return found
+
 def main() -> int:
     problems: list[str] = []
     notes: list[str] = []
@@ -179,6 +296,7 @@ def main() -> int:
     for bundle in BUNDLES:
         found, said, keys, files = check(bundle)
         problems += found
+        problems += unlocalised_copy(bundle)
         notes += said
         summary.append(f"{bundle.name}: {keys} keys over {files} source files")
 
