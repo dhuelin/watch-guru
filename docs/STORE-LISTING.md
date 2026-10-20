@@ -228,9 +228,30 @@ transfer request, not a setting.
 
 ### 3. The developer account
 
-`play.google.com/console/signup`, personal, $25 once, then identity
-verification with a government document. Verification can take days, which is
-the only reason to do this before anything else is ready.
+`play.google.com/console/signup`, personal, $25 once. Then three separate
+verifications, in Google's order, each gating the next:
+
+1. **Device verification.** A personal account created since early 2024 has
+   to prove it can reach a real Android phone. Start the task from the Play
+   Console web home page, scan the QR code to install the Play Console mobile
+   app, sign in there **as the account owner** and tap Verify. If the
+   developer account does not appear in the app, it is almost always the wrong
+   Google account.
+2. **Phone number.**
+3. **Identity**, with a government document. This one can take days, which is
+   why the whole of step 3 is worth starting before anything else is ready.
+
+> **It has to be a physical phone**: non-rooted, Android 10 or later. An
+> emulator will not do, which is the one place in this runbook where an
+> emulator is not a substitute. A borrowed one is fine — the device is needed
+> for this step only and never again, and a single phone can verify several
+> accounts. If no phone is to hand, everything in steps 4 to 7 can be done
+> first; only step 8 onwards is actually blocked.
+
+> Google will never ask for your password, ask you to add an unknown user to
+> the developer account, or start an email or chat thread about an "emergency
+> verification" or "compliance check". Anything that does is a scam aimed
+> precisely at people at this stage of setup.
 
 ### 4. Publish the privacy policy
 
