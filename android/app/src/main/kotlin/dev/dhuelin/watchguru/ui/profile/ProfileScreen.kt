@@ -58,6 +58,7 @@ fun ProfileScreen(
     onOpenTrakt: () -> Unit,
     onOpenImport: () -> Unit,
     onOpenNotifications: () -> Unit,
+    onOpenMyServices: () -> Unit,
     signIn: SignInViewModel,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
@@ -179,6 +180,13 @@ fun ProfileScreen(
                 // belong on the profile screen.
                 TextButton(onClick = onOpenNotifications) {
                     Text(stringResource(R.string.action_notification_settings))
+                }
+
+                // Beside Region, because the two answer the same question
+                // together: region decides which offers exist, this decides
+                // which of them the user can already watch.
+                TextButton(onClick = onOpenMyServices) {
+                    Text(stringResource(R.string.action_my_services))
                 }
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))

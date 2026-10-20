@@ -47,6 +47,11 @@ final class Session {
     let tokens: TokenStore
     let signIn: SignInModel
 
+    /// Which services the user says they pay for. Held here rather than per
+    /// screen because the picker writes it and the title screen reads it, and
+    /// both must see the same value without either reloading.
+    let myServices: MyServices
+
     /// Bumped whenever the profile changes in a way open screens must reflect.
     ///
     /// Streaming offers are per country and a title screen loads them once.
@@ -67,6 +72,8 @@ final class Session {
         self.client = client
 
         let store = FileOfflineStore()
+        let myServices = MyServices(store: store)
+        self.myServices = myServices
         let offline = OfflineClient(
             client: client,
             cache: SnapshotCache(store: store),
@@ -90,6 +97,10 @@ final class Session {
         // signs in next -- attributing one person's viewing to another.
         signIn.onSignedOut = { @Sendable in
             Task { await offline.clearLocalData() }
+            // Which services somebody subscribes to is a fact about them, not
+            // about the phone. On a shared device, leaving it would greet the
+            // next user with the last one's subscriptions.
+            Task { @MainActor in myServices.clear() }
         }
 
         // Where this user's new-episode notifications go (#19).

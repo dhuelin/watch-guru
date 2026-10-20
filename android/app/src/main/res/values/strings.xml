@@ -83,6 +83,14 @@
     <string name="where_to_watch_region">Offers for the country set in your profile.</string>
     <string name="where_to_watch_none">Not on any streaming service in your region.</string>
     <string name="where_to_watch_updated">Checked %1$s</string>
+    <!-- "My services" (#18). Ordering only, never a filter: hiding titles the
+         user cannot stream today would hide the thing they were looking for
+         the week before it arrives on their service. -->
+    <string name="where_to_watch_yours">You pay for this</string>
+    <string name="action_my_services">My services</string>
+    <string name="title_my_services">My services</string>
+    <string name="my_services_explainer">Tell us what you subscribe to and those services are listed first when you look at a title. Nothing is hidden either way.</string>
+    <string name="my_services_none_available">No streaming services are known for your region yet.</string>
     <string name="justwatch_attribution">Streaming availability data provided by JustWatch.</string>
 
     <!-- Stats. The streak rule is stated in the UI rather than left to be

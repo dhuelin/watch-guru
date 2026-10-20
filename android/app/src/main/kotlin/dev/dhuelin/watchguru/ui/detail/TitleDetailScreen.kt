@@ -57,6 +57,7 @@ fun TitleDetailScreen(
     val expandedSeason by viewModel.expandedSeason.collectAsStateWithLifecycle()
     val filmLog by viewModel.filmLog.collectAsStateWithLifecycle()
     val notifyNewEpisodes by viewModel.notifyNewEpisodes.collectAsStateWithLifecycle()
+    val myServices by viewModel.myServices.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -104,6 +105,7 @@ fun TitleDetailScreen(
                 onMarkUpTo = { episode -> viewModel.markUpTo(episode.id) },
                 notifyNewEpisodes = notifyNewEpisodes,
                 onNotifyNewEpisodes = viewModel::setNotifyNewEpisodes,
+                myServices = myServices,
                 modifier = Modifier.padding(padding),
             )
 
@@ -132,6 +134,7 @@ private fun TitleDetailContent(
     onMarkUpTo: (EpisodeResponse) -> Unit,
     notifyNewEpisodes: Boolean?,
     onNotifyNewEpisodes: (Boolean) -> Unit,
+    myServices: Set<Long>,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -254,6 +257,7 @@ private fun TitleDetailContent(
             offers = title.availability,
             checkedAt = title.availabilityCheckedAt,
             modifier = Modifier.padding(top = 24.dp),
+            mine = myServices,
         )
 
         // The episode list. This is the screen's real content for a series --

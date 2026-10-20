@@ -16,6 +16,7 @@ import dev.dhuelin.watchguru.ui.library.LibraryScreen
 import dev.dhuelin.watchguru.ui.notifications.NotificationSettingsScreen
 import dev.dhuelin.watchguru.ui.server.MediaServerScreen
 import dev.dhuelin.watchguru.ui.profile.ProfileScreen
+import dev.dhuelin.watchguru.ui.services.MyServicesScreen
 import dev.dhuelin.watchguru.ui.trakt.TraktScreen
 import dev.dhuelin.watchguru.ui.search.SearchScreen
 import dev.dhuelin.watchguru.ui.signin.SignInViewModel
@@ -48,6 +49,7 @@ fun WatchGuruNavHost(
                 onOpenTrakt = { navController.navigate(Routes.TRAKT) },
                 onOpenImport = { navController.navigate(Routes.IMPORT) },
                 onOpenNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
+                onOpenMyServices = { navController.navigate(Routes.MY_SERVICES) },
                 signIn = signIn,
             )
         }
@@ -72,6 +74,9 @@ fun WatchGuruNavHost(
         }
         composable(Routes.NOTIFICATIONS) {
             NotificationSettingsScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Routes.MY_SERVICES) {
+            MyServicesScreen(onBack = { navController.popBackStack() })
         }
         composable(
             route = Routes.TITLE_DETAIL,

@@ -55,6 +55,7 @@ fun WhereToWatch(
     offers: List<AvailabilityResponse>,
     checkedAt: OffsetDateTime?,
     modifier: Modifier = Modifier,
+    mine: Set<Long> = emptySet(),
 ) {
     if (offers.isEmpty() && checkedAt == null) return
 
@@ -81,7 +82,7 @@ fun WhereToWatch(
         return
     }
 
-    val groups = remember(offers) { WatchOffers.group(offers) }
+    val groups = remember(offers, mine) { WatchOffers.group(offers, mine) }
     val link = remember(offers) { WatchOffers.link(offers) }
     val uriHandler = LocalUriHandler.current
 
@@ -92,12 +93,27 @@ fun WhereToWatch(
         )
 
         groups.forEach { group ->
-            Text(
-                text = stringResource(group.offerType.labelRes()),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            Row(
                 modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
-            )
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(group.offerType.labelRes()),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                // Says why this group moved. Reordering with no visible reason
+                // reads as arbitrary: this is what turns "why is Rent above
+                // Free" into "because I pay for that one".
+                if (group.yours) {
+                    Text(
+                        text = stringResource(R.string.where_to_watch_yours),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
+                }
+            }
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),

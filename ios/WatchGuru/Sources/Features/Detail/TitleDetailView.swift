@@ -136,7 +136,11 @@ struct TitleDetailView: View {
                 // Above the episode list: for a film this is the only action
                 // the screen can offer, and for a series it is what someone
                 // does before they start rather than after.
-                WhereToWatchView(offers: title.availability, checkedAt: title.availabilityCheckedAt)
+                WhereToWatchView(
+                    offers: title.availability,
+                    checkedAt: title.availabilityCheckedAt,
+                    mine: session.myServices.selected
+                )
 
                 // The episode list. For a series this is the screen's real
                 // content; everything above it is context.

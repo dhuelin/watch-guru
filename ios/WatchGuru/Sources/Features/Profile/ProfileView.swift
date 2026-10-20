@@ -84,6 +84,12 @@ struct ProfileView: View {
                         NavigationLink("Notifications") {
                             NotificationSettingsView()
                         }
+                        // Beside Region, because together they answer one
+                        // question: region decides which offers exist, this
+                        // decides which of them the user can already watch.
+                        NavigationLink("My services") {
+                            MyServicesView()
+                        }
                     }
                     Section {
                         Button("Sign out") { session.signIn.signOut() }

@@ -16,10 +16,13 @@ object WatchOffers {
      * Ways of watching, in the order they are offered to the user.
      *
      * Cheapest first, which is what the app can honestly rank by: free, then
-     * free with ads, then a subscription, then rent, then buy. It does not
-     * know which services the user already pays for -- when it does, a
-     * subscription they hold belongs above a free service they have never
-     * heard of, and this order should change with it.
+     * free with ads, then a subscription, then rent, then buy.
+     *
+     * This is now the order only for services the user has NOT told us they
+     * pay for. It used to be the whole story, and the comment here promised
+     * that it would stop being: "a subscription they hold belongs above a free
+     * service they have never heard of, and this order should change with it".
+     * [group] now takes that set and does exactly that.
      *
      * Free was previously listed after subscriptions, which contradicted this
      * comment; the comment was the one making the promise.
@@ -32,9 +35,23 @@ object WatchOffers {
         AvailabilityResponse.OfferType.BUY,
     )
 
-    /** One group per way of watching, empty groups dropped. */
-    fun group(offers: List<AvailabilityResponse>): List<Group> =
-        order.mapNotNull { type ->
+    /**
+     * One group per way of watching, empty groups dropped.
+     *
+     * @param mine the services the user says they subscribe to. A way of
+     *   watching that uses one of them comes first, because to that user it
+     *   costs nothing -- which is the same reason free comes before rent. The
+     *   remaining groups keep [order].
+     *
+     * Partitioned rather than sorted, on both platforms, so the two agree
+     * exactly: a partition preserves the order of each side by construction,
+     * where Swift's `sorted(by:)` makes no stability promise at all.
+     */
+    fun group(
+        offers: List<AvailabilityResponse>,
+        mine: Set<Long> = emptySet(),
+    ): List<Group> {
+        val groups = order.mapNotNull { type ->
             val services = offers.asSequence()
                 .filter { it.offerType == type }
                 // A provider can return the same service twice for one offer
@@ -43,8 +60,18 @@ object WatchOffers {
                 .distinctBy { it.serviceId }
                 .sortedBy { it.serviceName.lowercase() }
                 .toList()
-            if (services.isEmpty()) null else Group(type, services)
+            if (services.isEmpty()) {
+                null
+            } else {
+                // Within a group too: the service they pay for is the one they
+                // will use, so it goes above one they would have to sign up to.
+                val (held, rest) = services.partition { it.serviceId in mine }
+                Group(type, held + rest, yours = held.isNotEmpty())
+            }
         }
+        val (yours, others) = groups.partition { it.yours }
+        return yours + others
+    }
 
     /**
      * The one link to open, or null when there isn't one.
@@ -70,5 +97,13 @@ object WatchOffers {
     data class Group(
         val offerType: AvailabilityResponse.OfferType,
         val services: List<AvailabilityResponse>,
+        /**
+         * Whether this group uses a service the user subscribes to.
+         *
+         * Carried so the screen can say so. Reordering without a visible
+         * reason reads as arbitrary -- the badge is what turns "why is Rent
+         * above Free" into "because I pay for that one".
+         */
+        val yours: Boolean = false,
     )
 }

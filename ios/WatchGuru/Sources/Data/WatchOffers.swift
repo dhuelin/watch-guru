@@ -24,12 +24,32 @@ enum WatchOffers {
         let offerType: AvailabilityResponse.OfferType
         let services: [AvailabilityResponse]
 
+        /// Whether this group uses a service the user subscribes to.
+        ///
+        /// Carried so the screen can say so. Reordering with no visible reason
+        /// reads as arbitrary — the badge is what turns "why is Rent above
+        /// Free" into "because I pay for that one".
+        var yours: Bool = false
+
         var id: String { offerType.rawValue }
     }
 
     /// One group per way of watching, empty groups dropped.
-    static func group(_ offers: [AvailabilityResponse]) -> [Group] {
-        order.compactMap { type in
+    ///
+    /// - Parameter mine: the services the user says they subscribe to. A way of
+    ///   watching that uses one of them comes first, because to that user it
+    ///   costs nothing — the same reason free comes before rent. The remaining
+    ///   groups keep `order`.
+    ///
+    /// Partitioned rather than sorted, on both platforms, so the two agree
+    /// exactly. `sorted(by:)` makes no stability promise, so a sort on the
+    /// boolean alone could reshuffle the groups that tie; splitting the list
+    /// preserves each side's order by construction.
+    static func group(
+        _ offers: [AvailabilityResponse],
+        mine: Set<Int64> = []
+    ) -> [Group] {
+        let groups: [Group] = order.compactMap { type in
             var seen = Set<Int64>()
             let services = offers
                 .filter { $0.offerType == type }
@@ -38,8 +58,14 @@ enum WatchOffers {
                 // would read as a bug.
                 .filter { seen.insert($0.serviceId).inserted }
                 .sorted { $0.serviceName.lowercased() < $1.serviceName.lowercased() }
-            return services.isEmpty ? nil : Group(offerType: type, services: services)
+            guard !services.isEmpty else { return nil }
+            // Within a group too: the service they pay for is the one they will
+            // use, so it goes above one they would have to sign up to.
+            let held = services.filter { mine.contains($0.serviceId) }
+            let rest = services.filter { !mine.contains($0.serviceId) }
+            return Group(offerType: type, services: held + rest, yours: !held.isEmpty)
         }
+        return groups.filter(\.yours) + groups.filter { !$0.yours }
     }
 
     /// The one link to open, or nil when there isn't one.
