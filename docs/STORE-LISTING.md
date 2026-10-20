@@ -152,11 +152,25 @@ Katalogdaten von TMDB. Watch Guru wird von TMDB weder unterstützt noch
 zertifiziert.
 ```
 
+## The account these are for
+
+Settled in the Play Console, and repeated here because three of them have to
+match something else and it is easier to check against one list.
+
+| Field | Value | Must match |
+|---|---|---|
+| Account type | Personal | The 12-tester rule applies; see the last section |
+| Developer account ID | `6294338939560110494` | Public once an app ships; it is the `id` in the store's developer URL |
+| Developer name | `Huelin.dev` | The operator named in [`PRIVACY.md`](PRIVACY.md) |
+| Account owner | `support@huelin.dev` | The support email below, and the OAuth consent screen |
+| Website | `https://huelin.dev` | — |
+| Package name | `dev.huelin.watchguru` | `applicationId`, the Android OAuth client, and the Play upload step |
+
 ## Required URLs
 
 | Field | Value |
 |---|---|
-| Privacy policy | The published URL of [`docs/PRIVACY.md`](PRIVACY.md) — GitHub Pages, or its `blob` URL on github.com. |
+| Privacy policy | `https://dhuelin.github.io/watch-guru/PRIVACY.html` — GitHub Pages serving `docs/`, which needs **Settings → Pages → Deploy from a branch → `main` → `/docs`** turned on once, and `docs/PRIVACY.md` merged to `main` first. |
 | Account deletion | The same page's **Deleting your account and your data** section. Play accepts an anchor on the privacy policy when deletion is also available in-app, which it is. |
 | Support email | `support@huelin.dev` — shown publicly on the listing, and the same address the privacy policy gives. It has to actually receive mail before the Google account can be created on it. |
 
