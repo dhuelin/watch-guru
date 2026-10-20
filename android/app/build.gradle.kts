@@ -8,11 +8,11 @@ plugins {
 }
 
 android {
-    namespace = "dev.dhuelin.watchguru"
+    namespace = "dev.huelin.watchguru"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "dev.dhuelin.watchguru"
+        applicationId = "dev.huelin.watchguru"
         minSdk = 26
         targetSdk = 35
         // Properties, not literals: Play rejects a second upload carrying a

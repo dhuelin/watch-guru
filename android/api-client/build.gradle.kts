@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "dev.dhuelin.watchguru.api"
+    namespace = "dev.huelin.watchguru.api"
     compileSdk = 35
 
     defaultConfig {

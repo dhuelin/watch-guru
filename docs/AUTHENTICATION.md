@@ -138,7 +138,7 @@ this was written.
 
 | | |
 |---|---|
-| Apple | Enable **Sign in with Apple** on the App ID. Put the bundle id (`dev.dhuelin.watchguru`) in `WATCH_GURU_AUTH_AUDIENCES` and `https://appleid.apple.com` in `WATCH_GURU_AUTH_ISSUERS`. |
+| Apple | Enable **Sign in with Apple** on the App ID. Put the bundle id (`dev.huelin.watchguru`) in `WATCH_GURU_AUTH_AUDIENCES` and `https://appleid.apple.com` in `WATCH_GURU_AUTH_ISSUERS`. |
 | Google | Create **two** OAuth clients in one project: an Android client (package name + signing SHA-1, never referenced in code but required for Credential Manager to return anything) and a **web** client. Build with `-Pwatchguru.googleWebClientId=<web id>`, and put that same web id in `WATCH_GURU_AUTH_AUDIENCES`, with `https://accounts.google.com` in `WATCH_GURU_AUTH_ISSUERS`. |
 
 The backend refuses to start with either variable unset. That is deliberate: an

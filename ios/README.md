@@ -178,8 +178,8 @@ things are shared deliberately and nothing else is:
 
 | Shared | How | Why |
 |---|---|---|
-| The feed it draws | App Group `group.dev.dhuelin.watchguru` | The app writes it on every Up Next fetch |
-| The session | Keychain group `$(AppIdentifierPrefix)dev.dhuelin.watchguru` | So one POST can be authenticated |
+| The feed it draws | App Group `group.dev.huelin.watchguru` | The app writes it on every Up Next fetch |
+| The session | Keychain group `$(AppIdentifierPrefix)dev.huelin.watchguru` | So one POST can be authenticated |
 | The pending queue | The same App Group | So a mark the widget could not send is not lost |
 
 Both entitlements files must agree. A mismatch is **not a build error**: the

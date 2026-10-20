@@ -126,7 +126,7 @@ jobs:
         uses: r0adkll/upload-google-play@v1.1.3
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: dev.dhuelin.watchguru
+          packageName: dev.huelin.watchguru
           releaseFiles: android/app/build/outputs/bundle/release/*.aab
           # Internal testing by default: it reaches testers in minutes and
           # needs no review, which is the right place for a build nobody has
