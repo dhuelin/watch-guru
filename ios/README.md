@@ -236,10 +236,12 @@ opaque (no alpha channel at all) and that its own corners are square, because
 the system applies its superellipse mask and an icon that rounds itself is
 visibly cropped twice.
 
-The accent colour beside it is the brand blue, which every `Color.accentColor`
-in the app was already asking for and not getting -- without the asset those
-call sites fell back to the system blue. It predates the artwork and has not
-been retuned to it, so the icon is purple and the accent is still blue.
+The accent colour beside it is the brand violet, which every
+`Color.accentColor` in the app was already asking for and not getting --
+without the asset those call sites fell back to the system blue. It is the
+wordmark's violet at tone 40 for light and tone 80 for dark, the same two
+tones Android's `primary` takes, so the two apps accent the same thing in the
+same colour without sharing a value.
 
 ## Regenerating the API client
 
