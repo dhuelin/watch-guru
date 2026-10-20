@@ -50,13 +50,49 @@ jobs:
           fi
           echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
 
+      # Both of these are compiled into the binary, and both are wrong by
+      # default: the API URL is a placeholder domain that resolves to nothing,
+      # and an empty client id turns every sign-in into a configuration error.
+      # A bundle shipped with either would install and then do nothing, so the
+      # build stops here rather than at a one-star review.
+      - name: Check the build is pointed at something real
+        env:
+          API_BASE_URL: ${{ vars.ANDROID_API_BASE_URL }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
+        run: |
+          fail=0
+          if [ -z "$API_BASE_URL" ]; then
+            echo "::error::Set the ANDROID_API_BASE_URL variable on the android-release environment"
+            echo "to the deployed backend, e.g. https://api.example.com/ (with the trailing slash)."
+            fail=1
+          fi
+          if [ -z "$GOOGLE_WEB_CLIENT_ID" ]; then
+            echo "::error::Set the GOOGLE_WEB_CLIENT_ID secret on the android-release environment."
+            echo "It is the Google *web* client id, and the backend's WATCH_GURU_AUTH_AUDIENCES"
+            echo "must list the same value."
+            fail=1
+          fi
+          exit $fail
+
       - name: Build App Bundle
         env:
           WATCHGURU_KEYSTORE_FILE: ${{ runner.temp }}/release.jks
           WATCHGURU_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           WATCHGURU_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           WATCHGURU_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew :app:bundleRelease
+          VERSION_NAME: ${{ github.event_name == 'release' && github.event.release.tag_name || '' }}
+        # versionCode comes from the run number because Play refuses an upload
+        # whose versionCode it has seen before, and run numbers only ever go
+        # up. versionName comes from the tag on a published release, and falls
+        # back to the Gradle default on a manual dispatch -- which is why it
+        # goes through the environment: an absent tag then expands to nothing
+        # at all, rather than to an empty -P flag Gradle reads as a blank name.
+        run: |
+          ./gradlew :app:bundleRelease \
+            -Pwatchguru.apiBaseUrl="${{ vars.ANDROID_API_BASE_URL }}" \
+            -Pwatchguru.googleWebClientId="${{ secrets.GOOGLE_WEB_CLIENT_ID }}" \
+            -Pwatchguru.versionCode="${{ github.run_number }}" \
+            ${VERSION_NAME:+-Pwatchguru.versionName="$VERSION_NAME"}
 
       - name: Upload the bundle
         uses: actions/upload-artifact@v4
@@ -65,12 +101,35 @@ jobs:
           path: android/app/build/outputs/bundle/release/*.aab
           retention-days: 30
 
-      # Deliberately stops here rather than uploading to Play. That step needs
-      # a service account, a listing, and a signed developer agreement -- none
-      # of which exist yet, and a half-configured publish step that fails on
-      # every release is worse than an explicit gap.
-      - name: Next step
+      # Publishing is opt-in on the presence of the service account, because
+      # a secret cannot be read in an `if:` directly. Without it this job still
+      # does its real work -- a signed bundle you can upload by hand -- rather
+      # than failing on every release until Play is set up.
+      - name: Is Play publishing configured?
+        id: play
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
         run: |
-          echo "::notice::Bundle built and uploaded as an artifact."
-          echo "Publishing to Play needs a service-account JSON and a created listing;"
-          echo "add r0adkll/upload-google-play here once those exist."
+          if [ -n "$PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::PLAY_SERVICE_ACCOUNT_JSON is not set, so the bundle is an artifact only."
+            echo "Upload it by hand, or see docs/STORE-LISTING.md to finish the setup."
+          fi
+
+      # The very first bundle for a package has to go through the console by
+      # hand: the API can upload to a track, but it cannot bring an app into
+      # existence. Every upload after that one can come from here.
+      - name: Upload to Play
+        if: steps.play.outputs.configured == 'true'
+        uses: r0adkll/upload-google-play@v1.1.3
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: dev.dhuelin.watchguru
+          releaseFiles: android/app/build/outputs/bundle/release/*.aab
+          # Internal testing by default: it reaches testers in minutes and
+          # needs no review, which is the right place for a build nobody has
+          # run yet. Override with the PLAY_TRACK variable once that changes.
+          track: ${{ vars.PLAY_TRACK || 'internal' }}
+          status: completed

@@ -4,9 +4,12 @@ import com.dhuelin.dev.watchguru.api.dto.ApiMapper;
 import com.dhuelin.dev.watchguru.api.dto.Requests;
 import com.dhuelin.dev.watchguru.api.dto.Responses;
 import com.dhuelin.dev.watchguru.security.CurrentUserService;
+import com.dhuelin.dev.watchguru.streaming.trakt.TraktConnectionService;
 import com.dhuelin.dev.watchguru.tracking.domain.AppUser;
 import com.dhuelin.dev.watchguru.tracking.repository.AppUserRepository;
 import io.swagger.v3.oas.annotations.Operation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,14 +33,21 @@ import java.util.Locale;
 @RequestMapping("/api/v1/me")
 public class MeController {
 
+    private static final Logger log = LoggerFactory.getLogger(MeController.class);
+
     private final CurrentUserService currentUser;
     private final AppUserRepository users;
     private final ApiMapper mapper;
+    private final TraktConnectionService trakt;
 
-    public MeController(CurrentUserService currentUser, AppUserRepository users, ApiMapper mapper) {
+    public MeController(CurrentUserService currentUser,
+                        AppUserRepository users,
+                        ApiMapper mapper,
+                        TraktConnectionService trakt) {
         this.currentUser = currentUser;
         this.users = users;
         this.mapper = mapper;
+        this.trakt = trakt;
     }
 
     @GetMapping
@@ -82,11 +92,41 @@ public class MeController {
      * <p>Required by both app stores for any app that lets a user create an
      * account, and it has to be a real delete: watchlist, episode progress,
      * watch history and linked accounts all go with it, by database cascade.
+     *
+     * <p>A cascade is not enough on its own. A Trakt token is a credential of
+     * somebody else's held at Trakt as well as here, and deleting our copy
+     * would strand a live one there that nobody can revoke any more -- the
+     * same failure
+     * {@link TraktConnectionService#disconnect(AppUser) disconnect} orders
+     * itself to avoid. So it is revoked first, and only then is the row it
+     * lives in deleted.
      */
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(operationId = "deleteAccount")
     public void deleteAccount() {
+        AppUser user = currentUser.require();
+        revokeThirdPartyTokens(user);
         currentUser.deleteCurrentUser();
+    }
+
+    /**
+     * Revokes what this account holds elsewhere, without letting that stand in
+     * the way of the delete.
+     *
+     * <p>Trakt being unreachable must not leave somebody unable to delete
+     * their account; an unrevoked token expires on Trakt's own schedule, which
+     * is a far smaller harm than a delete that refuses to happen. The failure
+     * is logged rather than swallowed silently, because it is the one case
+     * where a token outlives the account that owned it.
+     */
+    private void revokeThirdPartyTokens(AppUser user) {
+        try {
+            trakt.disconnect(user);
+        } catch (RuntimeException e) {
+            log.warn("Could not revoke the Trakt token for account {} before deleting it. "
+                    + "Deleting anyway; the token will expire on Trakt's schedule.",
+                    user.getId(), e);
+        }
     }
 }

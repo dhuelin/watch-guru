@@ -15,8 +15,12 @@ android {
         applicationId = "dev.dhuelin.watchguru"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        // Properties, not literals: Play rejects a second upload carrying a
+        // versionCode it has already seen, so a release pipeline has to be
+        // able to set it from outside. The defaults are what a local build
+        // gets, which is all a local build needs.
+        versionCode = providers.gradleProperty("watchguru.versionCode").orNull?.toInt() ?: 1
+        versionName = providers.gradleProperty("watchguru.versionName").orNull ?: "0.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // The Google OAuth *web* client id, not the Android one: Credential
@@ -54,7 +58,14 @@ android {
             applicationIdSuffix = ".debug"
         }
         release {
-            buildConfigField("String", "API_BASE_URL", "\"https://api.watch-guru.example/\"")
+            // The deployed backend. A property so that a release can point at
+            // a real one; the default is a placeholder that resolves to
+            // nothing, and shipping it would produce an app that installs and
+            // then cannot sign in. The release workflow refuses to build
+            // without the property set, which is where that is caught.
+            val apiBaseUrl = providers.gradleProperty("watchguru.apiBaseUrl").orNull
+                ?: "https://api.watch-guru.example/"
+            buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
