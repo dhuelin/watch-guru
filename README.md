@@ -36,6 +36,13 @@ against a real screen until then.
 See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the phased plan and the GitHub
 issues tracking each piece.
 
+For shipping: [`docs/STORE-LISTING.md`](docs/STORE-LISTING.md) holds the Play
+listing copy in both languages, the Data safety answers derived from what the
+backend actually stores, and the list of things that must be set before a
+first upload. [`docs/PRIVACY.md`](docs/PRIVACY.md) is the privacy policy Play
+requires at a public URL; it has two placeholders to fill in before it is
+published.
+
 ## Artwork
 
 The mascot, the wordmark and the app icon were drawn for the project and live
@@ -125,9 +132,11 @@ certified by TMDB") is required in-app by their terms.
 
 ```
 backend/    Spring Boot API — the source of truth
-ios/        SwiftUI app (not yet scaffolded)
-android/    Jetpack Compose app (not yet scaffolded)
-docs/       Roadmap and design notes
+ios/        SwiftUI app
+android/    Jetpack Compose app
+docs/       Roadmap, design notes, deployment, privacy policy, store listing
+docs/brand/ The artwork, and the store graphics cut from it
+tools/      Checkers and generators the CI workflows and the icons use
 ```
 
 ## Backend layout

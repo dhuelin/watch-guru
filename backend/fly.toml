@@ -1,0 +1,55 @@
+# Fly.io configuration for the Watch Guru API.
+#
+# Deployed from the image the CI workflow already publishes to GHCR, never
+# built here -- `flyctl deploy --image ghcr.io/.../backend@sha256:...` -- so
+# what runs is the exact image the tests passed against, and there is no
+# second Dockerfile to drift from backend/Dockerfile.
+#
+# First-time setup is in docs/DEPLOYMENT.md. Nothing secret belongs in this
+# file: it is committed, and Fly keeps secrets with `flyctl secrets set`.
+
+app = "watch-guru-api"
+primary_region = "fra"
+
+[env]
+  # Where this service is reachable from outside. The Plex webhook URL a user
+  # pastes into their server and the Trakt OAuth redirect are both built from
+  # it, and both fail silently if it is wrong. Change it with the app name,
+  # and again if a custom domain is put in front.
+  WATCH_GURU_PUBLIC_BASE_URL = "https://watch-guru-api.fly.dev"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+
+  # The machine is never allowed to sleep, which is not the cheap default and
+  # is deliberate. Three jobs run on cron inside this process -- the Trakt
+  # sync, the new-episode scan and the IMDb ratings import -- and a suspended
+  # machine runs none of them. Scale-to-zero would make the app look fine and
+  # quietly stop syncing anything.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 200
+    hard_limit = 250
+
+  # /actuator/health is exposed and unauthenticated; show-details is
+  # when-authorized, so an anonymous probe sees UP or DOWN and nothing else.
+  # The grace period is for the JVM plus Flyway on a cold start.
+  [[http_service.checks]]
+    grace_period = "45s"
+    interval = "15s"
+    timeout = "5s"
+    method = "GET"
+    path = "/actuator/health"
+
+[[vm]]
+  # 1GB rather than Fly's 512MB default: the image sets MaxRAMPercentage
+  # rather than a fixed heap, and a JVM running Hibernate, Flyway and a
+  # connection pool inside 512MB spends its life collecting garbage.
+  memory = "1gb"
+  cpu_kind = "shared"
+  cpus = 1

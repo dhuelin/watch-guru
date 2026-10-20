@@ -49,7 +49,7 @@ those were findable by reading.
 ## Layout
 
 ```
-app/src/main/kotlin/dev/dhuelin/watchguru/
+app/src/main/kotlin/dev/huelin/watchguru/
 ├── data/        Repository, token storage, auth interceptor — no Android
 │                imports, so it stays testable on a plain JVM
 ├── di/          Hilt modules
@@ -85,7 +85,7 @@ To run it you need an **OAuth web client id** and an **Android client id** in
 the same Google Cloud project:
 
 1. Create the Android OAuth client with this app's package name
-   (`dev.dhuelin.watchguru`, or `dev.dhuelin.watchguru.debug` for debug builds)
+   (`dev.huelin.watchguru`, or `dev.huelin.watchguru.debug` for debug builds)
    and the SHA-1 of the signing certificate. Credential Manager will not return
    a token without it, but the app never references it directly.
 2. Create the **web** OAuth client. Its id is what the app passes as

@@ -49,6 +49,10 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      # Passed to the deploy so it rolls out this exact image rather than
+      # resolving a tag again and possibly getting a different one.
+      digest: ${{ steps.build.outputs.digest }}
     permissions:
       contents: read
       packages: write
@@ -111,18 +115,49 @@ jobs:
     # runtime secrets rather than the repository holding them.
     environment:
       name: production
-      url: https://api.watch-guru.example
+      url: https://watch-guru-api.fly.dev
     steps:
-      - name: Roll out
+      - uses: actions/checkout@v4
+
+      # Opt-in on the token being present, because a secret cannot be read in
+      # an `if:` directly. Until Fly is set up this job says what is missing
+      # and succeeds, rather than turning every push to main red.
+      - name: Is Fly configured?
+        id: fly
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |
-          echo "::notice::No deploy target is configured yet."
-          echo
-          echo "The image is published and ready. Wiring this up means picking a"
-          echo "host and adding one step here:"
-          echo "  - Kubernetes: kubectl set image, or a Flux/Argo image update"
-          echo "  - Fly.io:     flyctl deploy --image \$IMAGE"
-          echo "  - Cloud Run:  gcloud run deploy --image \$IMAGE"
-          echo
-          echo "Whatever it is, it needs DATABASE credentials, TMDB_API_TOKEN"
-          echo "and WATCH_GURU_AUTH_AUDIENCES set in the environment's secrets."
-          echo "The API refuses to start without that last one, by design."
+          if [ -n "$FLY_API_TOKEN" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::FLY_API_TOKEN is not set on the production environment."
+            echo "The image is published and ready; see docs/DEPLOYMENT.md for the"
+            echo "one-time Fly setup, which ends with: flyctl tokens create deploy"
+          fi
+
+      - name: Install flyctl
+        if: steps.fly.outputs.configured == 'true'
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      # By digest, not by tag: a tag can be moved, and "which image is
+      # running" has to stay answerable after the fact. This is the digest of
+      # the image the tests in this same run passed against.
+      #
+      # Fly pulls this itself, so the GHCR package has to be readable without
+      # credentials. Packages are private even when their repository is
+      # public, and this one has to be switched over once by hand -- see
+      # docs/DEPLOYMENT.md. The symptom otherwise is flyctl failing on an
+      # unauthorized pull, which reads like a Fly problem and is not one.
+      - name: Roll out
+        if: steps.fly.outputs.configured == 'true'
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ needs.publish.outputs.digest }}
+        run: |
+          echo "Deploying $IMAGE"
+          flyctl deploy \
+            --config backend/fly.toml \
+            --image "$IMAGE" \
+            --strategy rolling \
+            --wait-timeout 10m

@@ -62,7 +62,7 @@ protocol TokenStore: Sendable {
 /// container.
 struct KeychainTokenStore: TokenStore {
 
-    private let service = "dev.dhuelin.watchguru"
+    private let service = "dev.huelin.watchguru"
 
     /// One item holding the whole session, not one per token. Two items can be
     /// written half-way and read back inconsistent; one cannot.

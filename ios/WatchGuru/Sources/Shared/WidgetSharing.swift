@@ -19,7 +19,7 @@ enum WidgetSharing {
     /// Must match `com.apple.security.application-groups` in *both*
     /// entitlements files. A mismatch is not a build error: the container
     /// lookup simply returns nil and the widget quietly has no data.
-    static let appGroup = "group.dev.dhuelin.watchguru"
+    static let appGroup = "group.dev.huelin.watchguru"
 
     /// Where the offline files live, shared by both processes.
     ///

@@ -40,7 +40,7 @@ rm -rf "$ROOT/android/api-client/src"
 generate Kotlin \
     -i "$SPEC" -g kotlin --library jvm-retrofit2 \
     -o "$ROOT/android/api-client" \
-    --additional-properties=packageName=dev.dhuelin.watchguru.api,serializationLibrary=kotlinx_serialization,useCoroutines=true,dateLibrary=java8
+    --additional-properties=packageName=dev.huelin.watchguru.api,serializationLibrary=kotlinx_serialization,useCoroutines=true,dateLibrary=java8
 
 # iOS: swift6 gives async/await and Sendable models, matching the SwiftUI app's
 # concurrency model. swift-combine would mean bridging publishers back to async.

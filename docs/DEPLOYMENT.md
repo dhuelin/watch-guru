@@ -39,21 +39,119 @@ provenance, so an image can be traced to the commit and workflow that made it.
 
 ## Deploying
 
-The `deploy` job is a deliberate stub. The image is built, tested and
-published; what is missing is a host. Wiring it up is one step:
+The target is **Fly.io**, configured in [`backend/fly.toml`](../backend/fly.toml).
+The `deploy` job rolls out the image by digest — the exact one the tests in the
+same run passed against, not a tag that could have moved since.
+
+It runs against a GitHub `production` environment, so the deploy can require a
+manual approval and the runtime secrets live on the environment rather than on
+the repository. Until `FLY_API_TOKEN` is set there, the job reports what is
+missing and succeeds, rather than turning every push to main red.
+
+### Why the machine never sleeps
+
+`fly.toml` sets `auto_stop_machines = false` and `min_machines_running = 1`,
+which is not the cheap default. Three jobs run on cron inside this process —
+the Trakt sync, the new-episode scan and the IMDb ratings import. A suspended
+machine runs none of them, and the failure is invisible: the API answers
+normally, because a request wakes it, while nothing has synced for days.
+
+### First-time setup
+
+Once, from a machine with [flyctl](https://fly.io/docs/flyctl/install/)
+installed and `flyctl auth login` done.
+
+**1. Create the app and its database.**
+
+```bash
+flyctl apps create watch-guru-api
+flyctl postgres create --name watch-guru-db --region fra
+flyctl postgres attach watch-guru-db --app watch-guru-api
+```
+
+`attach` sets `DATABASE_URL` on the app in libpq's URL form. Spring does not
+read that variable — it wants `spring.datasource.url` in JDBC form with the
+credentials separate — so `DatabaseUrlEnvironmentPostProcessor` translates it
+at startup. Nothing further is needed, and an explicit `SPRING_DATASOURCE_URL`
+still wins if you ever set one.
+
+**2. Generate the two secrets the service will not start without.**
+
+```bash
+openssl rand -base64 48   # WATCH_GURU_AUTH_SESSION_SECRET
+openssl rand -base64 32   # WATCH_GURU_CREDENTIALS_SECRET
+```
+
+Keep both. Losing the first signs everyone out; losing the second makes every
+stored third-party token permanently unreadable.
+
+**3. Set the secrets.**
+
+```bash
+flyctl secrets set --app watch-guru-api \
+  WATCH_GURU_AUTH_SESSION_SECRET='...' \
+  WATCH_GURU_CREDENTIALS_SECRET='...' \
+  WATCH_GURU_AUTH_AUDIENCES='<google-web-client-id>' \
+  TMDB_API_TOKEN='...'
+```
+
+`WATCH_GURU_AUTH_AUDIENCES` is the one to get right. The **same** Google *web*
+client id has to appear in three places or sign-in fails:
+
+| Place | How it gets there |
+|---|---|
+| This secret | `flyctl secrets set` above |
+| The Android build | `GOOGLE_WEB_CLIENT_ID` secret on the `android-release` environment |
+| Google Cloud Console | The OAuth client it came from |
+
+A mismatch produces a rejected token, not a helpful message. It is the single
+most common way a first deployment fails.
+
+**4. Make the image pullable.**
+
+Fly pulls the image from GHCR itself, and a package is private even when its
+repository is public. Open
+`https://github.com/users/dhuelin/packages/container/watch-guru%2Fbackend/settings`
+and change the visibility to public — once. Otherwise `flyctl deploy` fails on
+an unauthorized pull, which reads like a Fly problem and is not one.
+
+**5. Give CI a deploy token.**
+
+```bash
+flyctl tokens create deploy --app watch-guru-api --expiry 8760h
+```
+
+Put it on the repository's `production` environment as the secret
+`FLY_API_TOKEN`. The next push to `main` that touches `backend/` deploys, or
+run the workflow by hand with **Run workflow**.
+
+**6. Point the apps at it.**
+
+The Android release build bakes the API URL in, so set
+`ANDROID_API_BASE_URL` on the `android-release` environment to
+`https://watch-guru-api.fly.dev/` — with the trailing slash. The release
+workflow refuses to build without it.
+
+### Changing the hostname
+
+`WATCH_GURU_PUBLIC_BASE_URL` in `fly.toml` must match wherever the service
+actually answers. The Plex webhook URLs users paste into their servers and the
+Trakt OAuth redirect are both built from it, and both fail silently when it is
+wrong. If a custom domain goes in front, change it there, and change the
+redirect URI registered with Trakt to match.
+
+### If you would rather not use Fly
+
+The image is a plain OCI image with no Fly-specific anything in it, and
+`DATABASE_URL` is read the same way everywhere, so the alternatives are each
+one step in place of the `Roll out` step:
 
 ```yaml
 # Kubernetes
 - run: kubectl set image deployment/watch-guru-api api=$IMAGE
-# Fly.io
-- run: flyctl deploy --image $IMAGE
 # Cloud Run
 - run: gcloud run deploy watch-guru --image $IMAGE
 ```
-
-It runs against a GitHub `production` environment, so the deploy can require a
-manual approval and the runtime secrets live on the environment rather than on
-the repository.
 
 ### Required configuration
 
@@ -114,13 +212,27 @@ The workflow stops at uploading the `.aab` as an artifact. Publishing to Play
 needs a service account and a created listing, and a half-configured publish
 step that fails on every release is worse than an explicit gap.
 
-## What has been verified
+## What has been verified, and what has not
 
-The workflow YAML parses, and `backend/Dockerfile` was checked as far as this
-environment allows — the build reached base-image resolution, so the multi-stage
-structure and the cache mounts are syntactically sound, but no image was ever
-built because Docker Hub is unreachable from here.
+Verified:
 
-**No workflow has run.** The first push is their first execution, and the iOS
-and Android jobs in particular are compiling sources that have never been near
-a compiler.
+- The backend, Android and iOS workflows run on every pull request and pass.
+  Both apps compile and their unit tests run.
+- `DatabaseUrlEnvironmentPostProcessor` is covered by tests, including the
+  escaped-password and `sslmode` cases a real host produces.
+- `fly.toml` and every workflow parse.
+
+Not verified, and worth knowing before trusting any of it:
+
+- **Nothing has ever been deployed.** The `deploy` job has never reached Fly,
+  because no `FLY_API_TOKEN` exists. The flyctl invocation, the digest
+  hand-off from the publish job, and the health check's grace period are all
+  first-run-untested.
+- **No image has been built.** Docker Hub is unreachable from the environment
+  these changes were written in, so `backend/Dockerfile` has only been checked
+  as far as base-image resolution.
+- **`release-android.yml` has never run.** No release has been published and
+  no keystore exists.
+- **Neither app has run on a device or a simulator.** That is
+  [#35](https://github.com/dhuelin/watch-guru/issues/35), and it is also why
+  there are no store screenshots.

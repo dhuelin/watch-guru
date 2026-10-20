@@ -9,7 +9,7 @@
 	-->
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.dev.dhuelin.watchguru</string>
+		<string>group.dev.huelin.watchguru</string>
 	</array>
 	<!--
 	  And the same Keychain group, so the widget can read the session the app
@@ -18,7 +18,7 @@
 	-->
 	<key>keychain-access-groups</key>
 	<array>
-		<string>$(AppIdentifierPrefix)dev.dhuelin.watchguru</string>
+		<string>$(AppIdentifierPrefix)dev.huelin.watchguru</string>
 	</array>
 </dict>
 </plist>
