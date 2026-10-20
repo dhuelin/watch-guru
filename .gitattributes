@@ -14,6 +14,7 @@
 
 # Binary assets: never diff, never munge line endings.
 *.png               binary
+*.webp              binary
 *.jpg               binary
 *.jpeg              binary
 *.pdf               binary

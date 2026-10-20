@@ -219,20 +219,27 @@ named arguments there may appear in any order.
 
 ## The app icon
 
-The icon is drawn by a script rather than exported from a design tool:
+The icon is cut from the artwork in `docs/brand/` rather than drawn by hand,
+and shares that source with the Android launcher icon:
 
 ```bash
-python3 tools/make-ios-icon.py
+python3 tools/make-app-icon.py            # rewrite both platforms' icons
+python3 tools/make-app-icon.py --check    # fail if either has drifted
 ```
 
-It writes `WatchGuru/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png`
-from the same shapes and colours as the Android launcher icon, which is a
-vector. An asset catalogue takes a PNG and nothing else, so the committed image
-is a build product; the script is the source, and it is the thing to change.
+It writes `WatchGuru/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png`.
+An asset catalogue takes a PNG and nothing else, so the committed image is a
+build product; the artwork and that script are the source, and they are the
+things to change. The script's own docstring covers why the PNG is not a crop
+of the artwork: the two rules an iOS icon must follow are that it is fully
+opaque (no alpha channel at all) and that its own corners are square, because
+the system applies its superellipse mask and an icon that rounds itself is
+visibly cropped twice.
 
 The accent colour beside it is the brand blue, which every `Color.accentColor`
 in the app was already asking for and not getting -- without the asset those
-call sites fell back to the system blue.
+call sites fell back to the system blue. It predates the artwork and has not
+been retuned to it, so the icon is purple and the accent is still blue.
 
 ## Regenerating the API client
 

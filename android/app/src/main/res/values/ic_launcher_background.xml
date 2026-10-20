@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The launcher icon's background layer. A flat colour: the launcher may
-         shrink, mask and parallax this, and detail here survives none of it. -->
-    <color name="ic_launcher_background">#1B5E9B</color>
+    <!-- The launcher icon's background layer: the dark the artwork sits on,
+         averaged over its backdrop. The foreground fills the whole 72dp the
+         launcher's mask can show, so this is only ever seen behind a mask
+         wider than that, and it matters only that it is not a jarring edge. -->
+    <color name="ic_launcher_background">#18083C</color>
 </resources>

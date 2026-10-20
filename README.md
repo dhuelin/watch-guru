@@ -1,5 +1,7 @@
 # Watch Guru
 
+<img src="docs/brand/wordmark.png" alt="Watch Guru" width="420" />
+
 A guide to what you have watched and where you left off, for films and TV series.
 
 Watch Guru answers three questions the streaming apps themselves answer badly:
@@ -33,6 +35,29 @@ against a real screen until then.
 
 See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the phased plan and the GitHub
 issues tracking each piece.
+
+## Artwork
+
+The mascot, the wordmark and the app icon were drawn for the project and live
+in [`docs/brand/`](docs/brand). The icon is the one place they ship rather than
+merely being documented: both platforms' launcher icons are cut from the single
+source in that directory by
+[`tools/make-app-icon.py`](tools/make-app-icon.py), which also has a `--check`
+mode that fails if what is committed has drifted from it.
+
+That makes these the repository's first binary assets. The Android icon avoided
+them on purpose until now — a vector foreground is one file instead of five and
+reads in a diff — and the trade was made deliberately, because a vector cannot
+carry modelled shading. The themed (monochrome) layer stays a vector, since the
+system tints it to a flat silhouette anyway.
+
+<img src="docs/brand/promo.jpg" alt="Concept render: the mascot beside a phone showing a grid of posters" width="420" />
+
+That image is a **concept render, not a screenshot**. No build of either app has
+been run on a device, the layout in it is not the layout either app has, and its
+posters are generated likenesses rather than licensed artwork — so it belongs on
+this page and not in a store listing. The wordmark sets the name as
+`watch-guru`; the apps and this document call it Watch Guru.
 
 ## Architecture
 

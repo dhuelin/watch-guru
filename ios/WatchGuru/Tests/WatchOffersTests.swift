@@ -159,7 +159,10 @@ struct WatchOffersTests {
         )
 
         #expect(groups.map(\.offerType) == [.free, .flatrate])
-        #expect(groups.allSatisfy(\.yours))
+        // A closure rather than `allSatisfy(\.yours)`: a key path passed as
+        // the function argument of a `rethrows` call is what #expect
+        // decomposes into a throwing call it then refuses to compile.
+        #expect(groups.allSatisfy { $0.yours })
     }
 
     @Test("a held service the title is not on changes nothing")
