@@ -16,3 +16,12 @@ Thumbs.db
 # Python bytecode, from running the tools/ checkers.
 __pycache__/
 *.pyc
+
+# Signing material, at any depth. android/.gitignore already covers the app
+# directory, but the keytool command in docs/STORE-LISTING.md is run from
+# wherever you happen to be standing, and a signing key committed to a public
+# repository cannot be un-published.
+*.jks
+*.keystore
+*.jks.b64
+keystore.properties
