@@ -158,7 +158,7 @@ zertifiziert.
 |---|---|
 | Privacy policy | The published URL of [`docs/PRIVACY.md`](PRIVACY.md) — GitHub Pages, or its `blob` URL on github.com. |
 | Account deletion | The same page's **Deleting your account and your data** section. Play accepts an anchor on the privacy policy when deletion is also available in-app, which it is. |
-| Support email | Fill in — must be monitored, and it is shown publicly on the listing. |
+| Support email | `support@huelin.dev` — shown publicly on the listing, and the same address the privacy policy gives. It has to actually receive mail before the Google account can be created on it. |
 
 ## Data safety — answers for the form
 
@@ -202,20 +202,128 @@ TMDB, which can include mature titles; answer the "does the app display
 user-generated or third-party content" question honestly as **yes, third-party
 catalogue content**.
 
-## Before the first upload
+## From nothing to an internal test
 
-These are not listing text, and none of them is optional:
+In order. Later steps genuinely depend on earlier ones, and two of the
+dependencies are not obvious until they bite — both are flagged below.
 
-1. `API_BASE_URL` must point at a backend that exists. The default is a
-   placeholder (`https://api.watch-guru.example/`). Set the
-   `ANDROID_API_BASE_URL` variable on the `android-release` environment to the
-   deployed URL — `https://watch-guru-api.fly.dev/`, with the trailing slash —
-   and the release workflow passes it through. It refuses to build without it.
-2. `-Pwatchguru.googleWebClientId=…` must be the Google **web** client id, and
-   the same value must appear in the backend's
-   `WATCH_GURU_AUTH_AUDIENCES`. Without it, sign-in fails with a
-   configuration error.
-3. The upload keystore must exist and its four secrets must be set on the
-   `android-release` environment — see
-   [`DEPLOYMENT.md`](DEPLOYMENT.md#android-signing).
-4. Somebody must have launched the app at least once.
+### 1. The address, before anything else
+
+`support@huelin.dev` has to actually receive mail. Any host, or a forwarder;
+Google sends a verification code there and the account cannot be created
+without it. It is also the public support address on the listing and the one
+the privacy policy gives, so it is the address, not an address.
+
+### 2. The Google account
+
+Create a Google Account **using that existing address** rather than a new
+Gmail. Account *type* on Play (personal vs organization) is a separate
+question and is unaffected by this: a personal developer account can be owned
+by a Google account at a custom domain, with no company anywhere.
+
+Turn on two-factor authentication and save the recovery codes before going
+further. This account owns the app, the owner's email address cannot be
+changed afterwards, and moving the app to another account later is a reviewed
+transfer request, not a setting.
+
+### 3. The developer account
+
+`play.google.com/console/signup`, personal, $25 once, then identity
+verification with a government document. Verification can take days, which is
+the only reason to do this before anything else is ready.
+
+### 4. Publish the privacy policy
+
+Fill in `<OPERATOR>` in [`PRIVACY.md`](PRIVACY.md) — it must match the
+developer name Google verified — and publish it at a public URL. GitHub Pages
+on this repository, or the file's `blob` URL. Both the Play listing and the
+OAuth consent screen want it, so it has to exist before either.
+
+### 5. Google Cloud, for sign-in
+
+In a project under the **same** Google account:
+
+- **OAuth consent screen** — external, app name `Watch Guru`, support email
+  `support@huelin.dev`, the privacy policy URL from step 4.
+- **A Web client.** Its id is `GOOGLE_WEB_CLIENT_ID`, and the same value goes
+  in the backend's `WATCH_GURU_AUTH_AUDIENCES`. Credential Manager mints an ID
+  token whose audience is the *web* client, which is why the Android client is
+  not the one to use here.
+- **An Android client**, package `dev.huelin.watchguru`, with the SHA-1 of the
+  signing certificate.
+
+> **Trap 1.** That Android client needs the SHA-1 of the certificate the
+> installed app is actually signed with. Under Play App Signing, Google
+> re-signs the upload with a key you only see *after* the first bundle is
+> uploaded (Play Console → Test and release → App integrity). So sign-in fails
+> for testers until you come back and add that second SHA-1 alongside your
+> upload key's. It is not a code problem and it produces no useful error.
+
+### 6. The upload key
+
+```bash
+keytool -genkeypair -v -keystore release.jks \
+  -keyalg RSA -keysize 4096 -validity 10000 -alias watchguru
+base64 -w0 release.jks
+```
+
+Put the base64 and the three passwords on the `android-release` environment as
+`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`
+and `ANDROID_KEY_PASSWORD`. Keep `release.jks` somewhere you will still have
+it in a year.
+
+### 7. The backend
+
+The six steps in [`DEPLOYMENT.md`](DEPLOYMENT.md#first-time-setup), ending
+with `ANDROID_API_BASE_URL` set on the `android-release` environment. Nothing
+below works without this: the app signs in against the backend, and a build
+pointed at the placeholder domain installs and then does nothing.
+
+### 8. Create the app and upload the first bundle by hand
+
+Play Console → Create app. Name `Watch Guru`, package
+`dev.huelin.watchguru`, free, app not game.
+
+The first bundle has to go through the console by hand — the API can upload to
+a track but cannot bring an app into existence. Get one by publishing a GitHub
+release, or running **Release Android** manually, and downloading the
+`watch-guru-release-aab` artifact. Afterwards `PLAY_SERVICE_ACCOUNT_JSON` on
+the `android-release` environment makes the workflow do it.
+
+### 9. The console's own checklist
+
+Store listing from this document, the two graphics from `docs/brand/`, Data
+safety from the table above, content rating, target audience, ads declaration
+(there are none), and the privacy policy URL.
+
+> **Trap 2.** **App access.** The app is useless without signing in, so Google
+> asks how its reviewers get past that. Answer it: either give them
+> instructions saying any Google account works, or provide a test account. An
+> unanswered App access section holds up review, and a wrong answer gets the
+> build rejected for something that is not a defect.
+
+### 10. Internal testing, then the 14 days
+
+Internal testing reaches testers in minutes and needs no review — the right
+place for a build nobody has run. Then closed testing: **12 testers opted in
+for 14 continuous days** before you can apply for production. Recruiting
+twelve people with Google accounts who will stay opted in is usually the real
+bottleneck, so start asking now rather than on day one.
+
+## Still blocking, whatever else is done
+
+Two things the runbook cannot resolve, because neither is a configuration
+step:
+
+1. **Nobody has launched either app.** Not on a device, not on a simulator.
+   That is [#35](https://github.com/dhuelin/watch-guru/issues/35). Every
+   screen is unverified against a real screen, and the first person to find
+   out will be a tester unless it is you.
+2. **There are no screenshots,** and Play requires at least two. They come off
+   a running app, which is the same blocker as above. The concept render in
+   `docs/brand/promo.jpg` is not one and must not be submitted as one.
+
+And one that is nobody's fault: a personal developer account registered now
+cannot reach production until it has run a closed test with 12 testers opted
+in for 14 continuous days. Internal testing is available immediately, and is
+where this should go first regardless.

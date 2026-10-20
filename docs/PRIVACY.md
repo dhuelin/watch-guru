@@ -2,13 +2,11 @@
 
 **Last updated: 20 October 2026**
 
-> **Before publishing this, fill in the two placeholders below.** Google Play
-> requires a privacy policy at a public URL, and it will be read by people
-> deciding whether to trust the app, so it must name a real operator and a real
-> contact address.
->
-> - `<OPERATOR>` — the name of the person or company operating the service.
-> - `<CONTACT EMAIL>` — an address that is monitored.
+> **One placeholder is left: `<OPERATOR>`.** It is the name of the person or
+> company operating the service, and it has to match the developer name shown
+> on the Play listing — for a personal account, the name on the identity
+> document Google verified. Fill it in before publishing: a privacy policy
+> that does not say who is responsible is not one.
 >
 > The URL to give Play can be this file on GitHub Pages, or its `blob` URL on
 > github.com. Either is public and stable.
@@ -17,7 +15,7 @@ Watch Guru keeps a record of what you have watched. This policy describes what
 that means for your data: what is collected, why, who else sees it, and how to
 get rid of it.
 
-The service is operated by `<OPERATOR>`. Contact: `<CONTACT EMAIL>`.
+The service is operated by `<OPERATOR>`. Contact: **support@huelin.dev**.
 
 ## The short version
 
@@ -97,7 +95,7 @@ It is immediate and it cannot be undone. There is no grace period and no
 archived copy; backups age out on the hosting provider's own schedule.
 
 If you cannot reach the app — you have lost the device, or you cannot sign in —
-write to `<CONTACT EMAIL>` from the email address on the account and ask for it
+write to **support@huelin.dev** from the email address on the account and ask for it
 to be deleted.
 
 ## Children
@@ -109,7 +107,7 @@ from a child under 13 (or the equivalent age in your country).
 
 Depending on where you live, you may have the right to see a copy of your data,
 correct it, have it deleted, or object to how it is handled. Deletion is built
-into the app. For anything else, write to `<CONTACT EMAIL>`.
+into the app. For anything else, write to **support@huelin.dev**.
 
 If you are in the EU or the UK: the lawful basis for handling your account and
 viewing history is performance of the contract between you and the service —
