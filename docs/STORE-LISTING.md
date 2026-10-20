@@ -207,8 +207,10 @@ catalogue content**.
 These are not listing text, and none of them is optional:
 
 1. `API_BASE_URL` must point at a backend that exists. The default is a
-   placeholder (`https://api.watch-guru.example/`); pass
-   `-Pwatchguru.apiBaseUrl=https://…` to the release build.
+   placeholder (`https://api.watch-guru.example/`). Set the
+   `ANDROID_API_BASE_URL` variable on the `android-release` environment to the
+   deployed URL — `https://watch-guru-api.fly.dev/`, with the trailing slash —
+   and the release workflow passes it through. It refuses to build without it.
 2. `-Pwatchguru.googleWebClientId=…` must be the Google **web** client id, and
    the same value must appear in the backend's
    `WATCH_GURU_AUTH_AUDIENCES`. Without it, sign-in fails with a
