@@ -80,6 +80,11 @@
     <string name="where_to_watch_region">Angebote für das Land aus deinem Profil.</string>
     <string name="where_to_watch_none">In deiner Region bei keinem Streamingdienst verfügbar.</string>
     <string name="where_to_watch_updated">Geprüft %1$s</string>
+    <string name="where_to_watch_yours">Dafür zahlst du</string>
+    <string name="action_my_services">Meine Dienste</string>
+    <string name="title_my_services">Meine Dienste</string>
+    <string name="my_services_explainer">Sag uns, was du abonniert hast, dann stehen diese Dienste bei einem Titel oben. Versteckt wird so oder so nichts.</string>
+    <string name="my_services_none_available">Für deine Region sind noch keine Streamingdienste bekannt.</string>
     <string name="justwatch_attribution">Daten zur Streaming-Verfügbarkeit von JustWatch.</string>
 
     <string name="title_stats">Statistik</string>

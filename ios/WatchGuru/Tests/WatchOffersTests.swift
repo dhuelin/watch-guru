@@ -106,4 +106,70 @@ struct WatchOffersTests {
     func checkedAtOfNothing() {
         #expect(WatchOffers.checkedAt([]) == nil)
     }
+
+    // The services the user says they pay for. To them a subscription they
+    // already hold costs nothing, so it outranks a free service they have
+    // never heard of — which is what the ordering comment always promised.
+
+    @Test("a way to watch on a service the user holds comes first")
+    func heldServiceComesFirst() {
+        let groups = WatchOffers.group(
+            [offer(1, "Tubi", .free), offer(2, "Netflix", .flatrate)],
+            mine: [2]
+        )
+
+        // Without `mine` this is free then flatrate, as the other tests check.
+        #expect(groups.map(\.offerType) == [.flatrate, .free])
+        #expect(groups.first?.yours == true)
+        #expect(groups.last?.yours == false)
+    }
+
+    @Test("no held service leaves the cheapest-first order alone")
+    func noHeldServiceKeepsOrder() {
+        let groups = WatchOffers.group(
+            [offer(1, "Tubi", .free), offer(2, "Netflix", .flatrate)],
+            mine: [99]
+        )
+
+        #expect(groups.map(\.offerType) == [.free, .flatrate])
+        #expect(!groups.contains { $0.yours })
+    }
+
+    @Test("inside a group the held service is listed first")
+    func heldServiceFirstWithinGroup() {
+        // Alphabetically Disney+ precedes Netflix, so this can only pass if
+        // the held service was lifted above it.
+        let groups = WatchOffers.group(
+            [offer(1, "Disney+", .flatrate), offer(2, "Netflix", .flatrate)],
+            mine: [2]
+        )
+
+        #expect(groups.count == 1)
+        #expect(groups.first?.services.map(\.serviceName) == ["Netflix", "Disney+"])
+    }
+
+    @Test("groups that tie keep the cheapest-first order between them")
+    func tiedGroupsKeepTheirOrder() {
+        // Both groups hold a service, so neither wins on that and the original
+        // order has to survive. This is the case a plain sort on the flag is
+        // free to reshuffle, which is why group() partitions instead.
+        let groups = WatchOffers.group(
+            [offer(1, "Tubi", .free), offer(2, "Netflix", .flatrate)],
+            mine: [1, 2]
+        )
+
+        #expect(groups.map(\.offerType) == [.free, .flatrate])
+        // A closure rather than `allSatisfy(\.yours)`: a key path passed as
+        // the function argument of a `rethrows` call is what #expect
+        // decomposes into a throwing call it then refuses to compile.
+        #expect(groups.allSatisfy { $0.yours })
+    }
+
+    @Test("a held service the title is not on changes nothing")
+    func irrelevantHeldServiceChangesNothing() {
+        let groups = WatchOffers.group([offer(2, "Netflix", .flatrate)], mine: [7])
+
+        #expect(groups.map(\.offerType) == [.flatrate])
+        #expect(groups.first?.yours == false)
+    }
 }

@@ -10,6 +10,7 @@ import dev.dhuelin.watchguru.api.models.UpdateWatchlistItem
 import dev.dhuelin.watchguru.api.models.TitleProgress
 import dev.dhuelin.watchguru.api.models.TitleResponse
 import dev.dhuelin.watchguru.data.ApiResult
+import dev.dhuelin.watchguru.data.MyServices
 import dev.dhuelin.watchguru.data.OfflineRepository
 import dev.dhuelin.watchguru.data.ProfileEvents
 import dev.dhuelin.watchguru.data.WatchGuruRepository
@@ -31,6 +32,7 @@ import javax.inject.Inject
 class TitleDetailViewModel @Inject constructor(
     private val repository: WatchGuruRepository,
     private val offline: OfflineRepository,
+    private val services: MyServices,
     profileEvents: ProfileEvents,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -59,6 +61,12 @@ class TitleDetailViewModel @Inject constructor(
      * lists the rows the server holds, and an un-muted series has no row to
      * list, so it can only ever undo what is done here.
      */
+    /**
+     * The services the user says they pay for, straight through from
+     * [MyServices] so this screen re-orders the moment the picker is closed.
+     */
+    val myServices: StateFlow<Set<Long>> get() = services.selected
+
     private val _notifyNewEpisodes = MutableStateFlow<Boolean?>(null)
     val notifyNewEpisodes: StateFlow<Boolean?> = _notifyNewEpisodes.asStateFlow()
 

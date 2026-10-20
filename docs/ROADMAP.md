@@ -156,7 +156,7 @@ library rots.
 
 | # | Issue | Why it matters |
 |---|---|---|
-| [#18](https://github.com/dhuelin/watch-guru/issues/18) | Where to watch, and deep links | Turns a ledger into a guide. The backend data already exists and is unused. |
+| [#18](https://github.com/dhuelin/watch-guru/issues/18) | Where to watch, and deep links | Turns a ledger into a guide. Offers render on both apps, and "My services" now orders them by what the user pays for; the per-service deep link remains the stretch goal, see below |
 | [#19](https://github.com/dhuelin/watch-guru/issues/19) | New-episode notifications | The strongest reason to reopen the app. Backend and both apps are built; nothing is delivered until the push credentials in [#37](https://github.com/dhuelin/watch-guru/issues/37) exist, see below |
 | [#21](https://github.com/dhuelin/watch-guru/issues/21) | Import from Trakt, CSV, Netflix | Nobody starts from zero; an empty library is why tracking apps get deleted on day one |
 | [#20](https://github.com/dhuelin/watch-guru/issues/20) | Home screen widgets | Next episode, markable, without opening the app. Done on both platforms; the poster is not there yet, see below |
@@ -213,6 +213,46 @@ that token fail independently, and a screen that showed switches alone would
 leave somebody toggling a setting that could never do anything. The ordering is
 tested, because reporting "not registered" to somebody who has not been asked
 for permission sends them looking in the wrong place.
+
+---
+
+## "My services" is ordering, and it is on the device
+
+The last unmet criterion on #18 was letting the user say which subscriptions
+they hold, so availability on those surfaces first. The ordering comment in
+`WatchOffers` had promised it for months: *"it does not know which services the
+user already pays for — when it does, a subscription they hold belongs above a
+free service they have never heard of, and this order should change with it."*
+It now does.
+
+**It orders; it never filters.** Hiding titles the user cannot stream today
+would hide the thing they were looking for the week before it arrives on their
+service, and the explainer on the screen says so rather than leaving them to
+discover it. A group containing a service they hold sorts above one that does
+not, ties keep the cheapest-first order, and within a group their own service
+comes first. A badge says *why* — reordering with no visible reason reads as
+arbitrary.
+
+**The selection lives on the device, not the backend.** That is a limit worth
+stating. The region *is* server-side because the server needs it: every
+availability query is per country. This is only ever read to arrange a list the
+client already holds, so the client owns it — which also means no new endpoint,
+no migration, and no regenerated API client, none of which can be produced from
+an environment without Maven and the OpenAPI generator. The cost is that the
+selection does not follow the user to a second device. #18 asks for it to
+*persist*, which it does; moving it server-side later is a migration of a
+handful of ids, and `MyServices` on each platform is the seam for it.
+
+It clears on sign-out. Which services somebody subscribes to is a fact about
+them, not about the phone — the same reason the cached library and the widget
+feed go.
+
+One implementation note that applies to both platforms: the grouping
+**partitions** rather than sorts. Swift's `sorted(by:)` makes no stability
+promise, so sorting on the held/not-held flag alone would be free to reshuffle
+groups that tie. Splitting the list preserves each side's order by
+construction, and both platforms do it the same way so they cannot drift. There
+is a test for exactly that case on each.
 
 ---
 

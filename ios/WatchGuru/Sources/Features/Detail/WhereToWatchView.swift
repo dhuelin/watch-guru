@@ -18,8 +18,10 @@ struct WhereToWatchView: View {
 
     let offers: [AvailabilityResponse]
     let checkedAt: Date?
+    /// The services the user says they pay for; those ways of watching first.
+    var mine: Set<Int64> = []
 
-    private var groups: [WatchOffers.Group] { WatchOffers.group(offers) }
+    private var groups: [WatchOffers.Group] { WatchOffers.group(offers, mine: mine) }
 
     var body: some View {
         if offers.isEmpty {
@@ -41,9 +43,20 @@ struct WhereToWatchView: View {
 
                 ForEach(groups) { group in
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(WatchOffers.label(for: group.offerType))
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                        HStack(spacing: 8) {
+                            Text(WatchOffers.label(for: group.offerType))
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            // Says why this group moved. Reordering with no
+                            // visible reason reads as arbitrary: this turns
+                            // "why is Rent above Free" into "because I pay for
+                            // that one".
+                            if group.yours {
+                                Text("You pay for this")
+                                    .font(.caption2)
+                                    .foregroundStyle(.tint)
+                            }
+                        }
 
                         LazyVGrid(
                             columns: [GridItem(.adaptive(minimum: 140), spacing: 8, alignment: .leading)],

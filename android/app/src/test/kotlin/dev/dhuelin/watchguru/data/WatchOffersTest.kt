@@ -123,4 +123,81 @@ class WatchOffersTest {
     fun `no offers means nothing to date`() {
         assertNull(WatchOffers.checkedAt(emptyList()))
     }
+
+    // The services the user says they pay for. To them a subscription they
+    // already hold costs nothing, so it outranks a free service they have
+    // never heard of -- which is what the ordering comment always promised.
+
+    @Test
+    fun `a way to watch on a service the user holds comes first`() {
+        val groups = WatchOffers.group(
+            offers = listOf(
+                offer(1, "Tubi", OfferType.FREE),
+                offer(2, "Netflix", OfferType.FLATRATE),
+            ),
+            mine = setOf(2),
+        )
+
+        // Without `mine` this is FREE then FLATRATE, as the other tests check.
+        assertEquals(listOf(OfferType.FLATRATE, OfferType.FREE), groups.map { it.offerType })
+        assertEquals(true, groups.first().yours)
+        assertEquals(false, groups.last().yours)
+    }
+
+    @Test
+    fun `no held service leaves the cheapest-first order alone`() {
+        val groups = WatchOffers.group(
+            offers = listOf(
+                offer(1, "Tubi", OfferType.FREE),
+                offer(2, "Netflix", OfferType.FLATRATE),
+            ),
+            mine = setOf(99),
+        )
+
+        assertEquals(listOf(OfferType.FREE, OfferType.FLATRATE), groups.map { it.offerType })
+        assertEquals(false, groups.any { it.yours })
+    }
+
+    @Test
+    fun `inside a group the held service is listed first`() {
+        // Alphabetically Disney+ precedes Netflix, so this can only pass if
+        // the held service was lifted above it.
+        val groups = WatchOffers.group(
+            offers = listOf(
+                offer(1, "Disney+", OfferType.FLATRATE),
+                offer(2, "Netflix", OfferType.FLATRATE),
+            ),
+            mine = setOf(2),
+        )
+
+        assertEquals(listOf("Netflix", "Disney+"), groups.single().services.map { it.serviceName })
+    }
+
+    @Test
+    fun `groups that tie keep the cheapest-first order between them`() {
+        // Both groups contain a held service, so neither wins on that: the
+        // original order has to survive. A sort on the flag alone would be
+        // free to reshuffle these.
+        val groups = WatchOffers.group(
+            offers = listOf(
+                offer(1, "Tubi", OfferType.FREE),
+                offer(2, "Netflix", OfferType.FLATRATE),
+            ),
+            mine = setOf(1, 2),
+        )
+
+        assertEquals(listOf(OfferType.FREE, OfferType.FLATRATE), groups.map { it.offerType })
+        assertEquals(true, groups.all { it.yours })
+    }
+
+    @Test
+    fun `a held service the title is not on changes nothing`() {
+        val groups = WatchOffers.group(
+            offers = listOf(offer(2, "Netflix", OfferType.FLATRATE)),
+            mine = setOf(7),
+        )
+
+        assertEquals(listOf(OfferType.FLATRATE), groups.map { it.offerType })
+        assertEquals(false, groups.single().yours)
+    }
 }

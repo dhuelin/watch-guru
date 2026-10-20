@@ -255,3 +255,14 @@
 "Season %lld" = "Staffel %lld";
 "%lld of %lld watched" = "%lld von %lld gesehen";
 "%@ · not counted towards progress" = "%@ · zählt nicht zum Fortschritt";
+
+/* MARK: My services (#18)
+
+   Ordering only, never a filter: hiding titles the user cannot stream today
+   would hide the thing they were looking for the week before it arrives on
+   their service. Wording shared with the Android catalogue. */
+"My services" = "Meine Dienste";
+"You pay for this" = "Dafür zahlst du";
+"No services yet" = "Noch keine Dienste";
+"No streaming services are known for your region yet." = "Für deine Region sind noch keine Streamingdienste bekannt.";
+"Tell us what you subscribe to and those services are listed first when you look at a title. Nothing is hidden either way." = "Sag uns, was du abonniert hast, dann stehen diese Dienste bei einem Titel oben. Versteckt wird so oder so nichts.";

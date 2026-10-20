@@ -31,6 +31,7 @@ object Routes {
     const val TRAKT = "trakt"
     const val IMPORT = "import"
     const val NOTIFICATIONS = "notifications"
+    const val MY_SERVICES = "my-services"
 
     fun titleDetail(titleId: Long) = "title/$titleId"
 

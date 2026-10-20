@@ -11,6 +11,7 @@ import dev.dhuelin.watchguru.BuildConfig
 import dev.dhuelin.watchguru.data.CoilDataCleaner
 import dev.dhuelin.watchguru.data.GoogleSignIn
 import dev.dhuelin.watchguru.data.LocalDataCleaner
+import dev.dhuelin.watchguru.data.MyServices
 import dev.dhuelin.watchguru.data.OfflineRepository
 import dev.dhuelin.watchguru.data.SessionEvents
 import dev.dhuelin.watchguru.data.WatchGuruRepository
@@ -44,15 +45,19 @@ object AuthModule {
     fun localDataCleaner(
         @ApplicationContext context: Context,
         offline: OfflineRepository,
+        myServices: MyServices,
     ): LocalDataCleaner = object : LocalDataCleaner {
         private val images = CoilDataCleaner(context)
 
         override suspend fun clear() {
-            // Both halves. The cached library is the previous user's watch
-            // history in all but name, and the queue may still hold changes
-            // that would otherwise be replayed against whoever signs in next --
-            // attributing one person's viewing to another's account.
+            // All three. The cached library is the previous user's watch
+            // history in all but name, the queue may still hold changes that
+            // would otherwise be replayed against whoever signs in next --
+            // attributing one person's viewing to another's account -- and
+            // which services somebody subscribes to is a fact about them, not
+            // about the phone.
             offline.clearLocalData()
+            myServices.clear()
             images.clear()
         }
     }
