@@ -2,11 +2,11 @@
 
 **Last updated: 20 October 2026**
 
-> **One placeholder is left: `<OPERATOR>`.** It is the name of the person or
-> company operating the service, and it has to match the developer name shown
-> on the Play listing — for a personal account, the name on the identity
-> document Google verified. Fill it in before publishing: a privacy policy
-> that does not say who is responsible is not one.
+> **The operator name has to match the developer name on the Play listing** —
+> for a personal account, the name on the identity document Google verified.
+> If what Play Console shows differs from the name below, change the name
+> below rather than the other way round: a policy naming someone the store
+> does not is worse than no policy.
 >
 > The URL to give Play can be this file on GitHub Pages, or its `blob` URL on
 > github.com. Either is public and stable.
@@ -15,7 +15,7 @@ Watch Guru keeps a record of what you have watched. This policy describes what
 that means for your data: what is collected, why, who else sees it, and how to
 get rid of it.
 
-The service is operated by `<OPERATOR>`. Contact: **support@huelin.dev**.
+The service is operated by **Denis Huelin**. Contact: **support@huelin.dev**.
 
 ## The short version
 

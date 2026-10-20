@@ -260,38 +260,54 @@ developer name Google verified — and publish it at a public URL. GitHub Pages
 on this repository, or the file's `blob` URL. Both the Play listing and the
 OAuth consent screen want it, so it has to exist before either.
 
-### 5. Google Cloud, for sign-in
+### 5. The upload key
 
-In a project under the **same** Google account:
-
-- **OAuth consent screen** — external, app name `Watch Guru`, support email
-  `support@huelin.dev`, the privacy policy URL from step 4.
-- **A Web client.** Its id is `GOOGLE_WEB_CLIENT_ID`, and the same value goes
-  in the backend's `WATCH_GURU_AUTH_AUDIENCES`. Credential Manager mints an ID
-  token whose audience is the *web* client, which is why the Android client is
-  not the one to use here.
-- **An Android client**, package `dev.huelin.watchguru`, with the SHA-1 of the
-  signing certificate.
-
-> **Trap 1.** That Android client needs the SHA-1 of the certificate the
-> installed app is actually signed with. Under Play App Signing, Google
-> re-signs the upload with a key you only see *after* the first bundle is
-> uploaded (Play Console → Test and release → App integrity). So sign-in fails
-> for testers until you come back and add that second SHA-1 alongside your
-> upload key's. It is not a code problem and it produces no useful error.
-
-### 6. The upload key
+Before Google Cloud, not after: the Android OAuth client in the next step
+needs this key's fingerprint, so making the key first saves a return trip.
 
 ```bash
 keytool -genkeypair -v -keystore release.jks \
   -keyalg RSA -keysize 4096 -validity 10000 -alias watchguru
+
+# The fingerprint step 6 asks for
+keytool -list -v -keystore release.jks -alias watchguru | grep SHA1
+
+# Linux. On macOS: base64 -i release.jks | tr -d '\n'
 base64 -w0 release.jks
 ```
 
 Put the base64 and the three passwords on the `android-release` environment as
 `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`
-and `ANDROID_KEY_PASSWORD`. Keep `release.jks` somewhere you will still have
-it in a year.
+and `ANDROID_KEY_PASSWORD`. The environment is at **Settings → Environments**
+in this repository, and has to be created if it is not there yet.
+
+Keep `release.jks` somewhere you will still have it in a year. Under Play App
+Signing, losing it is recoverable — Google holds the key that actually signs
+what users install — but it is a support request, not an afternoon.
+
+### 6. Google Cloud, for sign-in
+
+In a project under the **same** Google account that owns the Play account:
+
+- **OAuth consent screen** — external, app name `Watch Guru`, support email
+  `support@huelin.dev`, the privacy policy URL from step 4, developer contact
+  `support@huelin.dev`. The scopes are the basic profile ones, so this needs
+  no Google review.
+- **A Web client.** Its id is `GOOGLE_WEB_CLIENT_ID`, and the same value goes
+  in the backend's `WATCH_GURU_AUTH_AUDIENCES`. Credential Manager mints an ID
+  token whose audience is the *web* client, which is why the Android client is
+  not the one to use here. It needs no redirect URI.
+- **An Android client**, package `dev.huelin.watchguru`, with the SHA-1 from
+  step 5. Nothing reads its id; it exists so that Google will accept a request
+  from this package signed with that key.
+
+> **Trap 1.** The Android client needs the SHA-1 of the certificate the
+> installed app is actually signed with — which, under Play App Signing, is
+> *not* the upload key. Google re-signs with a key you only see after the
+> first bundle is uploaded (Play Console → Test and release → App integrity).
+> So sign-in fails for every tester until you come back and add that second
+> SHA-1 alongside the upload key's. It is not a code problem and it produces
+> no useful error.
 
 ### 7. The backend
 
