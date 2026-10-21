@@ -9,12 +9,12 @@ plugins {
 
 android {
     namespace = "dev.huelin.watchguru"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "dev.huelin.watchguru"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         // Properties, not literals: Play rejects a second upload carrying a
         // versionCode it has already seen, so a release pipeline has to be
         // able to set it from outside. The defaults are what a local build

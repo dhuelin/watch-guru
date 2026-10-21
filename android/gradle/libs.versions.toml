@@ -1,7 +1,7 @@
 # Versions are pinned deliberately: AGP and the Kotlin plugins have to agree,
 # and the Compose compiler plugin version is tied to the Kotlin version exactly.
 [versions]
-agp = "8.7.3"
+agp = "8.10.1"
 kotlin = "2.1.21"
 coroutines = "1.9.0"
 serialization = "1.7.3"
