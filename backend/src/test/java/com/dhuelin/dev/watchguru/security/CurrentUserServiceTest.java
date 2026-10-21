@@ -5,6 +5,7 @@ import com.dhuelin.dev.watchguru.security.session.AccessTokenIssuer;
 import com.dhuelin.dev.watchguru.support.TestAuth;
 import com.dhuelin.dev.watchguru.tracking.domain.AppUser;
 import com.dhuelin.dev.watchguru.tracking.repository.AppUserRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,7 +13,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.Instant;
 import java.util.List;
@@ -93,6 +97,55 @@ class CurrentUserServiceTest {
         assertThat(user.getDisplayName()).isEqualTo("Viewer");
         assertThat(user.isEmailVerified()).isTrue();
         assertThat(user.getLastLoginAt()).isNotNull();
+    }
+
+    @AfterEach
+    void clearRequest() {
+        RequestContextHolder.resetRequestAttributes();
+    }
+
+    private static void deviceRegion(String value) {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader(DeviceRegion.HEADER, value);
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+    }
+
+    @Test
+    @DisplayName("a new account starts in the country the device is in")
+    void newAccountTakesDeviceRegion() {
+        when(users.findByAuthSubject(any())).thenReturn(Optional.empty());
+        when(users.findByEmail(any())).thenReturn(Optional.empty());
+        deviceRegion("ch");
+
+        AppUser user = service.resolve(jwt(GOOGLE, "g-1", "viewer@example.com", true, null));
+
+        assertThat(user.getRegion()).isEqualTo("CH");
+    }
+
+    @Test
+    @DisplayName("a device region that is not a country leaves the default alone")
+    void unusableDeviceRegionIsIgnored() {
+        when(users.findByAuthSubject(any())).thenReturn(Optional.empty());
+        when(users.findByEmail(any())).thenReturn(Optional.empty());
+        deviceRegion("419");
+
+        AppUser user = service.resolve(jwt(GOOGLE, "g-1", "viewer@example.com", true, null));
+
+        assertThat(user.getRegion()).isEqualTo("US");
+    }
+
+    @Test
+    @DisplayName("a returning user keeps the region they chose, whatever the device says")
+    void deviceRegionNeverOverwritesAnExistingAccount() {
+        AppUser existing = new AppUser("viewer@example.com", "Viewer");
+        existing.setAuthSubject(GOOGLE + "|g-1");
+        existing.setRegion("GB");
+        when(users.findByAuthSubject(GOOGLE + "|g-1")).thenReturn(Optional.of(existing));
+        deviceRegion("DE");
+
+        AppUser user = service.resolve(jwt(GOOGLE, "g-1", "viewer@example.com", true, null));
+
+        assertThat(user.getRegion()).isEqualTo("GB");
     }
 
     @Test

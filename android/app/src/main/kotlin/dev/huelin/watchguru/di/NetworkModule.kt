@@ -18,6 +18,7 @@ import dev.huelin.watchguru.api.apis.TitleControllerApi
 import dev.huelin.watchguru.api.apis.WatchHistoryControllerApi
 import dev.huelin.watchguru.api.apis.WatchlistControllerApi
 import dev.huelin.watchguru.data.AuthInterceptor
+import dev.huelin.watchguru.data.DeviceRegionInterceptor
 import dev.huelin.watchguru.data.EncryptedTokenStore
 import dev.huelin.watchguru.data.ProfileEvents
 import dev.huelin.watchguru.data.SessionAuthenticator
@@ -80,6 +81,9 @@ object NetworkModule {
     @Singleton
     @AuthStack
     fun authOkHttp(): OkHttpClient = OkHttpClient.Builder()
+        // The token exchange is where a first sign-in creates the account, so
+        // this stack is the one that needs it; see DeviceRegionInterceptor.
+        .addInterceptor(DeviceRegionInterceptor())
         .apply { if (BuildConfig.DEBUG) addInterceptor(logging()) }
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
@@ -128,6 +132,7 @@ object NetworkModule {
     ): OkHttpClient =
         OkHttpClient.Builder()
             .addInterceptor(AuthInterceptor(tokens))
+            .addInterceptor(DeviceRegionInterceptor())
             .authenticator(
                 SessionAuthenticator(
                     tokens = tokens,
