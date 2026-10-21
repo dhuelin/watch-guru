@@ -14,9 +14,11 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import dev.huelin.watchguru.R
 import dev.huelin.watchguru.api.models.MonthBucket
 import dev.huelin.watchguru.data.MonthlyBreakdown
 
@@ -48,7 +50,11 @@ fun MonthlyChart(
     Column(modifier = modifier.fillMaxWidth()) {
         if (busiest != null && peak > 0) {
             Text(
-                text = "Busiest month: ${MonthlyBreakdown.label(busiest)} · ${busiest.minutes / 60} h",
+                text = stringResource(
+                    R.string.stats_busiest_month,
+                    MonthlyBreakdown.label(busiest),
+                    busiest.minutes / 60,
+                ),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 8.dp),

@@ -264,7 +264,7 @@ private fun TitleDetailContent(
         // everything above it is context.
         seasons?.seasons?.takeIf { it.isNotEmpty() }?.let { list ->
             Text(
-                text = "Episodes",
+                text = stringResource(R.string.title_episodes),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(top = 24.dp, bottom = 4.dp),
             )
@@ -304,9 +304,21 @@ private fun EpisodeProgress(
     onMarkNext: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Hoisted: the semantics lambda below is not composable, so the label
+    // it needs has to be resolved out here.
+    val progressLabel = stringResource(
+        R.string.cd_episode_progress,
+        progress.watchedEpisodes,
+        progress.airedEpisodes,
+    )
+
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
-            text = "${progress.watchedEpisodes} of ${progress.airedEpisodes} episodes",
+            text = stringResource(
+                R.string.episode_progress,
+                progress.watchedEpisodes,
+                progress.airedEpisodes,
+            ),
             style = MaterialTheme.typography.titleMedium,
         )
 
@@ -315,20 +327,22 @@ private fun EpisodeProgress(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 8.dp)
-                .semantics {
-                    contentDescription =
-                        "${progress.watchedEpisodes} of ${progress.airedEpisodes} episodes watched"
-                },
+                .semantics { contentDescription = progressLabel },
         )
 
         val nextCode = progress.nextEpisodeCode
         if (nextCode != null) {
             Text(
-                text = buildString {
-                    append("Next: ")
-                    append(nextCode)
-                    progress.nextEpisodeName?.let { append(" · $it") }
-                },
+                // The episode is composed first and then put into the
+                // sentence, rather than the sentence being built by appending
+                // to a prefix: "Next:" does not come first in every language.
+                text = stringResource(
+                    R.string.episode_next,
+                    buildString {
+                        append(nextCode)
+                        progress.nextEpisodeName?.let { append(" · $it") }
+                    },
+                ),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(top = 12.dp),
             )
@@ -355,7 +369,7 @@ private fun EpisodeProgress(
         } else {
             // Caught up is a real state and deserves saying, not an empty gap.
             Text(
-                text = "You're all caught up.",
+                text = stringResource(R.string.episode_all_caught_up),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 12.dp),

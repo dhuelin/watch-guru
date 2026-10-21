@@ -247,4 +247,25 @@
     <string name="widget_offline">Keine Verbindung. Lieber nichts anzeigen als etwas Falsches.</string>
     <string name="widget_unavailable">Das konnte gerade nicht geladen werden.</string>
     <string name="widget_episode_named">%1$s · %2$s</string>
+
+    <!-- Staffeln und Folgen. -->
+    <string name="season_specials">Specials</string>
+    <string name="season_number">Staffel %1$d</string>
+    <string name="season_progress">%1$d von %2$d gesehen</string>
+    <string name="season_progress_specials">%1$d von %2$d gesehen · zählt nicht zum Fortschritt</string>
+    <string name="episode_airs_on">Läuft am %1$s</string>
+    <string name="episode_not_aired">Noch nicht ausgestrahlt</string>
+    <string name="title_episodes">Folgen</string>
+    <string name="episode_progress">%1$d von %2$d Folgen</string>
+    <string name="cd_episode_progress">%1$d von %2$d Folgen gesehen</string>
+    <string name="episode_next">Als Nächstes: %1$s</string>
+    <string name="episode_all_caught_up">Du bist auf dem neuesten Stand.</string>
+    <string name="history_rewatch">erneut gesehen</string>
+    <string name="stats_busiest_month">Aktivster Monat: %1$s · %2$d Std.</string>
+    <string name="stats_hero_hours">%1$d Std.</string>
+    <string name="stats_hero_minutes">%1$d Min.</string>
+    <plurals name="episode_watch_count">
+        <item quantity="one">%1$d Mal gesehen</item>
+        <item quantity="other">%1$d Mal gesehen</item>
+    </plurals>
 </resources>

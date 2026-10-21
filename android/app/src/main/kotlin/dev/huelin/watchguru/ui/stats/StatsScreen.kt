@@ -176,7 +176,11 @@ private fun HeroTime(stats: WatchStats, modifier: Modifier = Modifier) {
 
     Column(modifier = modifier) {
         Text(
-            text = if (hours > 0) "$hours h" else "$minutes min",
+            text = if (hours > 0) {
+                stringResource(R.string.stats_hero_hours, hours)
+            } else {
+                stringResource(R.string.stats_hero_minutes, minutes)
+            },
             style = MaterialTheme.typography.displayMedium,
         )
         Text(

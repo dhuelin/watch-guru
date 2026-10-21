@@ -292,4 +292,27 @@
     <string name="widget_offline">No connection. Showing nothing rather than something wrong.</string>
     <string name="widget_unavailable">Could not load this just now.</string>
     <string name="widget_episode_named">%1$s · %2$s</string>
+
+    <!-- Season and episode listing. The progress line exists twice rather
+         than once with a clause appended: a language that orders the clause
+         differently has nowhere to put a glued-on suffix. -->
+    <string name="season_specials">Specials</string>
+    <string name="season_number">Season %1$d</string>
+    <string name="season_progress">%1$d of %2$d watched</string>
+    <string name="season_progress_specials">%1$d of %2$d watched · not counted towards progress</string>
+    <string name="episode_airs_on">Airs %1$s</string>
+    <string name="episode_not_aired">Not yet aired</string>
+    <string name="title_episodes">Episodes</string>
+    <string name="episode_progress">%1$d of %2$d episodes</string>
+    <string name="cd_episode_progress">%1$d of %2$d episodes watched</string>
+    <string name="episode_next">Next: %1$s</string>
+    <string name="episode_all_caught_up">You\'re all caught up.</string>
+    <string name="history_rewatch">rewatch</string>
+    <string name="stats_busiest_month">Busiest month: %1$s · %2$d h</string>
+    <string name="stats_hero_hours">%1$d h</string>
+    <string name="stats_hero_minutes">%1$d min</string>
+    <plurals name="episode_watch_count">
+        <item quantity="one">Watched %1$d time</item>
+        <item quantity="other">Watched %1$d times</item>
+    </plurals>
 </resources>
