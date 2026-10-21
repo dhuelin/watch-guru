@@ -63,9 +63,18 @@ installed and `flyctl auth login` done.
 
 **1. Create the app and its database.**
 
+Fly has two Postgres offerings and they are not close in price. `fly postgres`
+is the *unmanaged* one: a Postgres machine Fly provisions and then leaves to
+you, at roughly the cost of the machine and its volume, with no support and no
+backups you did not arrange. `fly mpg` is the managed one, with automatic
+backups, failover and support, starting around ten times that. For a prototype
+nobody is relying on yet, unmanaged is the honest choice — but it is a choice,
+and the day somebody's viewing history is in there it should be revisited.
+
 ```bash
 flyctl apps create watch-guru-api
-flyctl postgres create --name watch-guru-db --region fra
+flyctl postgres create --name watch-guru-db --region fra \
+  --vm-size shared-cpu-1x --volume-size 10 --initial-cluster-size 1
 flyctl postgres attach watch-guru-db --app watch-guru-api
 ```
 
