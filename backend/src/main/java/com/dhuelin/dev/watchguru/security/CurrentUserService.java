@@ -175,6 +175,8 @@ public class CurrentUserService {
         user.setAuthIssuer(issuer);
         user.setEmailVerified(email != null && emailVerified);
         user.setLastLoginAt(Instant.now());
+        // Only here, on creation: after this the region is the user's to change.
+        DeviceRegion.ofCurrentRequest().ifPresent(user::setRegion);
 
         try {
             return users.saveAndFlush(user);

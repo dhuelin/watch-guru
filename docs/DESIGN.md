@@ -108,7 +108,9 @@ below them. A tappable "Netflix" row that opened a web page for all eleven
 services would be a lie told eleven times.
 
 **It must not guess the country.** Offers are for the region on the user's
-profile, which the backend takes from their token. That region is editable in
+profile, which the backend takes from their token. A new account starts with
+the country of the device it signed up on (the `X-Device-Region` header, read
+from the locale, used only at account creation). That region is editable in
 Profile, and the section says which country it is showing, because offers for
 the wrong country are worse than no offers at all.
 

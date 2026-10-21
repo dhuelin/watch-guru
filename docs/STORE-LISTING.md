@@ -178,7 +178,7 @@ collects. **Shares:** no.
 | App activity → Other user-generated content | Yes | No | Required | App functionality (the watchlist, history and ratings *are* the app) |
 | App activity → App interactions | No | — | — | Nothing is logged for analytics |
 | Device or other IDs | Yes | No | Optional | App functionality — the push token, only once notifications are switched on, deleted when they are switched off or the user signs out |
-| Location | No | — | — | Country is a setting the user picks, not a location reading |
+| Location | No | — | — | Country is a setting, not a location reading. A new account's country is seeded once from the device's locale (its language settings, not GPS or IP), and the user can change it in Profile |
 | Financial, Health, Messages, Photos, Contacts, Files, Calendar, Audio | No | — | — | None are requested or received |
 
 **Security practices**
