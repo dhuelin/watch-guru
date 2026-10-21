@@ -104,6 +104,17 @@ flyctl secrets set --app watch-guru-api \
   TMDB_API_TOKEN='...'
 ```
 
+Of those four, two are needed for the service to start at all —
+`WATCH_GURU_AUTH_SESSION_SECRET` and `WATCH_GURU_AUTH_AUDIENCES`, both of
+which fail closed rather than defaulting to something permissive.
+`TMDB_API_TOKEN` is not: without it the service boots and answers, and every
+catalogue lookup comes back empty. So it can be added afterwards, with one
+command, whenever the key arrives:
+
+```bash
+flyctl secrets set --app watch-guru-api TMDB_API_TOKEN='eyJ...'
+```
+
 `WATCH_GURU_AUTH_AUDIENCES` is the one to get right. The **same** Google *web*
 client id has to appear in three places or sign-in fails:
 
