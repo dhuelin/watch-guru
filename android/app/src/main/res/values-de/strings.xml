@@ -29,7 +29,6 @@
     <string name="status_dropped">Abgebrochen</string>
 
     <string name="action_mark_watched">Als gesehen markieren</string>
-    <string name="action_mark_unwatched">Als ungesehen markieren</string>
     <string name="action_mark_up_to_here">Alle bis hierhin als gesehen markieren</string>
     <string name="action_add_to_library">Zur Bibliothek hinzufügen</string>
     <string name="action_retry">Erneut versuchen</string>

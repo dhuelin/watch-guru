@@ -19,7 +19,6 @@
     <string name="status_dropped">Dropped</string>
 
     <string name="action_mark_watched">Mark watched</string>
-    <string name="action_mark_unwatched">Mark unwatched</string>
     <string name="action_mark_up_to_here">Mark all up to here</string>
     <string name="action_add_to_library">Add to library</string>
     <string name="action_retry">Retry</string>
