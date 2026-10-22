@@ -13,7 +13,7 @@
     <!--
       allowBackup is off: everything the app keeps is either the session, which
       must not leave the device, or a cache of what the server already holds.
-      A restored copy of the encrypted session cannot even be read -- the
+      A restored copy of the encrypted session cannot even be read: the
       Keystore key it was sealed with is never backed up.
 
       icon and roundIcon point at the same adaptive icon. The round variant
