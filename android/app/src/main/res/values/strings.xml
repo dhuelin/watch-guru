@@ -101,7 +101,19 @@
     <string name="stats_period_month">This month</string>
     <string name="stats_period_year">This year</string>
     <string name="stats_period_all">All time</string>
-    <string name="stats_hero_detail">%1$d titles · %2$d films · %3$d episodes</string>
+    <plurals name="stats_hero_titles">
+        <item quantity="one">%1$d title</item>
+        <item quantity="other">%1$d titles</item>
+    </plurals>
+    <plurals name="stats_hero_films">
+        <item quantity="one">%1$d film</item>
+        <item quantity="other">%1$d films</item>
+    </plurals>
+    <plurals name="stats_hero_episodes">
+        <item quantity="one">%1$d episode</item>
+        <item quantity="other">%1$d episodes</item>
+    </plurals>
+    <string name="stats_hero_detail">%1$s · %2$s · %3$s</string>
     <string name="stats_current_streak">Day streak</string>
     <string name="stats_longest_streak">Longest streak</string>
     <string name="stats_streak_rule">A streak counts consecutive days with at least one viewing. Yesterday still counts, so it does not break before the day is out.</string>
@@ -198,7 +210,10 @@
     <string name="cd_mark_episode_watched">Mark %1$s watched</string>
     <string name="cd_mark_episode_unwatched">Mark %1$s unwatched</string>
     <string name="cd_poster">Poster for %1$s</string>
-    <string name="cd_progress">%1$d of %2$d episodes watched</string>
+    <plurals name="cd_progress">
+        <item quantity="one">%1$d of %2$d episode watched</item>
+        <item quantity="other">%1$d of %2$d episodes watched</item>
+    </plurals>
     <!-- Names the episode and the series, because Up Next shows several of
          these at once and "Mark watched" alone does not say which. -->
     <string name="cd_mark_next_episode">Mark %1$s of %2$s watched</string>
@@ -243,7 +258,10 @@
     <!-- Counts the user acts on. Separated because they need different things
          from them: matched rows need only a glance, ambiguous ones need a
          choice, and unmatched ones need nothing at all. -->
-    <string name="import_already_imported">%1$d already imported. These are skipped.</string>
+    <plurals name="import_already_imported">
+        <item quantity="one">%1$d already imported. It is skipped.</item>
+        <item quantity="other">%1$d already imported. These are skipped.</item>
+    </plurals>
     <string name="import_section_matched">Ready to import</string>
     <string name="import_section_ambiguous">Needs a choice</string>
     <string name="import_section_unmatched">Not found</string>
@@ -302,8 +320,10 @@
     <string name="episode_airs_on">Airs %1$s</string>
     <string name="episode_not_aired">Not yet aired</string>
     <string name="title_episodes">Episodes</string>
-    <string name="episode_progress">%1$d of %2$d episodes</string>
-    <string name="cd_episode_progress">%1$d of %2$d episodes watched</string>
+    <plurals name="episode_progress">
+        <item quantity="one">%1$d of %2$d episode</item>
+        <item quantity="other">%1$d of %2$d episodes</item>
+    </plurals>
     <string name="episode_next">Next: %1$s</string>
     <string name="episode_all_caught_up">You\'re all caught up.</string>
     <string name="history_rewatch">rewatch</string>

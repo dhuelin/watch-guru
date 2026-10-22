@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -124,8 +125,11 @@ private fun UpNextCard(
                 )
 
                 if (entry.airedEpisodes > 0) {
-                    val progressLabel = stringResource(
-                        R.string.cd_progress, entry.watchedEpisodes, entry.airedEpisodes,
+                    val progressLabel = pluralStringResource(
+                        R.plurals.cd_progress,
+                        entry.airedEpisodes,
+                        entry.watchedEpisodes,
+                        entry.airedEpisodes,
                     )
                     LinearProgressIndicator(
                         progress = { entry.watchedEpisodes.toFloat() / entry.airedEpisodes },

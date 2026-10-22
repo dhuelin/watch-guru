@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -306,16 +307,18 @@ private fun EpisodeProgress(
 ) {
     // Hoisted: the semantics lambda below is not composable, so the label
     // it needs has to be resolved out here.
-    val progressLabel = stringResource(
-        R.string.cd_episode_progress,
+    val progressLabel = pluralStringResource(
+        R.plurals.cd_progress,
+        progress.airedEpisodes,
         progress.watchedEpisodes,
         progress.airedEpisodes,
     )
 
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
-            text = stringResource(
-                R.string.episode_progress,
+            text = pluralStringResource(
+                R.plurals.episode_progress,
+                progress.airedEpisodes,
                 progress.watchedEpisodes,
                 progress.airedEpisodes,
             ),
