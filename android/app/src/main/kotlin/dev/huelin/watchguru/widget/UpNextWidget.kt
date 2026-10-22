@@ -184,8 +184,14 @@ class UpNextWidget : GlanceAppWidget() {
                 )
                 if (!compact) {
                     Text(
-                        text = context.getString(
-                            R.string.cd_progress, entry.watchedEpisodes, entry.airedEpisodes,
+                        // getQuantityString rather than getString: Glance has
+                        // no pluralStringResource, and this is the same label
+                        // the app's own progress bars carry.
+                        text = context.resources.getQuantityString(
+                            R.plurals.cd_progress,
+                            entry.airedEpisodes,
+                            entry.watchedEpisodes,
+                            entry.airedEpisodes,
                         ),
                         style = TextStyle(
                             color = GlanceTheme.colors.onSurfaceVariant,

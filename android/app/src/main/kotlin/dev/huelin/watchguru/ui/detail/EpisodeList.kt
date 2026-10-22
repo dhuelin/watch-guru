@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -61,17 +62,28 @@ fun SeasonSection(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = if (season.seasonNumber == 0) {
-                        "Specials"
+                        stringResource(R.string.season_specials)
                     } else {
-                        season.name ?: "Season ${season.seasonNumber}"
+                        season.name
+                            ?: stringResource(R.string.season_number, season.seasonNumber)
                     },
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Text(
                     // Specials are shown but excluded from series progress, so
-                    // saying so here avoids the counts looking wrong.
-                    text = "${season.watchedEpisodes} of ${season.airedEpisodes} watched" +
-                            if (season.seasonNumber == 0) " · not counted towards progress" else "",
+                    // saying so here avoids the counts looking wrong. Two whole
+                    // sentences rather than one plus a glued-on clause: the
+                    // clause has nowhere to go in a language that puts it
+                    // somewhere else.
+                    text = stringResource(
+                        if (season.seasonNumber == 0) {
+                            R.string.season_progress_specials
+                        } else {
+                            R.string.season_progress
+                        },
+                        season.watchedEpisodes,
+                        season.airedEpisodes,
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -167,13 +179,19 @@ private fun EpisodeRow(
             )
             if (!episode.aired) {
                 Text(
-                    text = episode.airDate?.let { "Airs $it" } ?: "Not yet aired",
+                    text = episode.airDate
+                        ?.let { stringResource(R.string.episode_airs_on, it) }
+                        ?: stringResource(R.string.episode_not_aired),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             } else if (episode.watchCount > 1) {
                 Text(
-                    text = "Watched ${episode.watchCount} times",
+                    text = pluralStringResource(
+                        R.plurals.episode_watch_count,
+                        episode.watchCount,
+                        episode.watchCount,
+                    ),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

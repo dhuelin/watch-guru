@@ -63,6 +63,14 @@ jobs:
         working-directory: .
         run: python3 tools/check-translations.py
 
+      # And a string that never became a resource is invisible to the check
+      # above, because there is nothing for it to compare: it is simply
+      # English, in every language, for ever. Twelve had already slipped
+      # through when this was added.
+      - name: Check Compose strings
+        working-directory: .
+        run: python3 tools/check-compose-strings.py
+
       # This is the first Gradle build these sources will ever have had. They
       # were written in an environment that could not reach Google's Maven, so
       # the plugin versions and everything under ui/ are unproven. The data

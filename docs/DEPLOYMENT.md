@@ -63,9 +63,18 @@ installed and `flyctl auth login` done.
 
 **1. Create the app and its database.**
 
+Fly has two Postgres offerings and they are not close in price. `fly postgres`
+is the *unmanaged* one: a Postgres machine Fly provisions and then leaves to
+you, at roughly the cost of the machine and its volume, with no support and no
+backups you did not arrange. `fly mpg` is the managed one, with automatic
+backups, failover and support, starting around ten times that. For a prototype
+nobody is relying on yet, unmanaged is the honest choice — but it is a choice,
+and the day somebody's viewing history is in there it should be revisited.
+
 ```bash
 flyctl apps create watch-guru-api
-flyctl postgres create --name watch-guru-db --region fra
+flyctl postgres create --name watch-guru-db --region fra \
+  --vm-size shared-cpu-1x --volume-size 10 --initial-cluster-size 1
 flyctl postgres attach watch-guru-db --app watch-guru-api
 ```
 
@@ -93,6 +102,17 @@ flyctl secrets set --app watch-guru-api \
   WATCH_GURU_CREDENTIALS_SECRET='...' \
   WATCH_GURU_AUTH_AUDIENCES='<google-web-client-id>' \
   TMDB_API_TOKEN='...'
+```
+
+Of those four, two are needed for the service to start at all —
+`WATCH_GURU_AUTH_SESSION_SECRET` and `WATCH_GURU_AUTH_AUDIENCES`, both of
+which fail closed rather than defaulting to something permissive.
+`TMDB_API_TOKEN` is not: without it the service boots and answers, and every
+catalogue lookup comes back empty. So it can be added afterwards, with one
+command, whenever the key arrives:
+
+```bash
+flyctl secrets set --app watch-guru-api TMDB_API_TOKEN='eyJ...'
 ```
 
 `WATCH_GURU_AUTH_AUDIENCES` is the one to get right. The **same** Google *web*

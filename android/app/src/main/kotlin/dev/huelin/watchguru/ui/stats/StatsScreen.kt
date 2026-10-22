@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -176,15 +177,34 @@ private fun HeroTime(stats: WatchStats, modifier: Modifier = Modifier) {
 
     Column(modifier = modifier) {
         Text(
-            text = if (hours > 0) "$hours h" else "$minutes min",
+            text = if (hours > 0) {
+                stringResource(R.string.stats_hero_hours, hours)
+            } else {
+                stringResource(R.string.stats_hero_minutes, minutes)
+            },
             style = MaterialTheme.typography.displayMedium,
         )
         Text(
+            // Three counts cannot be one plural, so each is resolved on its
+            // own and the separator string joins them -- which also lets a
+            // translator reorder the three without touching this file.
             text = stringResource(
                 R.string.stats_hero_detail,
-                stats.distinctTitles,
-                stats.totalMovieViewings,
-                stats.totalEpisodeViewings,
+                // The counts are Long and the quantity selector takes an Int,
+                // so only the selector is narrowed -- the Long is still what
+                // gets formatted, and nothing in the visible number is lost.
+                pluralStringResource(
+                    R.plurals.stats_hero_titles,
+                    stats.distinctTitles.toInt(),
+                    stats.distinctTitles),
+                pluralStringResource(
+                    R.plurals.stats_hero_films,
+                    stats.totalMovieViewings.toInt(),
+                    stats.totalMovieViewings),
+                pluralStringResource(
+                    R.plurals.stats_hero_episodes,
+                    stats.totalEpisodeViewings.toInt(),
+                    stats.totalEpisodeViewings),
             ),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

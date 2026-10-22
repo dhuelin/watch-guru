@@ -1,21 +1,23 @@
+---
+title: Watch Guru — Privacy Policy
+---
+
 # Watch Guru — Privacy Policy
 
 **Last updated: 20 October 2026**
 
-> **The operator name has to match the developer name on the Play listing** —
-> for a personal account, the name on the identity document Google verified.
-> If what Play Console shows differs from the name below, change the name
-> below rather than the other way round: a policy naming someone the store
-> does not is worse than no policy.
->
-> The URL to give Play can be this file on GitHub Pages, or its `blob` URL on
-> github.com. Either is public and stable.
+> Published at
+> <https://dhuelin.github.io/watch-guru/PRIVACY.html>, which is the URL given
+> to Google Play, to the Play Data safety form and to the OAuth consent
+> screen. The front matter above is what makes GitHub Pages render this as a
+> page rather than serve the Markdown source.
 
 Watch Guru keeps a record of what you have watched. This policy describes what
 that means for your data: what is collected, why, who else sees it, and how to
 get rid of it.
 
-The service is operated by **Denis Huelin**. Contact: **support@huelin.dev**.
+The service is operated by **Huelin.dev** (Denis Huelin), in Switzerland.
+Contact: **support@huelin.dev**.
 
 ## The short version
 

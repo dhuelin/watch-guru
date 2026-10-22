@@ -29,7 +29,6 @@
     <string name="status_dropped">Abgebrochen</string>
 
     <string name="action_mark_watched">Als gesehen markieren</string>
-    <string name="action_mark_unwatched">Als ungesehen markieren</string>
     <string name="action_mark_up_to_here">Alle bis hierhin als gesehen markieren</string>
     <string name="action_add_to_library">Zur Bibliothek hinzufügen</string>
     <string name="action_retry">Erneut versuchen</string>
@@ -94,7 +93,19 @@
     <string name="stats_period_month">Dieser Monat</string>
     <string name="stats_period_year">Dieses Jahr</string>
     <string name="stats_period_all">Gesamt</string>
-    <string name="stats_hero_detail">%1$d Titel · %2$d Filme · %3$d Folgen</string>
+    <plurals name="stats_hero_titles">
+        <item quantity="one">%1$d Titel</item>
+        <item quantity="other">%1$d Titel</item>
+    </plurals>
+    <plurals name="stats_hero_films">
+        <item quantity="one">%1$d Film</item>
+        <item quantity="other">%1$d Filme</item>
+    </plurals>
+    <plurals name="stats_hero_episodes">
+        <item quantity="one">%1$d Folge</item>
+        <item quantity="other">%1$d Folgen</item>
+    </plurals>
+    <string name="stats_hero_detail">%1$s · %2$s · %3$s</string>
     <string name="stats_current_streak">Tage in Folge</string>
     <string name="stats_longest_streak">Längste Serie</string>
     <string name="stats_streak_rule">Gezählt werden aufeinanderfolgende Tage mit mindestens einer Sichtung. Gestern zählt noch mit, die Serie reißt also nicht, bevor der Tag vorbei ist.</string>
@@ -170,7 +181,10 @@
     <string name="cd_mark_episode_watched">%1$s als gesehen markieren</string>
     <string name="cd_mark_episode_unwatched">%1$s als ungesehen markieren</string>
     <string name="cd_poster">Poster von %1$s</string>
-    <string name="cd_progress">%1$d von %2$d Folgen gesehen</string>
+    <plurals name="cd_progress">
+        <item quantity="one">%1$d von %2$d Folge gesehen</item>
+        <item quantity="other">%1$d von %2$d Folgen gesehen</item>
+    </plurals>
     <string name="cd_mark_next_episode">%1$s von %2$s als gesehen markieren</string>
     <string name="cd_expand_season">Staffel aufklappen</string>
     <string name="cd_collapse_season">Staffel zuklappen</string>
@@ -202,7 +216,10 @@
     <string name="import_source_netflix">Netflix-Export</string>
     <string name="import_source_unknown">unbekannte Datei</string>
     <string name="import_nothing_found">In dieser Datei war kein Sehverlauf zu erkennen.</string>
-    <string name="import_already_imported">%1$d schon importiert. Diese werden übersprungen.</string>
+    <plurals name="import_already_imported">
+        <item quantity="one">%1$d bereits importiert. Dieser wird übersprungen.</item>
+        <item quantity="other">%1$d bereits importiert. Diese werden übersprungen.</item>
+    </plurals>
     <string name="import_section_matched">Bereit zum Import</string>
     <string name="import_section_ambiguous">Braucht eine Entscheidung</string>
     <string name="import_section_unmatched">Nicht gefunden</string>
@@ -247,4 +264,27 @@
     <string name="widget_offline">Keine Verbindung. Lieber nichts anzeigen als etwas Falsches.</string>
     <string name="widget_unavailable">Das konnte gerade nicht geladen werden.</string>
     <string name="widget_episode_named">%1$s · %2$s</string>
+
+    <!-- Staffeln und Folgen. -->
+    <string name="season_specials">Specials</string>
+    <string name="season_number">Staffel %1$d</string>
+    <string name="season_progress">%1$d von %2$d gesehen</string>
+    <string name="season_progress_specials">%1$d von %2$d gesehen · zählt nicht zum Fortschritt</string>
+    <string name="episode_airs_on">Läuft am %1$s</string>
+    <string name="episode_not_aired">Noch nicht ausgestrahlt</string>
+    <string name="title_episodes">Folgen</string>
+    <plurals name="episode_progress">
+        <item quantity="one">%1$d von %2$d Folge</item>
+        <item quantity="other">%1$d von %2$d Folgen</item>
+    </plurals>
+    <string name="episode_next">Als Nächstes: %1$s</string>
+    <string name="episode_all_caught_up">Du bist auf dem neuesten Stand.</string>
+    <string name="history_rewatch">erneut gesehen</string>
+    <string name="stats_busiest_month">Aktivster Monat: %1$s · %2$d Std.</string>
+    <string name="stats_hero_hours">%1$d Std.</string>
+    <string name="stats_hero_minutes">%1$d Min.</string>
+    <plurals name="episode_watch_count">
+        <item quantity="one">%1$d Mal gesehen</item>
+        <item quantity="other">%1$d Mal gesehen</item>
+    </plurals>
 </resources>

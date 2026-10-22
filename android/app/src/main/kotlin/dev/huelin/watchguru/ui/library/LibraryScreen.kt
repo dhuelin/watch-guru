@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -141,8 +142,11 @@ private fun LibraryRow(item: WatchlistItemResponse, onOpen: () -> Unit) {
             // null for films, which have no episode progress -- a bar there
             // would be meaningless rather than merely empty.
             item.progress?.let { progress ->
-                val progressLabel = stringResource(
-                    R.string.cd_progress, progress.watchedEpisodes, progress.airedEpisodes,
+                val progressLabel = pluralStringResource(
+                    R.plurals.cd_progress,
+                    progress.airedEpisodes,
+                    progress.watchedEpisodes,
+                    progress.airedEpisodes,
                 )
                 LinearProgressIndicator(
                     progress = { progress.watchedEpisodes.toFloat() / progress.airedEpisodes.coerceAtLeast(1) },

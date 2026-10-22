@@ -195,13 +195,15 @@ private fun HistoryRow(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+            // Hoisted: buildString's lambda is not composable.
+            val rewatch = stringResource(R.string.history_rewatch)
             Text(
                 text = buildString {
                     event.episodeCode?.let { append(it) }
                     event.episodeName?.let { append(" · $it") }
                     // A rewatch is marked as such: the history is a record of
                     // viewings, not of first viewings.
-                    if (event.rewatch) append(" · rewatch")
+                    if (event.rewatch) append(" · ").append(rewatch)
                     event.streamingServiceName?.let { append(" · $it") }
                 },
                 style = MaterialTheme.typography.bodySmall,

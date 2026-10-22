@@ -1,0 +1,10 @@
+# GitHub Pages serves this folder, so that the privacy policy has a public
+# URL Google Play can be given. It is not a website: the only page anyone is
+# meant to arrive at is PRIVACY.html, and everything else here is repository
+# documentation that happens to be served alongside it.
+#
+# A theme because an unstyled policy is a wall of black text on white, and the
+# people who open this link are deciding whether to trust the app.
+title: Watch Guru
+description: A guide to what you have watched and where you left off.
+theme: jekyll-theme-primer

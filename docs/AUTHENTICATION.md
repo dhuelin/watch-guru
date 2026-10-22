@@ -63,7 +63,7 @@ one user reading another's history.
 |---|---|
 | `WATCH_GURU_AUTH_AUDIENCES` | Comma-separated OAuth client ids for the iOS and Android apps. **Startup fails without it** — an empty list means no check on who a token was minted for |
 | `WATCH_GURU_AUTH_SESSION_SECRET` | At least 32 random bytes; the HMAC key for the access tokens this service signs. **Startup fails without it** |
-| `watch-guru.auth.issuers` | Defaults to Apple and Google; both are configured as trusted to assert email verification |
+| `watch-guru.auth.issuers` | Apple and Google, both trusted to assert email verification. Set in `application.yaml` and **not** overridable by an environment variable — there is no `WATCH_GURU_AUTH_ISSUERS`. Adding an issuer is a code change, which is the point: it is the list of parties allowed to say who a user is. |
 
 There is deliberately no bypass profile. Each of those fails startup rather
 than degrading quietly. For local development,
@@ -138,8 +138,8 @@ this was written.
 
 | | |
 |---|---|
-| Apple | Enable **Sign in with Apple** on the App ID. Put the bundle id (`dev.huelin.watchguru`) in `WATCH_GURU_AUTH_AUDIENCES` and `https://appleid.apple.com` in `WATCH_GURU_AUTH_ISSUERS`. |
-| Google | Create **two** OAuth clients in one project: an Android client (package name + signing SHA-1, never referenced in code but required for Credential Manager to return anything) and a **web** client. Build with `-Pwatchguru.googleWebClientId=<web id>`, and put that same web id in `WATCH_GURU_AUTH_AUDIENCES`, with `https://accounts.google.com` in `WATCH_GURU_AUTH_ISSUERS`. |
+| Apple | Enable **Sign in with Apple** on the App ID. Put the bundle id (`dev.huelin.watchguru`) in `WATCH_GURU_AUTH_AUDIENCES`. The issuer needs no setting: `https://appleid.apple.com` is already in the built-in list. |
+| Google | Create **two** OAuth clients in one project: an Android client (package name + signing SHA-1, never referenced in code but required for Credential Manager to return anything) and a **web** client. Build with `-Pwatchguru.googleWebClientId=<web id>`, and put that same web id in `WATCH_GURU_AUTH_AUDIENCES`, The issuer needs no setting: `https://accounts.google.com` is already in the built-in list. |
 
 The backend refuses to start with either variable unset. That is deliberate: an
 empty audience list would otherwise accept any token from a trusted issuer,
