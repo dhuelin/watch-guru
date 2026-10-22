@@ -11,7 +11,14 @@ spring:
       maximum-pool-size: 10
 
   jpa:
-    open-in-view: false
+    # On, and on purpose. Controllers map entities to responses after the
+    # service's transaction has closed, and the mapper reads lazy associations
+    # (an item's title, a title's genres). With this off, every one of those
+    # reads failed in a real request: the library, the title screen, Up Next
+    # and marking an episode all returned 500. LazyAssociationsOverHttpTest
+    # covers it. Turning this off again means fetching those associations
+    # explicitly first.
+    open-in-view: true
     hibernate:
       # Flyway owns the schema; Hibernate only checks the mappings agree with it.
       ddl-auto: validate
