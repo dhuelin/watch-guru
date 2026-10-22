@@ -136,7 +136,7 @@ public class CurrentUserService {
     private AppUser provision(Jwt jwt, String namespacedSubject) {
         String issuer = jwt.getIssuer() == null ? null : jwt.getIssuer().toString();
         String email = normalisedEmail(jwt);
-        boolean emailVerified = emailVerified(jwt);
+        boolean emailVerified = emailVerified(jwt) && !isUnmanagedGoogleAddress(jwt, issuer, email);
 
         // A second provider may adopt an existing account only when both sides
         // of the address are verified and the incoming issuer is trusted to
@@ -204,6 +204,29 @@ public class CurrentUserService {
         }
         return authProperties.issuers().stream()
                 .anyMatch(candidate -> issuer.equals(candidate.uri()) && candidate.trustEmailVerification());
+    }
+
+    /**
+     * Whether a Google token's address is one Google does not own the mailbox
+     * of.
+     *
+     * <p>Google sets {@code email_verified} on any address that was verified
+     * when the Google account was made, and leaves it set after the domain or
+     * mailbox changes hands. So a verified {@code alice@startup.example} may
+     * belong to whoever held it years ago. Google vouches for an address now
+     * only when it is a Gmail address, or a Workspace one (the token carries
+     * the {@code hd} claim), where the domain's administrator controls it.
+     * Anything else is treated as unverified: it still signs in, but it cannot
+     * adopt -- or later be adopted into -- another provider's account.
+     */
+    static boolean isUnmanagedGoogleAddress(Jwt jwt, String issuer, String email) {
+        boolean google = "https://accounts.google.com".equals(issuer) || "accounts.google.com".equals(issuer);
+        if (!google || email == null) {
+            return false;
+        }
+        String hostedDomain = jwt.getClaimAsString("hd");
+        boolean workspace = hostedDomain != null && !hostedDomain.isBlank();
+        return !(email.endsWith("@gmail.com") || email.endsWith("@googlemail.com") || workspace);
     }
 
     /**

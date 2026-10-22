@@ -1,6 +1,8 @@
 package com.dhuelin.dev.watchguru.security.session;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,6 +14,19 @@ import java.util.UUID;
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
 
     Optional<RefreshToken> findByTokenHash(String tokenHash);
+
+    /**
+     * The same lookup, holding the row until the transaction ends.
+     *
+     * <p>Used by rotation. Without the lock, two refreshes racing with the
+     * same token both read {@code usedAt == null} and both succeed -- a
+     * stolen token raced against its owner yields a working session and the
+     * reuse detection never fires. With it, the second waits, then sees the
+     * token spent and revokes the family.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select t from RefreshToken t where t.tokenHash = :tokenHash")
+    Optional<RefreshToken> findByTokenHashForUpdate(@Param("tokenHash") String tokenHash);
 
     /**
      * Revokes every unrevoked token in a family.

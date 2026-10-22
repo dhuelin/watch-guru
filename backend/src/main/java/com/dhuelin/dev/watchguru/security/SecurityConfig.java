@@ -104,6 +104,14 @@ public class SecurityConfig {
                         // the user who started the flow; without a valid one
                         // the callback connects nothing.
                         .requestMatchers(HttpMethod.GET, "/api/v1/streaming/trakt/callback").permitAll()
+                        // Rewrites the shared streaming-service table and spends
+                        // TMDB calls; with no roles, "authenticated" would mean
+                        // anybody who has ever signed in. Neither app calls it,
+                        // and StreamingServiceReconcileJob does the same work on
+                        // a schedule. Closed rather than removed so the
+                        // published contract the clients are generated from is
+                        // unchanged.
+                        .requestMatchers(HttpMethod.POST, "/api/v1/streaming-services/reconcile").denyAll()
                         // Everything else, including every other /api route, needs a token.
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.authenticationManagerResolver(issuerResolver))

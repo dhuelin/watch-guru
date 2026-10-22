@@ -21,6 +21,11 @@ defaults:
   run:
     working-directory: ios
 
+# Read-only by default. A job that needs more asks for it by name, so a
+# compromised step can do no more than that job was trusted with.
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build and test
@@ -30,7 +35,7 @@ jobs:
     timeout-minutes: 40
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       # Deliberately not pinned to a specific Xcode.app. Pinning it is what
       # broke the first run: the pinned Xcode had no iOS simulator runtimes

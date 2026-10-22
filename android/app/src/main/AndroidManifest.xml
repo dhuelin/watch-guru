@@ -11,13 +11,18 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!--
+      allowBackup is off: everything the app keeps is either the session, which
+      must not leave the device, or a cache of what the server already holds.
+      A restored copy of the encrypted session cannot even be read -- the
+      Keystore key it was sealed with is never backed up.
+
       icon and roundIcon point at the same adaptive icon. The round variant
       existed and was referenced by nothing, so a launcher that asks for one
       got no answer and masked the square icon itself.
     -->
     <application
         android:name=".WatchGuruApplication"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"

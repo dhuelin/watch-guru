@@ -29,6 +29,11 @@ public final class TraktResponses {
             String scope,
             @JsonProperty("token_type") String tokenType
     ) {
+        /** Leaves the tokens out, as {@link TraktTokens#toString()} does. */
+        @Override
+        public String toString() {
+            return "Token[expiresIn=" + expiresIn + ", scope=" + scope + "]";
+        }
     }
 
     /**

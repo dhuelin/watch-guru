@@ -16,12 +16,33 @@ import java.time.Instant
 class EncryptedTokenStore(context: Context) : TokenStore {
 
     private val prefs: SharedPreferences by lazy {
+        try {
+            open(context)
+        } catch (e: java.security.GeneralSecurityException) {
+            recover(context)
+        } catch (e: java.io.IOException) {
+            recover(context)
+        }
+    }
+
+    /**
+     * A file this device's Keystore cannot open -- restored from another
+     * device before backups were turned off, or left behind by a reset key --
+     * would otherwise crash every launch. Nothing in it is recoverable, so it
+     * is deleted and the user signs in again.
+     */
+    private fun recover(context: Context): SharedPreferences {
+        context.deleteSharedPreferences(FILE_NAME)
+        return open(context)
+    }
+
+    private fun open(context: Context): SharedPreferences {
         val key = MasterKey.Builder(context)
             .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
             .build()
-        EncryptedSharedPreferences.create(
+        return EncryptedSharedPreferences.create(
             context,
-            "watch-guru-auth",
+            FILE_NAME,
             key,
             EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
@@ -69,6 +90,7 @@ class EncryptedTokenStore(context: Context) : TokenStore {
     }
 
     private companion object {
+        const val FILE_NAME = "watch-guru-auth"
         const val KEY_ACCESS = "access_token"
         const val KEY_REFRESH = "refresh_token"
         const val KEY_EXPIRES_AT = "access_token_expires_at"

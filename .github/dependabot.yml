@@ -1,0 +1,8 @@
+# Keeps the commit-pinned actions in the workflows current. Pinning by SHA
+# stops a moved tag from changing what runs; this is what stops it going stale.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
