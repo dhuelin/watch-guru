@@ -1,6 +1,7 @@
 package dev.huelin.watchguru.ui.detail
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -41,6 +42,7 @@ import dev.huelin.watchguru.api.models.TitleProgress
 import dev.huelin.watchguru.api.models.TitleResponse
 import dev.huelin.watchguru.api.models.UpdateWatchlistItem
 import dev.huelin.watchguru.ui.components.ErrorView
+import dev.huelin.watchguru.ui.components.Backdrop
 import dev.huelin.watchguru.ui.components.Poster
 import dev.huelin.watchguru.ui.components.UiState
 import java.time.LocalDate
@@ -141,155 +143,166 @@ private fun TitleDetailContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
+            .verticalScroll(rememberScrollState()),
     ) {
-        Row {
-            Poster(
-                url = title.posterUrl,
-                title = title.primaryTitle,
-                modifier = Modifier.heightIn(max = 180.dp),
-            )
-            Column(modifier = Modifier.padding(start = 16.dp)) {
-                Text(title.primaryTitle, style = MaterialTheme.typography.headlineSmall)
-
-                title.releaseDate?.let {
-                    Text("${it.year}", style = MaterialTheme.typography.bodyMedium)
-                }
-                title.runtimeMinutes?.let {
-                    Text(
-                        text = stringResource(R.string.detail_runtime_minutes, it),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-
-                // The database stores two decimal places, so 8.4 arrives as
-                // 8.40; the trailing zero is noise on screen.
-                // Two rating sources, always labelled so they cannot be
-                // confused, and each omitted entirely when absent rather than
-                // rendered as 0.0.
-                title.providerRating?.let {
-                    Text(
-                        text = stringResource(R.string.detail_rating_tmdb, it.stripTrailingZeros().toPlainString()),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-                title.imdbRating?.let {
-                    Text(
-                        text = stringResource(R.string.detail_rating_imdb, it.stripTrailingZeros().toPlainString()),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-            }
-        }
-
-        // Before the tracking actions, because whether this is in the library
-        // at all is the first thing somebody arriving from the trending shelf
-        // needs to know.
-        LibraryEntrySection(
-            title = title,
-            busy = marking,
-            onAdd = onAddToLibrary,
-            onStatus = onStatus,
-            onRating = onRating,
-            onRemove = onRemoveFromLibrary,
-            modifier = Modifier.padding(top = 24.dp),
-        )
-
-        // A film is watched or it is not: there is no next episode to offer, so
-        // this is the whole of its tracking, and without it a film could reach
-        // the library but never the history.
-        if (title.titleType == TitleResponse.TitleType.MOVIE) {
-            LogFilmWatched(
-                busy = marking,
-                outcome = filmLog,
-                onLog = onLogFilm,
-                onDismissOutcome = onDismissFilmLog,
-                modifier = Modifier.padding(top = 24.dp),
-            )
-        }
-
-        if (progress != null && progress.airedEpisodes > 0) {
-            EpisodeProgress(
-                progress = progress,
-                marking = marking,
-                onMarkNext = onMarkNext,
-                modifier = Modifier.padding(top = 24.dp),
-            )
-        }
-
-        // The only place a series can be muted. The settings screen lists what
-        // the server holds a row for, and an un-muted series has no row, so it
-        // can only undo what is done here.
-        //
-        // Null means no switch: a film has no next episode to be told about,
-        // and a setting that could not be read would make this a guess.
-        notifyNewEpisodes?.let { notifying ->
-            // One label for both, so the switch is announced by the same words
-            // that are printed beside it rather than as a bare "switch".
-            val label = stringResource(R.string.detail_notify_new_episodes)
+        // The backdrop full width behind the header, the poster and title over
+        // its faded lower edge: the title's own artwork is the strongest thing
+        // the screen has, and it was a thumbnail beside a column of text.
+        Box {
+            Backdrop(url = title.backdropUrl)
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .padding(start = 16.dp, end = 16.dp, top = 96.dp),
+                verticalAlignment = Alignment.Bottom,
             ) {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.weight(1f),
+                Poster(
+                    url = title.posterUrl,
+                    title = title.primaryTitle,
+                    modifier = Modifier.heightIn(max = 180.dp),
                 )
-                Switch(
-                    checked = notifying,
-                    onCheckedChange = onNotifyNewEpisodes,
-                    modifier = Modifier.semantics { contentDescription = label },
-                )
+                Column(modifier = Modifier.padding(start = 16.dp)) {
+                    Text(title.primaryTitle, style = MaterialTheme.typography.headlineSmall)
+
+                    title.releaseDate?.let {
+                        Text("${it.year}", style = MaterialTheme.typography.bodyMedium)
+                    }
+                    title.runtimeMinutes?.let {
+                        Text(
+                            text = stringResource(R.string.detail_runtime_minutes, it),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+
+                    // The database stores two decimal places, so 8.4 arrives as
+                    // 8.40; the trailing zero is noise on screen.
+                    // Two rating sources, always labelled so they cannot be
+                    // confused, and each omitted entirely when absent rather than
+                    // rendered as 0.0.
+                    title.providerRating?.let {
+                        Text(
+                            text = stringResource(R.string.detail_rating_tmdb, it.stripTrailingZeros().toPlainString()),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                    title.imdbRating?.let {
+                        Text(
+                            text = stringResource(R.string.detail_rating_imdb, it.stripTrailingZeros().toPlainString()),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                }
             }
         }
 
-        title.overview?.let {
-            Text(
-                text = it,
-                style = MaterialTheme.typography.bodyMedium,
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Before the tracking actions, because whether this is in the library
+            // at all is the first thing somebody arriving from the trending shelf
+            // needs to know.
+            LibraryEntrySection(
+                title = title,
+                busy = marking,
+                onAdd = onAddToLibrary,
+                onStatus = onStatus,
+                onRating = onRating,
+                onRemove = onRemoveFromLibrary,
                 modifier = Modifier.padding(top = 24.dp),
             )
-        }
 
-        // Above the episode list: for a film this is the only action the
-        // screen can offer, and for a series it is what someone does before
-        // they start rather than after.
-        WhereToWatch(
-            offers = title.availability,
-            checkedAt = title.availabilityCheckedAt,
-            modifier = Modifier.padding(top = 24.dp),
-            mine = myServices,
-        )
-
-        // The episode list. This is the screen's real content for a series --
-        // everything above it is context.
-        seasons?.seasons?.takeIf { it.isNotEmpty() }?.let { list ->
-            Text(
-                text = stringResource(R.string.title_episodes),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(top = 24.dp, bottom = 4.dp),
-            )
-            list.forEach { season ->
-                SeasonSection(
-                    season = season,
-                    expanded = expandedSeason == season.seasonNumber,
-                    marking = marking,
-                    onToggle = { onToggleSeason(season.seasonNumber) },
-                    onToggleEpisode = onToggleEpisode,
-                    onMarkUpTo = onMarkUpTo,
+            // A film is watched or it is not: there is no next episode to offer, so
+            // this is the whole of its tracking, and without it a film could reach
+            // the library but never the history.
+            if (title.titleType == TitleResponse.TitleType.MOVIE) {
+                LogFilmWatched(
+                    busy = marking,
+                    outcome = filmLog,
+                    onLog = onLogFilm,
+                    onDismissOutcome = onDismissFilmLog,
+                    modifier = Modifier.padding(top = 24.dp),
                 )
             }
-        }
 
-        // Required by TMDB's terms of use wherever their data is shown.
-        Text(
-            text = stringResource(R.string.tmdb_attribution),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 32.dp),
-        )
+            if (progress != null && progress.airedEpisodes > 0) {
+                EpisodeProgress(
+                    progress = progress,
+                    marking = marking,
+                    onMarkNext = onMarkNext,
+                    modifier = Modifier.padding(top = 24.dp),
+                )
+            }
+
+            // The only place a series can be muted. The settings screen lists what
+            // the server holds a row for, and an un-muted series has no row, so it
+            // can only undo what is done here.
+            //
+            // Null means no switch: a film has no next episode to be told about,
+            // and a setting that could not be read would make this a guess.
+            notifyNewEpisodes?.let { notifying ->
+                // One label for both, so the switch is announced by the same words
+                // that are printed beside it rather than as a bare "switch".
+                val label = stringResource(R.string.detail_notify_new_episodes)
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Switch(
+                        checked = notifying,
+                        onCheckedChange = onNotifyNewEpisodes,
+                        modifier = Modifier.semantics { contentDescription = label },
+                    )
+                }
+            }
+
+            title.overview?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 24.dp),
+                )
+            }
+
+            // Above the episode list: for a film this is the only action the
+            // screen can offer, and for a series it is what someone does before
+            // they start rather than after.
+            WhereToWatch(
+                offers = title.availability,
+                checkedAt = title.availabilityCheckedAt,
+                modifier = Modifier.padding(top = 24.dp),
+                mine = myServices,
+            )
+
+            // The episode list. This is the screen's real content for a series --
+            // everything above it is context.
+            seasons?.seasons?.takeIf { it.isNotEmpty() }?.let { list ->
+                Text(
+                    text = stringResource(R.string.title_episodes),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(top = 24.dp, bottom = 4.dp),
+                )
+                list.forEach { season ->
+                    SeasonSection(
+                        season = season,
+                        expanded = expandedSeason == season.seasonNumber,
+                        marking = marking,
+                        onToggle = { onToggleSeason(season.seasonNumber) },
+                        onToggleEpisode = onToggleEpisode,
+                        onMarkUpTo = onMarkUpTo,
+                    )
+                }
+            }
+
+            // Required by TMDB's terms of use wherever their data is shown.
+            Text(
+                text = stringResource(R.string.tmdb_attribution),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 32.dp),
+            )
+        }
     }
 }
 
