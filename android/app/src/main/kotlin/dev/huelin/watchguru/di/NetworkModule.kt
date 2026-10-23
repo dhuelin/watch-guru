@@ -17,6 +17,7 @@ import dev.huelin.watchguru.api.apis.TraktControllerApi
 import dev.huelin.watchguru.api.apis.TitleControllerApi
 import dev.huelin.watchguru.api.apis.WatchHistoryControllerApi
 import dev.huelin.watchguru.api.apis.WatchlistControllerApi
+import dev.huelin.watchguru.api.infrastructure.Serializer
 import dev.huelin.watchguru.data.AuthInterceptor
 import dev.huelin.watchguru.data.DeviceRegionInterceptor
 import dev.huelin.watchguru.data.EncryptedTokenStore
@@ -69,6 +70,11 @@ object NetworkModule {
         // be fatal.
         ignoreUnknownKeys = true
         explicitNulls = false
+        // The generated models mark every date, timestamp and decimal
+        // @Contextual, so this Json must carry the client's adapters. Without
+        // them any response containing a timestamp fails to decode, which on
+        // screen is "Something went wrong" over a 200.
+        serializersModule = Serializer.kotlinxSerializationAdapters
     }
 
     private fun logging(): HttpLoggingInterceptor = HttpLoggingInterceptor().apply {
