@@ -119,12 +119,28 @@ class TokenExchangeTest {
         transactions.executeWithoutResult(status -> users.deleteAppUserById(id));
     }
 
+    /** The nonce each minted token was issued for, as the app would hold it. */
+    private static final java.util.Map<String, String> NONCES = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** Exchanges a token with the nonce it was minted for, as the app does. */
+    private SessionService.Session exchange(String token) {
+        return sessions.exchange(token, NONCES.getOrDefault(token, "no-nonce-was-minted-for-this"));
+    }
+
     private static String providerToken(String subject, String email, Instant expiry) {
+        String nonce = UUID.randomUUID().toString();
+        String token = providerToken(subject, email, expiry, SessionService.hash(nonce));
+        NONCES.put(token, nonce);
+        return token;
+    }
+
+    private static String providerToken(String subject, String email, Instant expiry, String nonceClaim) {
         try {
             JWTClaimsSet claims = new JWTClaimsSet.Builder()
                     .issuer(ISSUER)
                     .audience(AUDIENCE)
                     .subject(subject)
+                    .claim("nonce", nonceClaim)
                     .claim("email", email)
                     .claim("email_verified", true)
                     .issueTime(Date.from(Instant.now()))
@@ -147,7 +163,7 @@ class TokenExchangeTest {
         String email = subject + "@example.test";
 
         SessionService.Session session =
-                sessions.exchange(providerToken(subject, email, Instant.now().plus(Duration.ofMinutes(30))));
+                exchange(providerToken(subject, email, Instant.now().plus(Duration.ofMinutes(30))));
 
         assertThat(session.accessToken()).isNotBlank();
         assertThat(session.refreshToken()).isNotBlank();
@@ -165,11 +181,10 @@ class TokenExchangeTest {
     @DisplayName("exchanging twice returns two sessions for one account")
     void exchangeIsIdempotentAboutTheAccount() {
         String subject = "sub-" + UUID.randomUUID();
-        String token = providerToken(subject, subject + "@example.test",
-                Instant.now().plus(Duration.ofMinutes(30)));
-
-        SessionService.Session first = sessions.exchange(token);
-        SessionService.Session second = sessions.exchange(token);
+        SessionService.Session first = exchange(providerToken(subject, subject + "@example.test",
+                Instant.now().plus(Duration.ofMinutes(30))));
+        SessionService.Session second = exchange(providerToken(subject, subject + "@example.test",
+                Instant.now().plus(Duration.ofMinutes(30))));
 
         // Signing in on a second device must not create a second account, and
         // must not invalidate the first device's session.
@@ -181,9 +196,41 @@ class TokenExchangeTest {
     }
 
     @Test
+    @DisplayName("a provider token can be exchanged once, and a replay is refused")
+    void replayIsRefused() {
+        String subject = "sub-" + UUID.randomUUID();
+        String token = providerToken(subject, subject + "@example.test",
+                Instant.now().plus(Duration.ofMinutes(30)));
+
+        assertThat(exchange(token)).isNotNull();
+        // Somebody holding both the token and its nonce -- the strongest
+        // position a thief can be in -- still gets nothing the second time.
+        assertThatThrownBy(() -> exchange(token)).isInstanceOf(JwtException.class);
+    }
+
+    @Test
+    @DisplayName("a token is refused without the nonce it was issued for")
+    void wrongOrMissingNonceIsRefused() {
+        String subject = "sub-" + UUID.randomUUID();
+        String token = providerToken(subject, subject + "@example.test",
+                Instant.now().plus(Duration.ofMinutes(30)));
+
+        assertThatThrownBy(() -> sessions.exchange(token, "a-guess-at-the-nonce-value"))
+                .isInstanceOf(JwtException.class);
+
+        String noClaim = providerToken(subject, subject + "@example.test",
+                Instant.now().plus(Duration.ofMinutes(30)), null);
+        assertThatThrownBy(() -> sessions.exchange(noClaim, "anything-at-all-here"))
+                .isInstanceOf(JwtException.class);
+
+        // Neither refusal spent the real nonce.
+        assertThat(exchange(token)).isNotNull();
+    }
+
+    @Test
     @DisplayName("an expired provider token is refused")
     void expiredProviderTokenIsRefused() {
-        assertThatThrownBy(() -> sessions.exchange(providerToken(
+        assertThatThrownBy(() -> exchange(providerToken(
                 "sub-expired", "expired@example.test", Instant.now().minus(Duration.ofMinutes(1)))))
                 .isInstanceOf(JwtException.class);
     }
@@ -191,7 +238,7 @@ class TokenExchangeTest {
     @Test
     @DisplayName("a token that is not a JWT at all is refused")
     void garbageIsRefused() {
-        assertThatThrownBy(() -> sessions.exchange("not.a.jwt"))
+        assertThatThrownBy(() -> exchange("not.a.jwt"))
                 .isInstanceOf(JwtException.class);
     }
 
@@ -199,7 +246,7 @@ class TokenExchangeTest {
     @DisplayName("the issued access token resolves back to the same account")
     void accessTokenResolvesToTheUser() {
         String subject = "sub-" + UUID.randomUUID();
-        sessions.exchange(providerToken(subject, subject + "@example.test",
+        exchange(providerToken(subject, subject + "@example.test",
                 Instant.now().plus(Duration.ofMinutes(30))));
 
         AppUser user = users.findByAuthSubject(ISSUER + "|" + subject).orElseThrow();
@@ -230,7 +277,7 @@ class TokenExchangeTest {
     @DisplayName("a session token for a deleted account is refused")
     void sessionTokenForDeletedAccountIsRefused() {
         String subject = "sub-" + UUID.randomUUID();
-        sessions.exchange(providerToken(subject, subject + "@example.test",
+        exchange(providerToken(subject, subject + "@example.test",
                 Instant.now().plus(Duration.ofMinutes(30))));
 
         AppUser user = users.findByAuthSubject(ISSUER + "|" + subject).orElseThrow();
@@ -249,7 +296,7 @@ class TokenExchangeTest {
     @DisplayName("deleting an account takes its refresh tokens with it")
     void deletingAnAccountRemovesItsSessions() {
         String subject = "sub-" + UUID.randomUUID();
-        SessionService.Session session = sessions.exchange(providerToken(
+        SessionService.Session session = exchange(providerToken(
                 subject, subject + "@example.test", Instant.now().plus(Duration.ofMinutes(30))));
 
         AppUser user = users.findByAuthSubject(ISSUER + "|" + subject).orElseThrow();
@@ -270,7 +317,7 @@ class TokenExchangeTest {
         // chain has. Without it, a token harvested by any unrelated app that
         // also offers Google sign-in would be exchanged here for a session as
         // its owner -- correctly signed, correct issuer, wrong application.
-        assertThatThrownBy(() -> sessions.exchange(tokenFor("some-other-app")))
+        assertThatThrownBy(() -> exchange(tokenFor("some-other-app")))
                 .isInstanceOf(JwtException.class);
     }
 

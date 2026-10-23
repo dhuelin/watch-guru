@@ -47,9 +47,14 @@ public final class Requests {
      *
      * @param providerToken Apple's or Google's ID token, exactly as the
      *                      platform sign-in returned it
+     * @param nonce         the random value the app made up for this sign-in.
+     *                      The provider was given its SHA-256, as lowercase
+     *                      hex, and put that in the token; the value itself is
+     *                      sent only here. See {@code SessionService#exchange}
      */
     public record ExchangeToken(
-            @NotBlank @Size(max = 4096) String providerToken) {
+            @NotBlank @Size(max = 4096) String providerToken,
+            @NotBlank @Size(min = 16, max = 128) String nonce) {
     }
 
     /**

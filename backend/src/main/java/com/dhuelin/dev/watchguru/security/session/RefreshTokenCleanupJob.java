@@ -26,10 +26,12 @@ public class RefreshTokenCleanupJob {
     static final Duration GRACE = Duration.ofDays(7);
 
     private final RefreshTokenRepository refreshTokens;
+    private final SessionService sessions;
     private final Clock clock;
 
-    public RefreshTokenCleanupJob(RefreshTokenRepository refreshTokens, Clock clock) {
+    public RefreshTokenCleanupJob(RefreshTokenRepository refreshTokens, SessionService sessions, Clock clock) {
         this.refreshTokens = refreshTokens;
+        this.sessions = sessions;
         this.clock = clock;
     }
 
@@ -40,6 +42,9 @@ public class RefreshTokenCleanupJob {
         if (deleted > 0) {
             log.info("Deleted {} expired refresh token(s)", deleted);
         }
+        // Sign-in nonces too: each is only needed while the provider token it
+        // came from could still be presented.
+        sessions.purgeUsedNonces();
         return deleted;
     }
 }
