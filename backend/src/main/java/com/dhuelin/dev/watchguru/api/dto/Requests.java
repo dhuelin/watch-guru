@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.dhuelin.dev.watchguru.notifications.domain.DevicePlatform;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchStatus;
+import com.dhuelin.dev.watchguru.api.validation.CountryCode;
+import com.dhuelin.dev.watchguru.api.validation.LanguageTag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;
@@ -24,6 +26,13 @@ public final class Requests {
 
     private Requests() {
     }
+
+    /**
+     * Longest a watchlist note may be. The column is unbounded text, and every
+     * library listing returns the notes of every row, so without a cap one
+     * account could make each of its own page loads arbitrarily large.
+     */
+    public static final int MAX_NOTES_LENGTH = 4000;
 
     /**
      * Partial profile update; any null field is left unchanged.
@@ -56,8 +65,8 @@ public final class Requests {
 
     public record UpdateProfile(
             @Size(max = 128) String displayName,
-            @Size(min = 2, max = 2) String region,
-            @Size(max = 16) String language,
+            @CountryCode String region,
+            @LanguageTag String language,
             @Size(max = 64) String timeZone
     ) {
     }
@@ -84,7 +93,7 @@ public final class Requests {
     public record UpdateWatchlistItem(
             WatchStatus status,
             @DecimalMin("0.0") @DecimalMax("10.0") BigDecimal rating,
-            String notes,
+            @Size(max = MAX_NOTES_LENGTH) String notes,
             Boolean clearRating
     ) {
         public boolean clearsRating() {
