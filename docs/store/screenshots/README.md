@@ -1,15 +1,14 @@
 # Store screenshots
 
-Taken off the running apps on 23 October 2026: iOS on the iPhone 17 Pro Max and
-iPad Pro 13-inch (M5) simulators, Android on a Pixel emulator set to
-1080×1920 with `adb shell wm size`, so the captures are 9:16 as Play requires
-(a Pixel's native 20:9 is longer than Play's 2:1 limit). Status bars were
+Taken off the running apps on 23 October 2026: iOS on the iPhone 17 Pro Max
+simulator, Android on a Pixel emulator set to 1080×1920 with
+`adb shell wm size`, so the captures are 9:16 as Play requires (a Pixel's
+native 20:9 is longer than Play's 2:1 limit). Status bars were
 cleaned with `simctl status_bar` and Android's SystemUI demo mode.
 
 | Folder | What | Use for |
 |---|---|---|
 | `raw/iphone-6.9/` | 6 captures, 1320×2868 | App Store, iPhone 6.9" |
-| `raw/ipad-13/` | 3 captures, 2064×2752 | App Store, iPad 13" |
 | `raw/android-phone/` | 6 captures, 1080×1920 | Play, phone |
 | `framed/<same>/` | The same, captioned on the brand gradient, same sizes | Either store; these are the ones to upload |
 
@@ -46,6 +45,7 @@ None of that tooling is in the repository. If screenshots are retaken more
 than once or twice, the stand-in TMDB and the seed script are worth adding
 under `tools/`.
 
-Not taken: German screenshots. Both stores fall back to the default
-language's set, so the English ones serve the German listing until a German
-set is made.
+Not taken: iPad screenshots, because v1 is iPhone-only (iPad support is
+[#65](https://github.com/dhuelin/watch-guru/issues/65)). Nor German ones: both
+stores fall back to the default language's set, so the English ones serve the
+German listing until a German set is made.

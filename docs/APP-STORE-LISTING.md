@@ -26,18 +26,15 @@ the raw ones are valid too.
 | Slot | Files | Size |
 |---|---|---|
 | iPhone 6.9" display | `framed/iphone-6.9/*.png` (6) | 1320×2868 |
-| iPad 13" display | `framed/ipad-13/*.png` (3) | 2064×2752 |
 
-App Store Connect scales the 6.9" set down for every smaller iPhone and the
-13" set for every smaller iPad, so these two slots are the only ones required.
+App Store Connect scales the 6.9" set down for every smaller iPhone, so it is
+the only slot required.
 
-> **iPad is a choice, not a given.** The app builds for iPhone and iPad
-> (`TARGETED_DEVICE_FAMILY = 1,2`, XcodeGen's default) but has no iPad layout:
-> it is the phone layout stretched to 13 inches, which is visible in the iPad
-> screenshots. Shipping it makes the iPad screenshots mandatory and puts that
-> layout in front of App Review. Setting `TARGETED_DEVICE_FAMILY: "1"` on the
-> app and widget targets makes v1 iPhone-only; iPad users can still install it
-> and run it in the iPhone frame, and no iPad screenshots are needed.
+v1 is iPhone-only (`TARGETED_DEVICE_FAMILY = 1`), so no iPad screenshots are
+needed; iPads run the app in the iPhone frame. The app had no iPad layout, only
+the phone one stretched to 13 inches. Real iPad support is
+[#65](https://github.com/dhuelin/watch-guru/issues/65), and once shipped it
+cannot be taken back, so it waits for a layout worth shipping.
 
 ## Listing — English
 
