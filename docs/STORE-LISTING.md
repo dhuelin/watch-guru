@@ -3,10 +3,9 @@
 Everything the Play Console asks for that can be written down in advance, so
 the console session is copy-and-paste rather than composition.
 
-What is **not** here, because it cannot be: **screenshots**. Play wants at
-least two phone screenshots and they have to come off a running app. Nothing
-here has run on a device yet — see
-[#35](https://github.com/dhuelin/watch-guru/issues/35). The concept render in
+Screenshots are in [`store/screenshots/`](store/screenshots/README.md), taken
+off the running app on an emulator. The App Store's equivalent of this page is
+[`APP-STORE-LISTING.md`](APP-STORE-LISTING.md). The concept render in
 `docs/brand/promo.jpg` is not a screenshot and must not be submitted as one.
 
 ## Graphics
@@ -15,9 +14,9 @@ here has run on a device yet — see
 |---|---|---|
 | App icon | `docs/brand/play-icon-512.png` | 512×512 PNG. Full-bleed, square corners — Play rounds it itself. |
 | Feature graphic | `docs/brand/play-feature-graphic.png` | 1024×500 PNG, no alpha. |
-| Phone screenshots | **missing** | 2–8, 16:9 or 9:16, min 320px. Needs a device. |
+| Phone screenshots | `docs/store/screenshots/framed/android-phone/*.png` | 2–8, 16:9 or 9:16, min 320px. Six at 1080×1920, captioned; uncaptioned in `raw/`. |
 
-Both are regenerated from the artwork by:
+The icon and feature graphic are regenerated from the artwork by:
 
 ```bash
 python3 tools/make-store-graphics.py          # rewrite
@@ -343,7 +342,8 @@ the `android-release` environment makes the workflow do it.
 
 ### 9. The console's own checklist
 
-Store listing from this document, the two graphics from `docs/brand/`, Data
+Store listing from this document, the two graphics from `docs/brand/`, the
+six phone screenshots from `docs/store/screenshots/framed/android-phone/`, Data
 safety from the table above, content rating, target audience, ads declaration
 (there are none), and the privacy policy URL.
 
@@ -363,16 +363,11 @@ bottleneck, so start asking now rather than on day one.
 
 ## Still blocking, whatever else is done
 
-Two things the runbook cannot resolve, because neither is a configuration
-step:
-
-1. **Nobody has launched either app.** Not on a device, not on a simulator.
-   That is [#35](https://github.com/dhuelin/watch-guru/issues/35). Every
-   screen is unverified against a real screen, and the first person to find
-   out will be a tester unless it is you.
-2. **There are no screenshots,** and Play requires at least two. They come off
-   a running app, which is the same blocker as above. The concept render in
-   `docs/brand/promo.jpg` is not one and must not be submitted as one.
+Both apps have now run on an emulator and a simulator against a local backend
+([#35](https://github.com/dhuelin/watch-guru/issues/35)), and the screenshots
+came off those runs. What has still never happened is a sign-in against real
+Apple or Google accounts and a real deployed backend: that waits on steps 6
+and 7, and the first internal-test build is where it will be proven.
 
 And one that is nobody's fault: a personal developer account registered now
 cannot reach production until it has run a closed test with 12 testers opted

@@ -68,6 +68,17 @@ targets:
           NSExceptionDomains:
             localhost:
               NSExceptionAllowsInsecureHTTPLoads: true
+        # Without these two, XcodeGen writes 1.0 and 1 into the plist and the
+        # MARKETING_VERSION / CURRENT_PROJECT_VERSION settings below change
+        # nothing. Every build would be 1.0 (1), and App Store Connect refuses
+        # a second upload with a build number it has already seen, so a
+        # release pipeline has to be able to set CURRENT_PROJECT_VERSION.
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        # HTTPS through URLSession and nothing else, which is exempt. Saying so
+        # here answers App Store Connect's export compliance question once,
+        # rather than on every build before it can go to TestFlight.
+        ITSAppUsesNonExemptEncryption: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.huelin.watchguru
@@ -78,6 +89,10 @@ targets:
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "6.0"
+        # iPhone only for v1. XcodeGen's default is "1,2", which shipped the
+        # phone layout stretched to iPad size; iPads still run the app in the
+        # iPhone frame. Real iPad support is #65.
+        TARGETED_DEVICE_FAMILY: "1"
         # Complete checking, not minimal: the app is written for it, and
         # relaxing it later is far easier than adopting it later.
         SWIFT_STRICT_CONCURRENCY: complete
@@ -115,6 +130,9 @@ targets:
       path: WatchGuruWidgets/Info.plist
       properties:
         CFBundleDisplayName: Watch Guru
+        # Must track the app's: see the comment on the app target.
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
@@ -125,6 +143,8 @@ targets:
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "6.0"
+        # Kept in step with the app's.
+        TARGETED_DEVICE_FAMILY: "1"
         SWIFT_STRICT_CONCURRENCY: complete
         ENABLE_USER_SCRIPT_SANDBOXING: YES
         # An extension has no main() of its own to run.
