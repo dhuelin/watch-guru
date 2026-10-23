@@ -32,6 +32,16 @@ struct WatchGuruApp: App {
             // At the root, sign-in included, so the choice made in Profile
             // holds from the first frame of the next launch.
             .preferredColorScheme(appearance.colorScheme)
+            // And on the windows themselves: what UIKit presents (share
+            // sheets, the Safari sheet for Trakt sign-in, alerts) reads the
+            // window's style, not SwiftUI's preference.
+            .onChange(of: appearance, initial: true) { _, appearance in
+                for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {
+                    for window in scene.windows {
+                        window.overrideUserInterfaceStyle = appearance.interfaceStyle
+                    }
+                }
+            }
         }
     }
 }

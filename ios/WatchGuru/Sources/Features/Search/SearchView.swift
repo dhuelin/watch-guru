@@ -39,6 +39,7 @@ struct SearchView: View {
                         // cannot sit inside another one.
                         Section {} header: {
                             Text("Trending this week")
+                                .accessibilityAddTraits(.isHeader)
                         }
                     }
                     rows(hits, model: model)

@@ -212,22 +212,22 @@ private struct TitleHeader: View {
                     if let date = title.releaseDate {
                         Text(date.formatted(.dateTime.year()))
                             .foregroundStyle(.secondary)
-                }
-                if let runtime = title.runtimeMinutes {
-                    Text("\(runtime) min").foregroundStyle(.secondary)
-                }
+                    }
+                    if let runtime = title.runtimeMinutes {
+                        Text("\(runtime) min").foregroundStyle(.secondary)
+                    }
 
-                // Two rating sources, always labelled so they cannot be
-                // confused, and each omitted entirely when absent
-                // rather than rendered as 0.0.
-                if let tmdb = title.providerRating {
-                    Text("TMDB \(tmdb.formatted(.number.precision(.fractionLength(1))))")
-                        .font(.subheadline)
-                }
-                if let imdb = title.imdbRating {
-                    Text("IMDb \(imdb.formatted(.number.precision(.fractionLength(1))))")
-                        .font(.subheadline)
-                }
+                    // Two rating sources, always labelled so they cannot be
+                    // confused, and each omitted entirely when absent
+                    // rather than rendered as 0.0.
+                    if let tmdb = title.providerRating {
+                        Text("TMDB \(tmdb.formatted(.number.precision(.fractionLength(1))))")
+                            .font(.subheadline)
+                    }
+                    if let imdb = title.imdbRating {
+                        Text("IMDb \(imdb.formatted(.number.precision(.fractionLength(1))))")
+                            .font(.subheadline)
+                    }
                 }
                 .padding(.top, stacked ? 0 : 12)
             }

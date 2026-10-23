@@ -112,11 +112,7 @@ struct ProfileView: View {
                         // The one preference here kept on the phone rather
                         // than the account, which is why it is a control
                         // among read-only lines.
-                        Picker("Appearance", selection: $appearance) {
-                            ForEach(Appearance.allCases) { option in
-                                Text(option.label).tag(option)
-                            }
-                        }
+                        appearancePicker
                     } header: {
                         Text("Preferences")
                     }
@@ -135,7 +131,17 @@ struct ProfileView: View {
                     }
                 }
             case .failed(let failure):
-                FailureView(failure: failure) { Task { await load() } }
+                // Appearance stays reachable when the profile cannot load: it
+                // is kept on the phone, and being offline is no reason to be
+                // stuck with a theme.
+                VStack(spacing: 0) {
+                    FailureView(failure: failure) { Task { await load() } }
+                    List {
+                        appearancePicker
+                    }
+                    .frame(maxHeight: 120)
+                    .scrollDisabled(true)
+                }
             case .loading:
                 ProgressView()
             case .empty:
@@ -175,6 +181,14 @@ struct ProfileView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(session.signIn.accountError ?? "")
+        }
+    }
+
+    private var appearancePicker: some View {
+        Picker("Appearance", selection: $appearance) {
+            ForEach(Appearance.allCases) { option in
+                Text(option.label).tag(option)
+            }
         }
     }
 

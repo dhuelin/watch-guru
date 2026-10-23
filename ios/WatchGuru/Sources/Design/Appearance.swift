@@ -25,6 +25,16 @@ enum Appearance: String, CaseIterable, Identifiable {
         }
     }
 
+    /// The same choice for UIKit, which has its own way of saying "follow
+    /// the system".
+    var interfaceStyle: UIUserInterfaceStyle {
+        switch self {
+        case .system: .unspecified
+        case .light: .light
+        case .dark: .dark
+        }
+    }
+
     var label: LocalizedStringKey {
         switch self {
         case .system: "System"
