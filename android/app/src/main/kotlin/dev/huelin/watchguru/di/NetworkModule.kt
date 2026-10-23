@@ -26,6 +26,7 @@ import dev.huelin.watchguru.data.SessionAuthenticator
 import dev.huelin.watchguru.data.SessionEvents
 import dev.huelin.watchguru.data.SessionRepository
 import dev.huelin.watchguru.data.TokenStore
+import dev.huelin.watchguru.data.TraktCallbacks
 import dev.huelin.watchguru.data.WatchGuruRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -139,6 +140,11 @@ object NetworkModule {
     @Provides
     @Singleton
     fun profileEvents(): ProfileEvents = ProfileEvents()
+
+    /** Shared, because the activity the browser opens and the Trakt screen never meet. */
+    @Provides
+    @Singleton
+    fun traktCallbacks(): TraktCallbacks = TraktCallbacks()
 
     /**
      * The client every other call goes through.

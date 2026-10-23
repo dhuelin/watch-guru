@@ -14,6 +14,7 @@ import dev.huelin.watchguru.api.models.BulkMarkResponse
 import dev.huelin.watchguru.api.models.LogEpisodeWatched
 import dev.huelin.watchguru.api.models.LogMovieWatched
 import dev.huelin.watchguru.api.models.CommitImport
+import dev.huelin.watchguru.api.models.CompleteTrakt
 import dev.huelin.watchguru.api.models.ConnectMediaServer
 import dev.huelin.watchguru.api.models.ImportPreviewResponse
 import dev.huelin.watchguru.api.models.ImportResultResponse
@@ -274,11 +275,18 @@ class WatchGuruRepository(
     /**
      * Starts an authorisation and returns where to send the user.
      *
-     * Nothing is connected until they come back through the callback, so the
-     * screen has to ask again afterwards rather than assume.
+     * Nothing is connected until the browser hands the result back and
+     * [completeTrakt] succeeds.
      */
     suspend fun authorizeTrakt(): ApiResult<TraktAuthorizationResponse> =
         call { trakt.authorizeTrakt() }
+
+    /**
+     * Finishes an authorisation with what Trakt handed back, under this app's
+     * session: the server connects Trakt only for the account that started it.
+     */
+    suspend fun completeTrakt(code: String, state: String): ApiResult<TraktStatusResponse> =
+        call { trakt.completeTrakt(CompleteTrakt(code = code, state = state)) }
 
     /** Reads everything watched since the last sync, now. */
     suspend fun syncTrakt(): ApiResult<SyncResultResponse> = call { trakt.syncTrakt() }
