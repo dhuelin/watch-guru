@@ -94,6 +94,7 @@ public class WatchlistService {
         return items.save(item);
     }
 
+    /** @param rating 0 to 10, or null to remove the rating */
     @Transactional
     public WatchlistItem rate(Long userId, Long itemId, BigDecimal rating) {
         WatchlistItem item = requireItem(userId, itemId);

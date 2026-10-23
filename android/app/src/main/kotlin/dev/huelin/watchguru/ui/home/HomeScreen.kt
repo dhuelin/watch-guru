@@ -14,7 +14,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -32,7 +31,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -49,6 +47,7 @@ import dev.huelin.watchguru.R
 import dev.huelin.watchguru.api.models.UpNextResponse
 import dev.huelin.watchguru.ui.components.ErrorView
 import dev.huelin.watchguru.ui.components.FullScreenMessage
+import dev.huelin.watchguru.ui.components.SkeletonList
 import dev.huelin.watchguru.ui.components.Poster
 import dev.huelin.watchguru.ui.components.UiState
 import dev.huelin.watchguru.ui.components.contentOrNull
@@ -135,11 +134,10 @@ fun HomeScreen(
                 }
             }
 
-            upNext is UiState.Loading -> Column(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) { CircularProgressIndicator() }
+            upNext is UiState.Loading -> SkeletonList(
+                modifier = Modifier.padding(padding),
+                posterWidth = 64.dp,
+            )
 
             upNext is UiState.Error -> ErrorView(
                 failure = (upNext as UiState.Error).failure,

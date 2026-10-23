@@ -46,7 +46,7 @@ struct SearchView: View {
             } else {
                 switch model.visible {
                 case .loading:
-                    ProgressView()
+                    SkeletonList()
                 case .failed(let failure):
                     FailureView(failure: failure) { model.retry() }
                 case .empty where !model.isSearching:
@@ -74,10 +74,14 @@ struct SearchView: View {
     @ViewBuilder
     private func rows(_ hits: [SearchHit], model: SearchModel) -> some View {
         ForEach(hits, id: \.providerId) { hit in
+            // The server's entry covers anything added before this screen
+            // opened, on this device or another; `added` covers what was added
+            // since, without waiting for a reload.
+            let alreadyAdded = hit.library != nil || model.added.contains(hit.providerId)
             NavigationLink(value: ProviderTitle(hit)) {
                 SearchResultRow(
                     hit: hit,
-                    alreadyAdded: model.added.contains(hit.providerId),
+                    alreadyAdded: alreadyAdded,
                     isAdding: model.adding.contains(hit.providerId),
                     add: { Task { await model.addToLibrary(hit) } }
                 )
@@ -85,12 +89,14 @@ struct SearchView: View {
             // Kept as a shortcut beside the visible button. On its own it was
             // the only way to add from here, and nothing on screen said so.
             .swipeActions(edge: .trailing) {
-                Button {
-                    Task { await model.addToLibrary(hit) }
-                } label: {
-                    Label("Add", systemImage: "plus")
+                if !alreadyAdded {
+                    Button {
+                        Task { await model.addToLibrary(hit) }
+                    } label: {
+                        Label("Add", systemImage: "plus")
+                    }
+                    .tint(.accentColor)
                 }
-                .tint(.accentColor)
             }
         }
     }
@@ -114,6 +120,13 @@ private struct SearchResultRow: View {
                 Text(subtitle)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                // Words as well as the check, which on its own reads as
+                // "selected" as easily as "tracked".
+                if alreadyAdded {
+                    Text("In your library")
+                        .font(.caption)
+                        .foregroundStyle(.tint)
+                }
             }
 
             Spacer()

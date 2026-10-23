@@ -165,7 +165,7 @@ class SearchViewModel @Inject constructor(
      * there is nothing to do first.
      */
     fun addToLibrary(hit: SearchHit) {
-        if (hit.providerId in _adding.value || hit.providerId in _added.value) return
+        if (hit.library != null || hit.providerId in _adding.value || hit.providerId in _added.value) return
 
         viewModelScope.launch {
             _adding.value = _adding.value + hit.providerId

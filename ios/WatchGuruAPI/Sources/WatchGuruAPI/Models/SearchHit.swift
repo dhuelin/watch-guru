@@ -13,6 +13,7 @@ public struct SearchHit: Sendable, Codable, Hashable {
         case movie = "MOVIE"
         case tvSeries = "TV_SERIES"
     }
+    public var library: LibraryEntry?
     public var originalTitle: String?
     public var overview: String?
     public var posterUrl: String?
@@ -23,7 +24,8 @@ public struct SearchHit: Sendable, Codable, Hashable {
     public var title: String
     public var titleType: TitleType
 
-    public init(originalTitle: String? = nil, overview: String? = nil, posterUrl: String? = nil, providerId: Int64, providerRating: Double? = nil, providerVoteCount: Int? = nil, releaseDate: Date? = nil, title: String, titleType: TitleType) {
+    public init(library: LibraryEntry? = nil, originalTitle: String? = nil, overview: String? = nil, posterUrl: String? = nil, providerId: Int64, providerRating: Double? = nil, providerVoteCount: Int? = nil, releaseDate: Date? = nil, title: String, titleType: TitleType) {
+        self.library = library
         self.originalTitle = originalTitle
         self.overview = overview
         self.posterUrl = posterUrl
@@ -36,6 +38,7 @@ public struct SearchHit: Sendable, Codable, Hashable {
     }
 
     public enum CodingKeys: String, CodingKey, CaseIterable {
+        case library
         case originalTitle
         case overview
         case posterUrl
@@ -51,6 +54,7 @@ public struct SearchHit: Sendable, Codable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(library, forKey: .library)
         try container.encodeIfPresent(originalTitle, forKey: .originalTitle)
         try container.encodeIfPresent(overview, forKey: .overview)
         try container.encodeIfPresent(posterUrl, forKey: .posterUrl)

@@ -254,9 +254,11 @@ class TitleDetailViewModel @Inject constructor(
      * Ten rather than five stars because that is the scale the column has held
      * since the first migration, and the one both the TMDB and IMDb figures
      * beside it are on -- three scales on one screen is two too many.
+     *
+     * @param rating 1 to 10, or null to remove the rating
      */
-    fun setRating(itemId: Long, rating: Int) {
-        updateEntry(itemId, UpdateWatchlistItem(rating = rating.toBigDecimal()))
+    fun setRating(itemId: Long, rating: Int?) {
+        updateEntry(itemId, ratingUpdate(rating))
     }
 
     fun removeFromLibrary(itemId: Long) {
@@ -342,3 +344,14 @@ class TitleDetailViewModel @Inject constructor(
         data class Failed(val failure: ApiResult.Failure) : FilmLog
     }
 }
+
+/**
+ * Null becomes `clearRating` rather than a null rating: the client leaves null
+ * fields out of the body, and the server reads a missing rating as "unchanged".
+ */
+internal fun ratingUpdate(rating: Int?): UpdateWatchlistItem =
+    if (rating == null) {
+        UpdateWatchlistItem(clearRating = true)
+    } else {
+        UpdateWatchlistItem(rating = rating.toBigDecimal())
+    }

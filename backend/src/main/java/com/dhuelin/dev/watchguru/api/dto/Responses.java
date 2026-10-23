@@ -60,7 +60,14 @@ public final class Responses {
     ) {
     }
 
-    /** A provider search hit, not yet in the local catalog. */
+    /**
+     * A provider search hit.
+     *
+     * @param library the caller's entry for this title, or null if they have
+     *                not added it. Lets search mark what is already tracked,
+     *                including titles added on another device or in an earlier
+     *                session, which the app has no other way to know.
+     */
     public record SearchHit(
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) Long providerId,
             @Schema(requiredMode = Schema.RequiredMode.REQUIRED) TitleType titleType,
@@ -70,7 +77,8 @@ public final class Responses {
             String overview,
             String posterUrl,
             BigDecimal providerRating,
-            Integer providerVoteCount
+            Integer providerVoteCount,
+            LibraryEntry library
     ) {
     }
 

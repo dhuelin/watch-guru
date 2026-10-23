@@ -192,8 +192,17 @@ final class TitleDetailModel {
     /// Ten rather than five stars because that is the scale the column has held
     /// since the first migration, and the one the TMDB and IMDb figures beside
     /// it are on — three scales on one screen is two too many.
-    func setRating(itemId: Int64, rating: Int) async {
-        await updateEntry(itemId: itemId, UpdateWatchlistItem(rating: Double(rating)))
+    ///
+    /// - Parameter rating: 1 to 10, or nil to remove the rating.
+    func setRating(itemId: Int64, rating: Int?) async {
+        await updateEntry(itemId: itemId, Self.ratingUpdate(rating))
+    }
+
+    /// Nil becomes `clearRating` rather than a nil rating: the generated client
+    /// drops nil fields, and the server reads a missing rating as "unchanged".
+    nonisolated static func ratingUpdate(_ rating: Int?) -> UpdateWatchlistItem {
+        guard let rating else { return UpdateWatchlistItem(clearRating: true) }
+        return UpdateWatchlistItem(rating: Double(rating))
     }
 
     func removeFromLibrary(itemId: Int64) async {

@@ -23,6 +23,7 @@
 
 package dev.huelin.watchguru.api.models
 
+import dev.huelin.watchguru.api.models.LibraryEntry
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -34,6 +35,7 @@ import kotlinx.serialization.Contextual
  * @param providerId 
  * @param title 
  * @param titleType 
+ * @param library 
  * @param originalTitle 
  * @param overview 
  * @param posterUrl 
@@ -53,6 +55,9 @@ data class SearchHit (
 
     @SerialName(value = "titleType")
     val titleType: SearchHit.TitleType,
+
+    @SerialName(value = "library")
+    val library: LibraryEntry? = null,
 
     @SerialName(value = "originalTitle")
     val originalTitle: kotlin.String? = null,

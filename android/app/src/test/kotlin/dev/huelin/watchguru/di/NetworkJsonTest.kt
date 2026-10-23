@@ -4,6 +4,7 @@ import dev.huelin.watchguru.api.models.SearchResponse
 import dev.huelin.watchguru.api.models.TitleResponse
 import dev.huelin.watchguru.api.models.UpNextResponse
 import dev.huelin.watchguru.api.models.UpdateWatchlistItem
+import dev.huelin.watchguru.ui.detail.ratingUpdate
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.math.BigDecimal
@@ -81,5 +82,28 @@ class NetworkJsonTest {
         )
 
         assertEquals("""{"rating":7}""", encoded)
+    }
+
+    @Test
+    fun `clearing a rating is sent as clearRating, not as a missing rating`() {
+        val encoded = NetworkModule.json().encodeToString(
+            UpdateWatchlistItem.serializer(),
+            ratingUpdate(null),
+        )
+
+        assertEquals("""{"clearRating":true}""", encoded)
+    }
+
+    @Test
+    fun `a search hit carries the caller's library entry`() {
+        val body = """
+            {"results":[{"providerId":8001,"titleType":"MOVIE","title":"Deep Field",
+              "library":{"itemId":3,"status":"WATCHING"}}],
+             "page":1,"totalPages":1,"totalResults":1}
+        """.trimIndent()
+
+        val decoded = NetworkModule.json().decodeFromString<SearchResponse>(body)
+
+        assertEquals(3L, decoded.results.single().library?.itemId)
     }
 }

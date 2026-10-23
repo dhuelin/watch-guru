@@ -58,7 +58,7 @@ struct HomeView: View {
         } else {
             switch model.state {
             case .loading:
-                ProgressView()
+                SkeletonList()
             case .failed(let failure):
                 FailureView(failure: failure) { Task { await model.load() } }
             default:

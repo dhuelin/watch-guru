@@ -1,10 +1,12 @@
 package com.dhuelin.dev.watchguru.api.dto;
 
 import com.dhuelin.dev.watchguru.catalog.domain.TitleType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.dhuelin.dev.watchguru.notifications.domain.DevicePlatform;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchStatus;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -71,12 +73,30 @@ public final class Requests {
         }
     }
 
-    /** Partial update; any null field is left unchanged. */
+    /**
+     * Partial update; any null field is left unchanged.
+     *
+     * @param clearRating removes the rating. A flag rather than an explicit
+     *                    null: both generated clients drop nil fields from the
+     *                    body, so a null rating cannot be told apart from one
+     *                    that was not sent.
+     */
     public record UpdateWatchlistItem(
             WatchStatus status,
             @DecimalMin("0.0") @DecimalMax("10.0") BigDecimal rating,
-            String notes
+            String notes,
+            Boolean clearRating
     ) {
+        public boolean clearsRating() {
+            return Boolean.TRUE.equals(clearRating);
+        }
+
+        /** Rating and clearing it at once has no single meaning. */
+        @JsonIgnore
+        @AssertTrue(message = "rating and clearRating cannot both be set")
+        public boolean isRatingUnambiguous() {
+            return rating == null || !clearsRating();
+        }
     }
 
     /**

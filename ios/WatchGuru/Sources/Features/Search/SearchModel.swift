@@ -113,7 +113,7 @@ final class SearchModel {
     /// The backend imports the title from the provider as part of this call,
     /// so there is nothing to do first.
     func addToLibrary(_ hit: SearchHit) async {
-        guard !adding.contains(hit.providerId), !added.contains(hit.providerId) else { return }
+        guard hit.library == nil, !adding.contains(hit.providerId), !added.contains(hit.providerId) else { return }
         adding.insert(hit.providerId)
         defer { adding.remove(hit.providerId) }
 

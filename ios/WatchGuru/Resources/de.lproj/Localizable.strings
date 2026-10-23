@@ -166,6 +166,8 @@
 /* MARK: Search */
 "Add" = "Hinzufügen";
 "Already in your library" = "Schon in deiner Bibliothek";
+"In your library" = "In deiner Bibliothek";
+"Loading" = "Wird geladen";
 "Search films and series" = "Filme und Serien suchen";
 "Search for something to watch" = "Suche etwas zum Schauen";
 "Trending this week" = "Diese Woche im Trend";

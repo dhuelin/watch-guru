@@ -3,6 +3,7 @@ package dev.huelin.watchguru.ui.detail
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -45,7 +46,7 @@ fun LibraryEntrySection(
     busy: Boolean,
     onAdd: () -> Unit,
     onStatus: (Long, UpdateWatchlistItem.Status) -> Unit,
-    onRating: (Long, Int) -> Unit,
+    onRating: (Long, Int?) -> Unit,
     onRemove: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -113,12 +114,15 @@ fun LibraryEntrySection(
  *
  * The value is held locally while dragging and sent once at the end -- sending
  * on every change would be nine requests on the way from 1 to 10.
+ *
+ * Zero is "not rated", as the label beside it says, so dragging back to it or
+ * pressing Clear removes the rating rather than recording a score of zero.
  */
 @Composable
 private fun RatingRow(
     entry: LibraryEntry,
     busy: Boolean,
-    onRating: (Long, Int) -> Unit,
+    onRating: (Long, Int?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var dragging by remember(entry.itemId, entry.rating) {
@@ -130,7 +134,10 @@ private fun RatingRow(
     val ratingLabel = stringResource(R.string.cd_your_rating)
 
     Column(modifier = modifier.fillMaxWidth()) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             Text(
                 text = stringResource(R.string.library_your_rating),
                 style = MaterialTheme.typography.labelMedium,
@@ -144,12 +151,26 @@ private fun RatingRow(
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(start = 8.dp),
             )
+            if (entry.rating != null) {
+                Spacer(Modifier.weight(1f))
+                TextButton(
+                    onClick = { onRating(entry.itemId, null) },
+                    enabled = !busy,
+                ) {
+                    Text(stringResource(R.string.action_clear_rating))
+                }
+            }
         }
 
         Slider(
             value = dragging,
             onValueChange = { dragging = it },
-            onValueChangeFinished = { if (shown > 0) onRating(entry.itemId, shown) },
+            onValueChangeFinished = {
+                when {
+                    shown > 0 -> onRating(entry.itemId, shown)
+                    entry.rating != null -> onRating(entry.itemId, null)
+                }
+            },
             valueRange = 0f..10f,
             // Nine stops between the eleven whole numbers, so every landing
             // point is a value the backend stores rather than something it

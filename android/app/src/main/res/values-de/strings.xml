@@ -48,6 +48,7 @@
     <string name="action_remove_from_library">Aus der Bibliothek entfernen</string>
     <string name="library_your_rating">Deine Bewertung</string>
     <string name="library_not_rated">Nicht bewertet</string>
+    <string name="action_clear_rating">Entfernen</string>
     <string name="library_rating_value">%1$d / 10</string>
 
     <string name="error_offline">Offline — Änderungen werden synchronisiert, sobald du wieder verbunden bist.</string>
@@ -186,6 +187,7 @@
     <string name="cd_collapse_season">Staffel zuklappen</string>
     <string name="cd_more_actions">Weitere Aktionen für %1$s</string>
     <string name="cd_your_rating">Deine Bewertung von zehn</string>
+    <string name="cd_loading">Wird geladen</string>
     <string name="cd_delete_entry">Diesen Eintrag für %1$s löschen</string>
 
     <string name="detail_runtime_minutes">%1$d Min.</string>

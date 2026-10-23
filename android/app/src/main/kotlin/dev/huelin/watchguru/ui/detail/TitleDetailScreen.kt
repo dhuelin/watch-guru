@@ -127,7 +127,7 @@ private fun TitleDetailContent(
     onDismissFilmLog: () -> Unit,
     onAddToLibrary: () -> Unit,
     onStatus: (Long, UpdateWatchlistItem.Status) -> Unit,
-    onRating: (Long, Int) -> Unit,
+    onRating: (Long, Int?) -> Unit,
     onRemoveFromLibrary: (Long) -> Unit,
     onMarkNext: () -> Unit,
     onToggleSeason: (Int) -> Unit,

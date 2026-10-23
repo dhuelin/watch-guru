@@ -7,6 +7,7 @@ import com.dhuelin.dev.watchguru.tracking.service.SeriesProgressCounts;
 import com.dhuelin.dev.watchguru.tracking.service.UpNextService;
 import com.dhuelin.dev.watchguru.tracking.service.WatchlistService;
 import com.dhuelin.dev.watchguru.catalog.domain.Title;
+import com.dhuelin.dev.watchguru.catalog.domain.TitleType;
 import com.dhuelin.dev.watchguru.provider.model.ProviderSearchPage;
 import com.dhuelin.dev.watchguru.streaming.domain.LinkedStreamingAccount;
 import com.dhuelin.dev.watchguru.streaming.domain.SyncRun;
@@ -19,7 +20,9 @@ import com.dhuelin.dev.watchguru.tracking.domain.WatchlistItem;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /** Entity-to-response conversion, kept out of the controllers. */
 @Component
@@ -39,11 +42,25 @@ public class ApiMapper {
     }
 
     public Responses.SearchResponse toSearch(ProviderSearchPage page) {
+        return toSearch(page, List.of());
+    }
+
+    /**
+     * @param tracked the caller's library entries among these results; any
+     *                that do not match a hit are ignored
+     */
+    public Responses.SearchResponse toSearch(ProviderSearchPage page, List<WatchlistItem> tracked) {
+        Map<String, WatchlistItem> byProviderTitle = new HashMap<>();
+        for (WatchlistItem item : tracked) {
+            Title title = item.getTitle();
+            byProviderTitle.put(providerKey(title.getTitleType(), title.getTmdbId()), item);
+        }
         List<Responses.SearchHit> hits = page.results().stream()
                 .map(s -> new Responses.SearchHit(
                         s.providerId(), s.titleType(), s.title(), s.originalTitle(),
                         s.releaseDate(), s.overview(), images.poster(s.posterPath()),
-                        s.voteAverage(), s.voteCount()))
+                        s.voteAverage(), s.voteCount(),
+                        toLibraryEntry(byProviderTitle.get(providerKey(s.titleType(), s.providerId())))))
                 .toList();
         return new Responses.SearchResponse(hits, page.page(), page.totalPages(), page.totalResults());
     }
@@ -116,8 +133,16 @@ public class ApiMapper {
                 genres,
                 offers,
                 checkedAt,
-                item == null ? null : new Responses.LibraryEntry(
-                        item.getId(), item.getStatus(), item.getUserRating(), item.getNotes()));
+                toLibraryEntry(item));
+    }
+
+    private static Responses.LibraryEntry toLibraryEntry(WatchlistItem item) {
+        return item == null ? null : new Responses.LibraryEntry(
+                item.getId(), item.getStatus(), item.getUserRating(), item.getNotes());
+    }
+
+    private static String providerKey(TitleType type, Long providerId) {
+        return type + ":" + providerId;
     }
 
     private static Instant oldestFetch(List<TitleAvailability> availability) {

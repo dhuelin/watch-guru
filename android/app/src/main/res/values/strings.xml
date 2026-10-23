@@ -44,6 +44,7 @@
     <string name="action_remove_from_library">Remove from library</string>
     <string name="library_your_rating">Your rating</string>
     <string name="library_not_rated">Not rated</string>
+    <string name="action_clear_rating">Clear</string>
     <string name="library_rating_value">%1$d / 10</string>
 
     <string name="error_offline">Offline — changes will sync when you reconnect.</string>
@@ -217,6 +218,7 @@
     <string name="cd_collapse_season">Collapse season</string>
     <string name="cd_more_actions">More actions for %1$s</string>
     <string name="cd_your_rating">Your rating out of ten</string>
+    <string name="cd_loading">Loading</string>
     <string name="cd_delete_entry">Delete this entry for %1$s</string>
 
     <!-- Title detail figures. Format strings rather than concatenation, so a

@@ -8,6 +8,8 @@ import com.dhuelin.dev.watchguru.catalog.repository.TitleRepository;
 import com.dhuelin.dev.watchguru.catalog.service.CatalogService;
 import com.dhuelin.dev.watchguru.common.NotFoundException;
 import com.dhuelin.dev.watchguru.config.TmdbProperties;
+import com.dhuelin.dev.watchguru.provider.model.ProviderSearchPage;
+import com.dhuelin.dev.watchguru.provider.model.ProviderTitleSummary;
 import com.dhuelin.dev.watchguru.security.CurrentUserService;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchlistItem;
 import com.dhuelin.dev.watchguru.tracking.repository.WatchlistItemRepository;
@@ -15,6 +17,7 @@ import com.dhuelin.dev.watchguru.tracking.service.EpisodeListService;
 import com.dhuelin.dev.watchguru.streaming.service.AvailabilityService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.constraints.NotBlank;
+import java.util.List;
 import java.util.Locale;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -70,7 +73,7 @@ public class TitleController {
     @Operation(operationId = "getTrending")
     public Responses.SearchResponse trending(@RequestParam(defaultValue = "1") int page,
                                              @RequestParam(required = false) String language) {
-        return mapper.toSearch(catalog.trending(page, language));
+        return withLibrary(catalog.trending(page, language));
     }
 
     /** Live search against the metadata provider; nothing is persisted. */
@@ -79,7 +82,23 @@ public class TitleController {
     public Responses.SearchResponse search(@RequestParam @NotBlank String query,
                                            @RequestParam(defaultValue = "1") int page,
                                            @RequestParam(required = false) String language) {
-        return mapper.toSearch(catalog.search(query, page, language));
+        return withLibrary(catalog.search(query, page, language));
+    }
+
+    /**
+     * A page of provider results, each marked with the caller's entry if they
+     * have one. One query for the page; rows nobody has imported cannot be in
+     * anyone's library and simply match nothing.
+     */
+    private Responses.SearchResponse withLibrary(ProviderSearchPage page) {
+        List<Long> tmdbIds = page.results().stream()
+                .map(ProviderTitleSummary::providerId)
+                .distinct()
+                .toList();
+        List<WatchlistItem> tracked = tmdbIds.isEmpty()
+                ? List.of()
+                : items.findByUserIdAndTmdbIds(currentUser.require().getId(), tmdbIds);
+        return mapper.toSearch(page, tracked);
     }
 
     /** Imports a provider title into the local catalog and returns it. */
