@@ -27,4 +27,10 @@ public record TraktTokens(String accessToken, String refreshToken, Instant expir
     public boolean needsRenewal(Instant now) {
         return expiresAt == null || expiresAt.minusSeconds(RENEW_BEFORE_SECONDS).isBefore(now);
     }
+
+    /** Never the tokens themselves: a record prints every field, and this one ends up in logs. */
+    @Override
+    public String toString() {
+        return "TraktTokens[expiresAt=" + expiresAt + "]";
+    }
 }

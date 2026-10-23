@@ -36,8 +36,8 @@ primary_region = "fra"
     soft_limit = 200
     hard_limit = 250
 
-  # /actuator/health is exposed and unauthenticated; show-details is
-  # when-authorized, so an anonymous probe sees UP or DOWN and nothing else.
+  # /actuator/health is exposed and unauthenticated; show-details is never,
+  # so every caller sees UP or DOWN and nothing else.
   # The grace period is for the JVM plus Flyway on a cold start.
   [[http_service.checks]]
     grace_period = "45s"

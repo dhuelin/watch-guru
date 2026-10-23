@@ -90,13 +90,43 @@ class CurrentUserServiceTest {
         when(users.findByAuthSubject(any())).thenReturn(Optional.empty());
         when(users.findByEmail(any())).thenReturn(Optional.empty());
 
-        AppUser user = service.resolve(jwt(GOOGLE, "g-1", "Viewer@Example.com", true, "Viewer"));
+        AppUser user = service.resolve(jwt(GOOGLE, "g-1", "Viewer@Gmail.com", true, "Viewer"));
 
         assertThat(user.getAuthSubject()).isEqualTo(GOOGLE + "|g-1");
         assertThat(user.getAuthIssuer()).isEqualTo(GOOGLE);
         assertThat(user.getDisplayName()).isEqualTo("Viewer");
         assertThat(user.isEmailVerified()).isTrue();
         assertThat(user.getLastLoginAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Google's verification of a non-Gmail, non-Workspace address cannot adopt an account")
+    void googleCannotAdoptOnAnUnmanagedAddress() {
+        AppUser existing = new AppUser("alice@startup.example", "Alice");
+        existing.setAuthSubject(APPLE + "|a-1");
+        existing.setEmailVerified(true);
+        when(users.findByAuthSubject(any())).thenReturn(Optional.empty());
+        when(users.findByEmail("alice@startup.example")).thenReturn(Optional.of(existing));
+
+        // A former owner of the address, whose old Google account still says
+        // it is verified.
+        assertThatThrownBy(() -> service.resolve(jwt(GOOGLE, "g-old", "alice@startup.example", true, null)))
+                .isInstanceOf(AccountConflictException.class);
+        assertThat(existing.getAuthSubject()).isEqualTo(APPLE + "|a-1");
+    }
+
+    @Test
+    @DisplayName("Gmail and Workspace addresses are ones Google does vouch for")
+    void googleManagedAddressesAreTrusted() {
+        Jwt gmail = jwt(GOOGLE, "g-1", "a@gmail.com", true, null);
+        Jwt workspace = Jwt.withTokenValue("t").header("alg", "RS256").issuer(GOOGLE).subject("g-2")
+                .claim("email", "a@corp.example").claim("hd", "corp.example").build();
+        Jwt consumer = jwt(GOOGLE, "g-3", "a@corp.example", true, null);
+
+        assertThat(CurrentUserService.isUnmanagedGoogleAddress(gmail, GOOGLE, "a@gmail.com")).isFalse();
+        assertThat(CurrentUserService.isUnmanagedGoogleAddress(workspace, GOOGLE, "a@corp.example")).isFalse();
+        assertThat(CurrentUserService.isUnmanagedGoogleAddress(consumer, GOOGLE, "a@corp.example")).isTrue();
+        assertThat(CurrentUserService.isUnmanagedGoogleAddress(consumer, APPLE, "a@corp.example")).isFalse();
     }
 
     @AfterEach

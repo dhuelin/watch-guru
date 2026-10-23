@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -125,6 +126,17 @@ class MediaServerWebhookEndpointTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("not json"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("an oversized body is refused with 413 before the token is even looked at")
+    void rejectsAnOversizedBody() throws Exception {
+        mvc.perform(post("/api/v1/webhooks/{service}/{token}", "jellyfin", "12.secret")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new byte[512 * 1024]))
+                .andExpect(status().isContentTooLarge());
+
+        verify(webhooks, never()).receive(any(), any(), any());
     }
 
     @Test

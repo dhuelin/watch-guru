@@ -46,13 +46,28 @@ final class TraktModel {
 
         do {
             let authorization = try await client.authorizeTrakt()
-            return URL(string: authorization.authorizeUrl)
+            guard let url = URL(string: authorization.authorizeUrl),
+                  Self.isTraktAuthorizationURL(url) else {
+                // Whatever the server sent, the app only ever sends the user
+                // to Trakt: a sign-in page anywhere else is not one to trust.
+                failureMessage = "Trakt cannot be connected from this server right now."
+                return nil
+            }
+            return url
         } catch {
             // A 409 here is the honest case: this server has no Trakt
             // application configured, and retrying changes nothing.
             failureMessage = "Trakt cannot be connected from this server right now."
             return nil
         }
+    }
+
+    /// Only an https page on trakt.tv is somewhere to send the user to approve.
+    nonisolated static func isTraktAuthorizationURL(_ url: URL) -> Bool {
+        guard url.scheme?.lowercased() == "https", let host = url.host?.lowercased() else {
+            return false
+        }
+        return host == "trakt.tv" || host.hasSuffix(".trakt.tv")
     }
 
     func syncNow() async {

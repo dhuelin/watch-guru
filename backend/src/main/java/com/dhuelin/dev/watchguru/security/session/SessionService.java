@@ -99,7 +99,7 @@ public class SessionService {
     @Transactional(noRollbackFor = InvalidSessionException.class)
     public Session refresh(String presented) {
         Instant now = Instant.now();
-        Optional<RefreshToken> found = refreshTokens.findByTokenHash(hash(presented));
+        Optional<RefreshToken> found = refreshTokens.findByTokenHashForUpdate(hash(presented));
 
         if (found.isEmpty()) {
             // Unknown token. Nothing to revoke, and nothing to say beyond no.
@@ -137,7 +137,7 @@ public class SessionService {
      */
     @Transactional
     public void logout(String presented) {
-        refreshTokens.findByTokenHash(hash(presented)).ifPresent(token ->
+        refreshTokens.findByTokenHashForUpdate(hash(presented)).ifPresent(token ->
                 refreshTokens.revokeFamily(token.getFamilyId(), Instant.now(), "signed_out"));
     }
 

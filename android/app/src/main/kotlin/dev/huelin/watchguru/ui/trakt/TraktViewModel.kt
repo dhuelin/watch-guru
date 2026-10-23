@@ -71,7 +71,15 @@ class TraktViewModel @Inject constructor(
         viewModelScope.launch {
             _busy.value = true
             when (val result = repository.authorizeTrakt()) {
-                is ApiResult.Success -> _authorizeUrl.value = result.value.authorizeUrl
+                is ApiResult.Success ->
+                    // Whatever the server sent, the app only ever sends the
+                    // user to Trakt: a sign-in page anywhere else is not one
+                    // to trust.
+                    if (isTraktAuthorizeUrl(result.value.authorizeUrl)) {
+                        _authorizeUrl.value = result.value.authorizeUrl
+                    } else {
+                        _error.value = "Trakt cannot be connected from this server right now."
+                    }
                 // A 409 here is the honest case: this server has no Trakt
                 // application, and no amount of retrying changes that.
                 is ApiResult.Failure -> _error.value =
@@ -119,4 +127,12 @@ class TraktViewModel @Inject constructor(
     fun dismissError() {
         _error.value = null
     }
+}
+
+/** Only an https page on trakt.tv is somewhere to send the user to approve. */
+internal fun isTraktAuthorizeUrl(url: String): Boolean {
+    val uri = runCatching { java.net.URI(url) }.getOrNull() ?: return false
+    if (!uri.scheme.equals("https", ignoreCase = true)) return false
+    val host = uri.host?.lowercase() ?: return false
+    return host == "trakt.tv" || host.endsWith(".trakt.tv")
 }

@@ -296,9 +296,14 @@ export SPRING_DOCKER_COMPOSE_ENABLED=false
 cd backend && ./mvnw test
 ```
 
-Actuator health, info, metrics, flyway and caches endpoints are exposed under
-`/actuator`. Provider health is under `watchguru.provider.call`, tagged by
-operation and outcome; the search cache hit ratio is under `/actuator/caches`.
+Only the actuator's health and info endpoints are exposed under `/actuator`,
+and health shows no details. The service has no admin role, so anything else
+there would be open to every signed-in user. Locally, set
+`WATCH_GURU_ACTUATOR_ENDPOINTS=health,info,metrics,flyway,caches` to get the
+rest back: provider health is under `watchguru.provider.call`, tagged by
+operation and outcome, and the search cache hit ratio is under
+`/actuator/caches`. Set `WATCH_GURU_LOG_LEVEL=DEBUG` for the application's
+debug logging, which is off by default because it logs account identifiers.
 
 ### Upstream resilience
 

@@ -5,6 +5,7 @@ import com.dhuelin.dev.watchguru.provider.MetadataProviderException;
 import com.dhuelin.dev.watchguru.provider.MetadataProviderNotConfiguredException;
 import com.dhuelin.dev.watchguru.security.AccountConflictException;
 import com.dhuelin.dev.watchguru.security.CurrentUserService;
+import com.dhuelin.dev.watchguru.security.RequestBodyLimitFilter;
 import com.dhuelin.dev.watchguru.security.session.SessionService;
 import com.dhuelin.dev.watchguru.streaming.mediaserver.MediaServerLinkService;
 import com.dhuelin.dev.watchguru.streaming.mediaserver.WebhookAuthenticationException;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -139,9 +141,31 @@ public class ApiExceptionHandler {
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
     ProblemDetail onDataIntegrityViolation(DataIntegrityViolationException e) {
-        log.warn("A write was refused by a database constraint", e);
+        // The cause's class, not the exception: Postgres puts the offending
+        // values in its message -- an email address, for one -- and those do
+        // not belong in the logs.
+        log.warn("A write was refused by a database constraint: {}",
+                e.getMostSpecificCause().getClass().getName());
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
                 "That change conflicts with something already recorded.");
+    }
+
+    /**
+     * A body that ran past {@link RequestBodyLimitFilter}'s cap while being
+     * read: 413, the same answer a declared oversize length gets.
+     *
+     * <p>Anything else unreadable is rethrown, which hands it back to Spring's
+     * default handling and the 400 it has always produced.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    ProblemDetail onUnreadable(HttpMessageNotReadableException e) {
+        for (Throwable cause = e; cause != null; cause = cause.getCause()) {
+            if (cause instanceof RequestBodyLimitFilter.BodyTooLargeException) {
+                return ProblemDetail.forStatusAndDetail(HttpStatus.CONTENT_TOO_LARGE,
+                        "That request is too large.");
+            }
+        }
+        throw e;
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

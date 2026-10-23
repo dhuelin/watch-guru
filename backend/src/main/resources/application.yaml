@@ -47,6 +47,15 @@ spring:
       max-file-size: 2MB
       max-request-size: 4MB
 
+server:
+  # Fly terminates TLS and forwards. Without this the app believes every
+  # request is plain HTTP on whatever Host the client sent: no HSTS, and any
+  # URL built from the request points wherever the caller chose.
+  forward-headers-strategy: native
+  tomcat:
+    # Bound what Tomcat will read and discard after rejecting a body.
+    max-swallow-size: 1MB
+
 watch-guru:
   auth:
     # Trusted identity providers. A token signed by anyone else is rejected
@@ -191,10 +200,15 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,flyway,caches
+        # Health and info only. Every signed-in user is "authorized" as far as
+        # Spring is concerned -- there are no roles -- and anybody with a
+        # Google or Apple account can sign up, so metrics, the Flyway history
+        # and cache eviction were effectively public. Turn more on locally
+        # with WATCH_GURU_ACTUATOR_ENDPOINTS=health,info,metrics,flyway,caches.
+        include: ${WATCH_GURU_ACTUATOR_ENDPOINTS:health,info}
   endpoint:
     health:
-      show-details: when-authorized
+      show-details: never
 
 springdoc:
   api-docs:
@@ -210,4 +224,6 @@ springdoc:
 
 logging:
   level:
-    com.dhuelin.dev.watchguru: DEBUG
+    # INFO in production: DEBUG logs auth subjects and media-server account
+    # names. Turn it up locally with WATCH_GURU_LOG_LEVEL=DEBUG.
+    com.dhuelin.dev.watchguru: ${WATCH_GURU_LOG_LEVEL:INFO}

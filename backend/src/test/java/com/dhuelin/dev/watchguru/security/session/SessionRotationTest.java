@@ -15,6 +15,10 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,6 +40,7 @@ class SessionRotationTest {
     @Autowired private SessionService sessions;
     @Autowired private RefreshTokenRepository refreshTokens;
     @Autowired private AppUserRepository users;
+    @Autowired private RefreshTokenCleanupJob cleanup;
 
     private AppUser user;
 
@@ -180,5 +185,59 @@ class SessionRotationTest {
 
         assertThatThrownBy(() -> sessions.refresh(session.refreshToken()))
                 .isInstanceOf(SessionService.InvalidSessionException.class);
+    }
+
+    @Test
+    @DisplayName("two refreshes racing with one token never both succeed")
+    void concurrentRefreshIsSerialised() throws Exception {
+        SessionService.Session first = sessions.start(user, Instant.now());
+        CountDownLatch go = new CountDownLatch(1);
+
+        try (ExecutorService pool = Executors.newFixedThreadPool(2)) {
+            List<CompletableFuture<Boolean>> attempts = List.of(1, 2).stream()
+                    .map(i -> CompletableFuture.supplyAsync(() -> {
+                        try {
+                            go.await();
+                            sessions.refresh(first.refreshToken());
+                            return true;
+                        } catch (SessionService.InvalidSessionException e) {
+                            return false;
+                        } catch (InterruptedException e) {
+                            throw new IllegalStateException(e);
+                        }
+                    }, pool))
+                    .toList();
+            go.countDown();
+
+            long succeeded = attempts.stream().map(CompletableFuture::join).filter(ok -> ok).count();
+            // Without the row lock both read the token as unused and both win.
+            assertThat(succeeded).isEqualTo(1);
+        }
+        // And the loser's attempt is what it looks like: reuse, so the family goes.
+        assertThat(refreshTokens.findAll()).allSatisfy(token ->
+                assertThat(token.getRevokedAt()).isNotNull());
+    }
+
+    @Test
+    @DisplayName("the cleanup job drops tokens a week past expiry and keeps the rest")
+    void cleanupDropsLongExpiredTokens() {
+        SessionService.Session old = sessions.start(user, Instant.now());
+        SessionService.Session recent = sessions.start(user, Instant.now());
+        SessionService.Session live = sessions.start(user, Instant.now());
+
+        expire(old, Instant.now().minus(8, ChronoUnit.DAYS));
+        expire(recent, Instant.now().minus(1, ChronoUnit.DAYS));
+
+        assertThat(cleanup.run()).isEqualTo(1);
+        assertThat(refreshTokens.findByTokenHash(SessionService.hash(old.refreshToken()))).isEmpty();
+        assertThat(refreshTokens.findByTokenHash(SessionService.hash(recent.refreshToken()))).isPresent();
+        assertThat(sessions.refresh(live.refreshToken())).isNotNull();
+    }
+
+    private void expire(SessionService.Session session, Instant at) {
+        RefreshToken stored = refreshTokens.findByTokenHash(SessionService.hash(session.refreshToken()))
+                .orElseThrow();
+        stored.setExpiresAt(at);
+        refreshTokens.save(stored);
     }
 }
