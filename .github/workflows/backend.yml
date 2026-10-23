@@ -63,7 +63,7 @@ jobs:
         run: ./mvnw -B --no-transfer-progress verify
 
       - name: Publish test report
-        uses: mikepenz/action-junit-report@db71d41eb79864e25ab0337e395c352e84523afe # v4
+        uses: mikepenz/action-junit-report@6ef3fdcfcd5f0b5d14df3e659ef19b8c6820f93d # v6.6.1
         if: always()
         with:
           report_paths: backend/target/surefire-reports/TEST-*.xml
