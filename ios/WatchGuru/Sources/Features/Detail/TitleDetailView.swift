@@ -55,8 +55,12 @@ struct TitleDetailView: View {
     }
 
     private func detail(title: TitleResponse, model: TitleDetailModel) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+        // A List rather than a ScrollView, though it does not look like one:
+        // only a List's rows take swipe actions, and the episode rows' swipe
+        // to mark watched is the fastest way through a season. Every block
+        // above the episodes is one borderless row.
+        List {
+            Group {
                 HStack(alignment: .top, spacing: 16) {
                     PosterView(
                         url: title.posterUrl.flatMap(URL.init(string:)),
@@ -104,6 +108,12 @@ struct TitleDetailView: View {
                     },
                     remove: { itemId in Task { await model.removeFromLibrary(itemId: itemId) } }
                 )
+                // What a ScrollView gives a button with no style of its own. In
+                // a List the default turns the whole row into the button's tap
+                // target, which a row holding several controls cannot have.
+                // Not set on the List itself: swipe action buttons would take
+                // it too, and then never appear.
+                .buttonStyle(.borderless)
 
                 // A film is watched or it is not: there is no next episode to
                 // offer, so this is the whole of its tracking, and without it a
@@ -115,6 +125,7 @@ struct TitleDetailView: View {
                         log: { day in Task { await model.logFilmWatched(on: day) } },
                         dismissOutcome: { model.clearFilmLog() }
                     )
+                    .buttonStyle(.borderless)
                 }
 
                 if let progress = model.progress, progress.airedEpisodes > 0 {
@@ -150,6 +161,7 @@ struct TitleDetailView: View {
                     region: session.region,
                     mine: session.myServices.selected
                 )
+                .buttonStyle(.borderless)
 
                 // The episode list. For a series this is the screen's real
                 // content; everything above it is context.
@@ -179,8 +191,11 @@ struct TitleDetailView: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }
-            .padding()
+            .listRowSeparator(.hidden)
+            .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
         }
+        .listStyle(.plain)
+        .environment(\.defaultMinListRowHeight, 0)
         .navigationTitle(title.primaryTitle)
     }
 }
