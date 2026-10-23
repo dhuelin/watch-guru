@@ -102,11 +102,12 @@ text, and looked generic next to every other tracker.
 | | iOS | Android |
 |---|---|---|
 | A list of titles | `.cardList()`, each item a `CardRow` (its own inset-grouped section) | `LazyColumn` of `RowCard`s with `RowCardList` padding |
-| Title screen header | `BackdropView` full width, poster and title over its faded lower edge | `Backdrop`, the same |
+| Title screen header | `BackdropView`, 240pt tall and full width; only the poster overlaps its faded lower edge, the title and details sit on `screen` beside it (below it at accessibility sizes) | `Backdrop` and `DetailHeader`, the same at 240dp, stacking at font scale 1.5 and up |
 | Other screens (forms, settings) | System grouped style, unchanged | Material defaults on `background` |
 
 The backdrop fades into `screen`, so a title without one simply has no
-header image rather than a placeholder.
+header image rather than a placeholder. **No text on artwork**: text over an
+image is only as legible as the image allows, which no contrast ratio covers.
 
 ## Ratings
 

@@ -60,48 +60,7 @@ struct TitleDetailView: View {
         // to mark watched is the fastest way through a season. Every block
         // above the episodes is one borderless row.
         List {
-            // The backdrop full width behind the header, the poster and title
-            // over its faded lower edge: the title's own artwork is the
-            // strongest thing the screen has, and it was a thumbnail beside a
-            // column of text.
-            VStack(alignment: .leading, spacing: 0) {
-                BackdropView(url: title.backdropUrl.flatMap(URL.init(string:)))
-                HStack(alignment: .bottom, spacing: 16) {
-                    PosterView(
-                        url: title.posterUrl.flatMap(URL.init(string:)),
-                        title: title.primaryTitle
-                    )
-                    .frame(width: 120)
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(title.primaryTitle).font(.title2.bold())
-
-                        if let date = title.releaseDate {
-                            Text(date.formatted(.dateTime.year()))
-                                .foregroundStyle(.secondary)
-                        }
-                        if let runtime = title.runtimeMinutes {
-                            Text("\(runtime) min").foregroundStyle(.secondary)
-                        }
-
-                        // Two rating sources, always labelled so they cannot be
-                        // confused, and each omitted entirely when absent
-                        // rather than rendered as 0.0.
-                        if let tmdb = title.providerRating {
-                            Text("TMDB \(tmdb.formatted(.number.precision(.fractionLength(1))))")
-                                .font(.subheadline)
-                        }
-                        if let imdb = title.imdbRating {
-                            Text("IMDb \(imdb.formatted(.number.precision(.fractionLength(1))))")
-                                .font(.subheadline)
-                        }
-                    }
-                }
-                .padding(.horizontal, 16)
-                // Up over the backdrop's faded half; the poster is taller
-                // than what is left of it.
-                .padding(.top, -110)
-            }
+            TitleHeader(title: title)
             .listRowInsets(EdgeInsets())
             .listRowSeparator(.hidden)
             .listRowBackground(Color.clear)
@@ -213,6 +172,67 @@ struct TitleDetailView: View {
         .screenBackground()
         .environment(\.defaultMinListRowHeight, 0)
         .navigationTitle(title.primaryTitle)
+    }
+}
+
+/// The backdrop across the top, the poster overlapping its faded lower edge,
+/// and the title and its details beside the poster on the plain screen.
+///
+/// Only the poster sits on the artwork. Text on a backdrop is only as legible
+/// as the image behind it allows, and with a large text size or a long title
+/// it would climb into the part the fade does not cover. At accessibility
+/// sizes the details go under the poster, where a column beside it would hold
+/// two words a line.
+private struct TitleHeader: View {
+    let title: TitleResponse
+
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        let stacked = typeSize.isAccessibilitySize
+        let layout = stacked
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
+            : AnyLayout(HStackLayout(alignment: .top, spacing: 16))
+
+        VStack(alignment: .leading, spacing: 0) {
+            BackdropView(url: title.backdropUrl.flatMap(URL.init(string:)))
+            layout {
+                PosterView(
+                    url: title.posterUrl.flatMap(URL.init(string:)),
+                    title: title.primaryTitle
+                )
+                .frame(width: 120)
+                // Up over the backdrop's faded edge. Negative padding rather
+                // than an offset, so the space it leaves is taken back too.
+                .padding(.top, -88)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(title.primaryTitle).font(.title2.bold())
+
+                    if let date = title.releaseDate {
+                        Text(date.formatted(.dateTime.year()))
+                            .foregroundStyle(.secondary)
+                }
+                if let runtime = title.runtimeMinutes {
+                    Text("\(runtime) min").foregroundStyle(.secondary)
+                }
+
+                // Two rating sources, always labelled so they cannot be
+                // confused, and each omitted entirely when absent
+                // rather than rendered as 0.0.
+                if let tmdb = title.providerRating {
+                    Text("TMDB \(tmdb.formatted(.number.precision(.fractionLength(1))))")
+                        .font(.subheadline)
+                }
+                if let imdb = title.imdbRating {
+                    Text("IMDb \(imdb.formatted(.number.precision(.fractionLength(1))))")
+                        .font(.subheadline)
+                }
+                }
+                .padding(.top, stacked ? 0 : 12)
+            }
+            .padding(.horizontal, 16)
+        }
     }
 }
 

@@ -4,6 +4,8 @@ enum Artwork {
     /// The universal film-poster ratio. Never crop a poster to a square.
     static let posterAspectRatio: CGFloat = 2.0 / 3.0
     static let backdropAspectRatio: CGFloat = 16.0 / 9.0
+    /// How tall a title screen's backdrop is, whatever the width.
+    static let backdropHeight: CGFloat = 240
 }
 
 /// A poster, with the placeholder that stands in when there isn't one.
@@ -55,6 +57,11 @@ struct PosterView: View {
 
 /// A title's backdrop, fading into the screen behind it.
 ///
+/// A fixed height rather than 16:9 of the width: on a phone in portrait the
+/// two are about the same, and in landscape or on an iPad 16:9 would be a
+/// whole screen of artwork before anything the user came for. The image is
+/// cropped to fill it.
+///
 /// Decoration under the header rather than content, so VoiceOver skips it,
 /// and with no placeholder: without a backdrop the header is simply the
 /// background, which is how a title with no artwork should look.
@@ -63,7 +70,8 @@ struct BackdropView: View {
 
     var body: some View {
         Color.clear
-            .aspectRatio(Artwork.backdropAspectRatio, contentMode: .fit)
+            .frame(height: Artwork.backdropHeight)
+            .frame(maxWidth: .infinity)
             .overlay {
                 if let url {
                     AsyncImage(url: url) { image in
@@ -75,7 +83,8 @@ struct BackdropView: View {
             }
             .clipped()
             // Clear at the top to the screen colour at the bottom, so the
-            // poster and title laid over its lower half stay readable.
+            // poster laid over its lower edge sits on the screen rather than
+            // on a hard line where the image stops.
             .overlay {
                 LinearGradient(
                     stops: [

@@ -1,13 +1,14 @@
 package dev.huelin.watchguru.ui.detail
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.layout
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -145,54 +146,7 @@ private fun TitleDetailContent(
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
     ) {
-        // The backdrop full width behind the header, the poster and title over
-        // its faded lower edge: the title's own artwork is the strongest thing
-        // the screen has, and it was a thumbnail beside a column of text.
-        Box {
-            Backdrop(url = title.backdropUrl)
-            Row(
-                modifier = Modifier
-                    .padding(start = 16.dp, end = 16.dp, top = 96.dp),
-                verticalAlignment = Alignment.Bottom,
-            ) {
-                Poster(
-                    url = title.posterUrl,
-                    title = title.primaryTitle,
-                    modifier = Modifier.heightIn(max = 180.dp),
-                )
-                Column(modifier = Modifier.padding(start = 16.dp)) {
-                    Text(title.primaryTitle, style = MaterialTheme.typography.headlineSmall)
-
-                    title.releaseDate?.let {
-                        Text("${it.year}", style = MaterialTheme.typography.bodyMedium)
-                    }
-                    title.runtimeMinutes?.let {
-                        Text(
-                            text = stringResource(R.string.detail_runtime_minutes, it),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    }
-
-                    // The database stores two decimal places, so 8.4 arrives as
-                    // 8.40; the trailing zero is noise on screen.
-                    // Two rating sources, always labelled so they cannot be
-                    // confused, and each omitted entirely when absent rather than
-                    // rendered as 0.0.
-                    title.providerRating?.let {
-                        Text(
-                            text = stringResource(R.string.detail_rating_tmdb, it.stripTrailingZeros().toPlainString()),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    }
-                    title.imdbRating?.let {
-                        Text(
-                            text = stringResource(R.string.detail_rating_imdb, it.stripTrailingZeros().toPlainString()),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    }
-                }
-            }
-        }
+        DetailHeader(title)
 
         Column(modifier = Modifier.padding(16.dp)) {
             // Before the tracking actions, because whether this is in the library
@@ -313,6 +267,80 @@ private fun TitleDetailContent(
  * without scrolling on a detail screen, because people press it repeatedly,
  * on a sofa, one-handed.
  */
+/**
+ * The backdrop across the top, the poster overlapping its faded lower edge,
+ * and the title and its details beside the poster on the plain screen.
+ *
+ * Only the poster sits on the artwork. Text on a backdrop is only as legible
+ * as the image behind it allows, and at a large font scale or with a long
+ * title it would climb into the part the fade does not cover. At the largest
+ * font scales the details go under the poster instead of beside it, where a
+ * column a third of the screen wide would hold two words a line.
+ */
+@Composable
+private fun DetailHeader(title: TitleResponse) {
+    val stacked = LocalDensity.current.fontScale >= 1.5f
+    val overlap = 88.dp
+
+    Column {
+        Backdrop(url = title.backdropUrl)
+        // Pulled up over the backdrop by laying the poster out shorter than it
+        // is: an offset would move it but leave its whole height as a gap below.
+        val poster = Modifier
+            .width(120.dp)
+            .layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints)
+                val lift = overlap.roundToPx()
+                layout(placeable.width, placeable.height - lift) {
+                    placeable.place(0, -lift)
+                }
+            }
+        val details: @Composable () -> Unit = {
+            Text(title.primaryTitle, style = MaterialTheme.typography.headlineSmall)
+
+            title.releaseDate?.let {
+                Text("${it.year}", style = MaterialTheme.typography.bodyMedium)
+            }
+            title.runtimeMinutes?.let {
+                Text(
+                    text = stringResource(R.string.detail_runtime_minutes, it),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+
+            // The database stores two decimal places, so 8.4 arrives as
+            // 8.40; the trailing zero is noise on screen.
+            // Two rating sources, always labelled so they cannot be
+            // confused, and each omitted entirely when absent rather than
+            // rendered as 0.0.
+            title.providerRating?.let {
+                Text(
+                    text = stringResource(R.string.detail_rating_tmdb, it.stripTrailingZeros().toPlainString()),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+            title.imdbRating?.let {
+                Text(
+                    text = stringResource(R.string.detail_rating_imdb, it.stripTrailingZeros().toPlainString()),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+
+        if (stacked) {
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Poster(url = title.posterUrl, title = title.primaryTitle, modifier = poster)
+                Column(modifier = Modifier.padding(top = 12.dp)) { details() }
+            }
+        } else {
+            Row(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Poster(url = title.posterUrl, title = title.primaryTitle, modifier = poster)
+                Column(modifier = Modifier.padding(start = 16.dp, top = 12.dp)) { details() }
+            }
+        }
+    }
+}
+
 @Composable
 private fun EpisodeProgress(
     progress: TitleProgress,
