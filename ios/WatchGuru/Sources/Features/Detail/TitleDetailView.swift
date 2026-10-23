@@ -173,10 +173,12 @@ struct TitleDetailView: View {
         .environment(\.defaultMinListRowHeight, 0)
         // On the whole list rather than on a button: an episode marked deep
         // in a season, by tap or swipe, is felt even when the progress button
-        // at the top has scrolled away. Only when the count goes up, so
-        // unmarking is quiet.
+        // at the top has scrolled away. Only when a known count goes up, so
+        // unmarking is quiet and so is the progress arriving after the screen
+        // opens, which goes from nothing to a number.
         .sensoryFeedback(.success, trigger: model.progress?.watchedEpisodes) { old, new in
-            (new ?? 0) > (old ?? 0)
+            guard let old, let new else { return false }
+            return new > old
         }
         .navigationTitle(title.primaryTitle)
     }
