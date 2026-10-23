@@ -56,10 +56,9 @@ import dev.huelin.watchguru.ui.components.contentOrNull
  * Connecting Trakt.
  *
  * The authorisation happens in a browser rather than a web view, so the user
- * can see the address bar says trakt.tv before typing a password there. That
- * also means this screen loses sight of them for a moment: it refreshes on
- * resume, because coming back to a screen still saying "not connected" after
- * connecting is the failure worth designing against.
+ * can see the address bar says trakt.tv before typing a password there. Trakt
+ * sends the browser back to the app, and the view model finishes the flow on
+ * resume -- see [TraktViewModel].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

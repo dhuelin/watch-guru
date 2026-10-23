@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.dhuelin.dev.watchguru.notifications.domain.DevicePlatform;
 import com.dhuelin.dev.watchguru.tracking.domain.WatchStatus;
+import com.dhuelin.dev.watchguru.api.validation.CountryCode;
+import com.dhuelin.dev.watchguru.api.validation.LanguageTag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;
@@ -26,6 +28,13 @@ public final class Requests {
     }
 
     /**
+     * Longest a watchlist note may be. The column is unbounded text, and every
+     * library listing returns the notes of every row, so without a cap one
+     * account could make each of its own page loads arbitrarily large.
+     */
+    public static final int MAX_NOTES_LENGTH = 4000;
+
+    /**
      * Partial profile update; any null field is left unchanged.
      *
      * <p>Replaces the old {@code CreateUser}. Accounts are no longer created by
@@ -38,9 +47,14 @@ public final class Requests {
      *
      * @param providerToken Apple's or Google's ID token, exactly as the
      *                      platform sign-in returned it
+     * @param nonce         the random value the app made up for this sign-in.
+     *                      The provider was given its SHA-256, as lowercase
+     *                      hex, and put that in the token; the value itself is
+     *                      sent only here. See {@code SessionService#exchange}
      */
     public record ExchangeToken(
-            @NotBlank @Size(max = 4096) String providerToken) {
+            @NotBlank @Size(max = 4096) String providerToken,
+            @NotBlank @Size(min = 16, max = 128) String nonce) {
     }
 
     /**
@@ -56,10 +70,21 @@ public final class Requests {
 
     public record UpdateProfile(
             @Size(max = 128) String displayName,
-            @Size(min = 2, max = 2) String region,
-            @Size(max = 16) String language,
+            @CountryCode String region,
+            @LanguageTag String language,
             @Size(max = 64) String timeZone
     ) {
+    }
+
+    /**
+     * What Trakt handed back to the app at the end of an authorisation.
+     *
+     * @param code  Trakt's authorisation code, exchanged on the server
+     * @param state the value issued when the flow started
+     */
+    public record CompleteTrakt(
+            @NotBlank @Size(max = 512) String code,
+            @NotBlank @Size(max = 128) String state) {
     }
 
     /** Adds a title by its provider id, importing it into the catalog first. */
@@ -84,7 +109,7 @@ public final class Requests {
     public record UpdateWatchlistItem(
             WatchStatus status,
             @DecimalMin("0.0") @DecimalMax("10.0") BigDecimal rating,
-            String notes,
+            @Size(max = MAX_NOTES_LENGTH) String notes,
             Boolean clearRating
     ) {
         public boolean clearsRating() {

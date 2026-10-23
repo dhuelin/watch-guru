@@ -111,18 +111,48 @@ public class TraktConnectionService {
     }
 
     /**
-     * Finishes the flow the browser came back from.
+     * Where the browser is sent after Trakt, to hand the result to the app.
+     *
+     * <p>The callback cannot finish the flow itself. The state says which user
+     * <em>started</em> it, but nothing says the browser that came back belongs
+     * to that user: somebody could start a flow on their own account, send the
+     * authorisation link to somebody else, and -- once that person approved at
+     * Trakt -- have that person's Trakt history connected to the sender's
+     * library. Only the signed-in app knows who is holding the phone, so the
+     * code goes to the app and the app finishes with its own session.
+     */
+    public String appCallbackUri(String code, String state) {
+        return UriComponentsBuilder.fromUriString(properties.appCallbackUri())
+                .queryParam("code", code)
+                .queryParam("state", state)
+                .encode()
+                .build()
+                .toUriString();
+    }
+
+    /**
+     * Finishes a flow, for the signed-in user who started it.
      *
      * @return the connected account
-     * @throws NotAvailableException when the state does not name a user -- an
-     *         unknown, expired, replayed or forged callback, all of which are
-     *         one answer to whoever is asking
+     * @throws NotAvailableException when the state does not name this user --
+     *         unknown, expired, replayed, forged, or started by somebody
+     *         else's account, all of which are one answer to whoever is asking.
+     *         The state is spent either way, so a link that reached the wrong
+     *         person cannot be tried again by the right one
      */
-    @Transactional
-    public LinkedStreamingAccount complete(String state, String code, String requestBaseUrl) {
+    // noRollbackFor, or the refusal would roll back the state's deletion and
+    // leave it redeemable: the "spent either way" above depends on it.
+    @Transactional(noRollbackFor = NotAvailableException.class)
+    public LinkedStreamingAccount complete(AppUser caller, String state, String code, String requestBaseUrl) {
         Long userId = oauthStates.redeem(state, TRAKT_SLUG)
                 .orElseThrow(() -> new NotAvailableException(
                         "That authorisation link is not valid any more. Start again from the app."));
+        if (!userId.equals(caller.getId())) {
+            log.warn("A Trakt authorisation started by user {} was presented by user {}",
+                    userId, caller.getId());
+            throw new NotAvailableException(
+                    "That authorisation link is not valid any more. Start again from the app.");
+        }
 
         AppUser user = users.findById(userId)
                 .orElseThrow(() -> NotFoundException.of("User", userId));

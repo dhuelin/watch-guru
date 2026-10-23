@@ -7,6 +7,7 @@ import okhttp3.RequestBody
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+import dev.huelin.watchguru.api.models.CompleteTrakt
 import dev.huelin.watchguru.api.models.SyncResultResponse
 import dev.huelin.watchguru.api.models.TraktAuthorizationResponse
 import dev.huelin.watchguru.api.models.TraktStatusResponse
@@ -23,6 +24,19 @@ interface TraktControllerApi {
      */
     @POST("api/v1/me/streaming-accounts/trakt/authorize")
     suspend fun authorizeTrakt(): Response<TraktAuthorizationResponse>
+
+    /**
+     * POST api/v1/me/streaming-accounts/trakt/complete
+     * 
+     * 
+     * Responses:
+     *  - 200: OK
+     *
+     * @param completeTrakt 
+     * @return [TraktStatusResponse]
+     */
+    @POST("api/v1/me/streaming-accounts/trakt/complete")
+    suspend fun completeTrakt(@Body completeTrakt: CompleteTrakt): Response<TraktStatusResponse>
 
     /**
      * DELETE api/v1/me/streaming-accounts/trakt

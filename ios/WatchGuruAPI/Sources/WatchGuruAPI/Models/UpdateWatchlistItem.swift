@@ -16,6 +16,7 @@ public struct UpdateWatchlistItem: Sendable, Codable, Hashable {
         case onHold = "ON_HOLD"
         case dropped = "DROPPED"
     }
+    public static let notesRule = StringRule(minLength: 0, maxLength: 4000, pattern: nil)
     public static let ratingRule = NumericRule<Double>(minimum: 0.0, exclusiveMinimum: false, maximum: 10.0, exclusiveMaximum: false, multipleOf: nil)
     public var clearRating: Bool?
     public var notes: String?

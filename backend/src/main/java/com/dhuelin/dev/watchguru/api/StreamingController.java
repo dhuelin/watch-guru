@@ -3,6 +3,7 @@ package com.dhuelin.dev.watchguru.api;
 import com.dhuelin.dev.watchguru.api.dto.ApiMapper;
 import com.dhuelin.dev.watchguru.security.CurrentUserService;
 import com.dhuelin.dev.watchguru.api.dto.Responses;
+import com.dhuelin.dev.watchguru.api.validation.CountryCode;
 import com.dhuelin.dev.watchguru.streaming.repository.LinkedStreamingAccountRepository;
 import com.dhuelin.dev.watchguru.streaming.repository.StreamingServiceRepository;
 import com.dhuelin.dev.watchguru.streaming.service.AvailabilityService;
@@ -56,7 +57,7 @@ public class StreamingController {
     /** Pulls the provider's streaming-service catalogue into the local table. */
     @PostMapping("/streaming-services/reconcile")
     @Operation(operationId = "reconcileStreamingServices")
-    public Map<String, Object> reconcile(@RequestParam(required = false) String region) {
+    public Map<String, Object> reconcile(@RequestParam(required = false) @CountryCode String region) {
         int count = availability.reconcileServices(region);
         return Map.of("reconciled", count);
     }

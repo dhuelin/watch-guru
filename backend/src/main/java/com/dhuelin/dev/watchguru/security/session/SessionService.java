@@ -5,6 +5,7 @@ import com.dhuelin.dev.watchguru.security.TrustedIssuers;
 import com.dhuelin.dev.watchguru.tracking.domain.AppUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,19 +44,29 @@ public class SessionService {
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final Base64.Encoder ENCODER = Base64.getUrlEncoder().withoutPadding();
 
+    /**
+     * How long a nonce is remembered when its token states no expiry. Apple's
+     * and Google's always do; this is only so a token without one is not
+     * remembered for ever, nor forgotten at once.
+     */
+    private static final java.time.Duration NONCE_FALLBACK_TTL = java.time.Duration.ofDays(1);
+
     private final TrustedIssuers trustedIssuers;
     private final CurrentUserService users;
     private final RefreshTokenRepository refreshTokens;
     private final AccessTokenIssuer accessTokens;
+    private final AuthNonceRepository nonces;
 
     public SessionService(TrustedIssuers trustedIssuers,
                           CurrentUserService users,
                           RefreshTokenRepository refreshTokens,
-                          AccessTokenIssuer accessTokens) {
+                          AccessTokenIssuer accessTokens,
+                          AuthNonceRepository nonces) {
         this.trustedIssuers = trustedIssuers;
         this.users = users;
         this.refreshTokens = refreshTokens;
         this.accessTokens = accessTokens;
+        this.nonces = nonces;
     }
 
     /**
@@ -67,10 +78,48 @@ public class SessionService {
      * so nothing about account creation or linking changes here.
      */
     @Transactional
-    public Session exchange(String providerToken) {
+    public Session exchange(String providerToken, String nonce) {
         Jwt jwt = trustedIssuers.verify(providerToken);
+        Instant now = Instant.now();
+        claimNonce(jwt, nonce, now);
         AppUser user = users.resolve(jwt);
-        return start(user, Instant.now());
+        return start(user, now);
+    }
+
+    /**
+     * Makes the provider token single-use, and usable only by whoever asked
+     * for it.
+     *
+     * <p>The app makes up a random nonce, hands its SHA-256 to Apple or Google,
+     * and gets back a token carrying that hash. It then presents the token with
+     * the nonce itself. Two things follow. A token lifted from somewhere --
+     * a log, a proxy, a crash report -- is useless without the nonce, which
+     * never left the device until this call. And because the hash is recorded
+     * here on first use, a token exchanged once cannot be exchanged again for
+     * as long as it remains valid, even by somebody holding both halves.
+     *
+     * <p>Failures are reported as a bad token, through the same flat 401 as
+     * every other verification failure: which check failed is not something to
+     * tell a caller probing this endpoint.
+     */
+    private void claimNonce(Jwt jwt, String nonce, Instant now) {
+        String claimed = jwt.getClaimAsString("nonce");
+        if (claimed == null || nonce == null
+                || !MessageDigest.isEqual(hash(nonce).getBytes(StandardCharsets.US_ASCII),
+                        claimed.toLowerCase(java.util.Locale.ROOT).getBytes(StandardCharsets.US_ASCII))) {
+            throw new BadJwtException("The token's nonce does not match the one presented");
+        }
+        Instant expiresAt = jwt.getExpiresAt() != null ? jwt.getExpiresAt() : now.plus(NONCE_FALLBACK_TTL);
+        if (nonces.claim(hash(claimed), now, expiresAt) == 0) {
+            log.warn("A provider token was presented for a second time (subject {})", jwt.getSubject());
+            throw new BadJwtException("That token has already been used");
+        }
+    }
+
+    /** Clears out nonces whose tokens have expired, and so can no longer be replayed. */
+    @Transactional
+    public int purgeUsedNonces() {
+        return nonces.deleteExpiredBefore(Instant.now());
     }
 
     /** Issues the first token pair of a new session family. */

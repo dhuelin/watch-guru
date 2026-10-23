@@ -29,7 +29,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.mockito.Mockito.never;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -107,5 +109,17 @@ class WatchlistControllerSecurityTest {
                 .andExpect(status().isOk());
 
         verify(watchlist).list(eq(7L), any(), any());
+    }
+
+    @Test
+    @DisplayName("a note longer than the cap is refused before anything is written")
+    void overlongNotesAreRefused() throws Exception {
+        String body = "{\"notes\":\"" + "n".repeat(4001) + "\"}";
+
+        mvc.perform(patch("/api/v1/me/watchlist/5").with(jwt())
+                        .contentType("application/json").content(body))
+                .andExpect(status().isBadRequest());
+
+        verify(watchlist, never()).setNotes(any(), any(), any());
     }
 }

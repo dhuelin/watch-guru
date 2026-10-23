@@ -2,6 +2,8 @@ package com.dhuelin.dev.watchguru.api;
 
 import com.dhuelin.dev.watchguru.api.dto.ApiMapper;
 import com.dhuelin.dev.watchguru.api.dto.Responses;
+import com.dhuelin.dev.watchguru.api.validation.CountryCode;
+import com.dhuelin.dev.watchguru.api.validation.LanguageTag;
 import com.dhuelin.dev.watchguru.catalog.domain.Title;
 import com.dhuelin.dev.watchguru.catalog.domain.TitleType;
 import com.dhuelin.dev.watchguru.catalog.repository.TitleRepository;
@@ -16,7 +18,10 @@ import com.dhuelin.dev.watchguru.tracking.repository.WatchlistItemRepository;
 import com.dhuelin.dev.watchguru.tracking.service.EpisodeListService;
 import com.dhuelin.dev.watchguru.streaming.service.AvailabilityService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.Locale;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +35,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/titles")
 public class TitleController {
+
+    /**
+     * The last page the metadata provider serves. Pages are part of the
+     * trending and search cache keys, so an unbounded number is an unbounded
+     * cache.
+     */
+    static final int MAX_PAGE = 500;
 
     private final CatalogService catalog;
     private final EpisodeListService episodeList;
@@ -71,17 +83,17 @@ public class TitleController {
      */
     @GetMapping("/trending")
     @Operation(operationId = "getTrending")
-    public Responses.SearchResponse trending(@RequestParam(defaultValue = "1") int page,
-                                             @RequestParam(required = false) String language) {
+    public Responses.SearchResponse trending(@RequestParam(defaultValue = "1") @Min(1) @Max(MAX_PAGE) int page,
+                                             @RequestParam(required = false) @LanguageTag String language) {
         return withLibrary(catalog.trending(page, language));
     }
 
     /** Live search against the metadata provider; nothing is persisted. */
     @GetMapping("/search")
     @Operation(operationId = "searchTitles")
-    public Responses.SearchResponse search(@RequestParam @NotBlank String query,
-                                           @RequestParam(defaultValue = "1") int page,
-                                           @RequestParam(required = false) String language) {
+    public Responses.SearchResponse search(@RequestParam @NotBlank @Size(max = 200) String query,
+                                           @RequestParam(defaultValue = "1") @Min(1) @Max(MAX_PAGE) int page,
+                                           @RequestParam(required = false) @LanguageTag String language) {
         return withLibrary(catalog.search(query, page, language));
     }
 
@@ -106,7 +118,7 @@ public class TitleController {
     @Operation(operationId = "importTitle")
     public Responses.TitleResponse importTitle(@RequestParam TitleType titleType,
                                                @RequestParam long providerId,
-                                               @RequestParam(required = false) String language) {
+                                               @RequestParam(required = false) @LanguageTag String language) {
         Title title = catalog.importTitle(titleType, providerId, language);
         return mapper.toTitle(title, availability.offersFor(title, region(null)));
     }
@@ -123,7 +135,7 @@ public class TitleController {
     @GetMapping("/{titleId}")
     @Operation(operationId = "getTitle")
     public Responses.TitleResponse get(@PathVariable Long titleId,
-                                       @RequestParam(required = false) String region) {
+                                       @RequestParam(required = false) @CountryCode String region) {
         Title title = titles.findById(titleId)
                 .orElseThrow(() -> NotFoundException.of("Title", titleId));
         WatchlistItem item = items

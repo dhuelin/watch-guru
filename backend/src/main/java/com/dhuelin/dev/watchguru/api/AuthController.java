@@ -45,11 +45,13 @@ public class AuthController {
     @Operation(operationId = "createSession",
             summary = "Exchange a provider ID token for a session",
             description = "Verifies the provider's ID token and returns an access token and a "
-                    + "refresh token issued by this service. Provisions the account on first use.")
+                    + "refresh token issued by this service. Provisions the account on first use. "
+                    + "The token must carry the SHA-256 (lowercase hex) of the nonce sent "
+                    + "alongside it, and each token can be exchanged only once.")
     public ResponseEntity<Responses.SessionResponse> create(
             @Valid @RequestBody Requests.ExchangeToken request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(toResponse(sessions.exchange(request.providerToken())));
+                .body(toResponse(sessions.exchange(request.providerToken(), request.nonce())));
     }
 
     /**

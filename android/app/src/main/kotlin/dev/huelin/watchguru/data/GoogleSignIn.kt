@@ -40,8 +40,10 @@ class GoogleSignIn(private val webClientId: String) {
      * @param activityContext must be an Activity context. Credential Manager
      *   presents a bottom sheet, so the application context will not do; this
      *   is why the context is a parameter rather than a constructor argument.
+     * @param nonce goes into the ID token as given: pass [SignInNonce.hashed],
+     *   never the raw value, which only the backend may see.
      */
-    suspend fun signIn(activityContext: Context): Result {
+    suspend fun signIn(activityContext: Context, nonce: String): Result {
         if (webClientId.isBlank()) {
             return Result.Failed(
                 "No Google web client id configured. Set watchguru.googleWebClientId " +
@@ -56,6 +58,7 @@ class GoogleSignIn(private val webClientId: String) {
             // their very first sign-in.
             .setFilterByAuthorizedAccounts(false)
             .setAutoSelectEnabled(false)
+            .setNonce(nonce)
             .build()
 
         return try {

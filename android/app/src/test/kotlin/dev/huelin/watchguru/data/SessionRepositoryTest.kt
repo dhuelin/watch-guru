@@ -60,14 +60,17 @@ class SessionRepositoryTest {
     @Test
     fun `exchange returns tokens with expiry measured from receipt`() = runTest {
         var sent: String? = null
+        var sentNonce: String? = null
         val repository = repository(StubAuth(onCreate = {
             sent = it.providerToken
+            sentNonce = it.nonce
             Response.success(session("access-1", "refresh-1", expiresIn = 900))
         }))
 
-        val result = repository.exchange("google-id-token")
+        val result = repository.exchange("google-id-token", "the-raw-nonce-value")
 
         assertEquals("google-id-token", sent)
+        assertEquals("the-raw-nonce-value", sentNonce)
         assertTrue(result is ApiResult.Success)
         val tokens = (result as ApiResult.Success).value
         assertEquals("access-1", tokens.accessToken)
@@ -83,14 +86,14 @@ class SessionRepositoryTest {
             Response.error(401, "".toResponseBody("application/json".toMediaType()))
         }))
 
-        assertTrue(repository.exchange("token") is ApiResult.Failure.Unauthorised)
+        assertTrue(repository.exchange("token", "nonce-nonce-nonce") is ApiResult.Failure.Unauthorised)
     }
 
     @Test
     fun `being offline during exchange is reported as offline`() = runTest {
         val repository = repository(StubAuth(onCreate = { throw IOException("no route to host") }))
 
-        assertTrue(repository.exchange("token") is ApiResult.Failure.Offline)
+        assertTrue(repository.exchange("token", "nonce-nonce-nonce") is ApiResult.Failure.Offline)
     }
 
     @Test

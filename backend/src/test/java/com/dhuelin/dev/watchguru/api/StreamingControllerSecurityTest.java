@@ -62,7 +62,7 @@ class StreamingControllerSecurityTest {
     @Test
     @DisplayName("a signed-in user cannot reconcile the shared streaming-service table")
     void reconcileIsClosed() throws Exception {
-        mvc.perform(post("/api/v1/streaming-services/reconcile").param("region", "XX").with(jwt()))
+        mvc.perform(post("/api/v1/streaming-services/reconcile").param("region", "DE").with(jwt()))
                 .andExpect(status().isForbidden());
 
         verify(availability, never()).reconcileServices(any());

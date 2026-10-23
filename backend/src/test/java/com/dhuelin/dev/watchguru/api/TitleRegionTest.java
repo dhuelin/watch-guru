@@ -160,4 +160,29 @@ class TitleRegionTest {
 
         verify(availability).offersFor(eq(title), eq(DEFAULT_REGION));
     }
+
+    @Test
+    @DisplayName("a region that is not a country is refused rather than passed upstream")
+    void unknownRegionIsRefused() throws Exception {
+        theTitle();
+        userInRegion("CH");
+
+        mvc.perform(get("/api/v1/titles/7?region=ZZ").with(jwt()))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/titles/7?region=GB%0d%0aX").with(jwt()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("a language or page the provider would not understand is refused, so it cannot grow the cache")
+    void malformedLanguageAndPageAreRefused() throws Exception {
+        userInRegion("CH");
+
+        mvc.perform(get("/api/v1/titles/trending?language=" + "x".repeat(40)).with(jwt()))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/titles/trending?page=100000").with(jwt()))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/titles/search?query=a&language=en_US").with(jwt()))
+                .andExpect(status().isBadRequest());
+    }
 }

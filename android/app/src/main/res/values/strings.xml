@@ -153,7 +153,7 @@
     <string name="action_trakt_connect">Connect Trakt</string>
     <string name="action_trakt_sync">Sync now</string>
     <string name="action_trakt_disconnect">Disconnect</string>
-    <string name="trakt_waiting">Approve the connection in your browser, then come back here.</string>
+    <string name="trakt_waiting">Approve the connection in your browser. Trakt sends you straight back here.</string>
     <string name="trakt_last_synced">Last synced %1$s</string>
     <string name="trakt_recent_syncs">Recent syncs</string>
     <string name="trakt_sync_problems">Could not be matched: %1$s</string>

@@ -55,6 +55,7 @@ Class | Method | HTTP request | Description
 *TitleControllerAPI* | [**importTitle**](docs/TitleControllerAPI.md#importtitle) | **POST** /api/v1/titles/import | 
 *TitleControllerAPI* | [**searchTitles**](docs/TitleControllerAPI.md#searchtitles) | **GET** /api/v1/titles/search | 
 *TraktControllerAPI* | [**authorizeTrakt**](docs/TraktControllerAPI.md#authorizetrakt) | **POST** /api/v1/me/streaming-accounts/trakt/authorize | 
+*TraktControllerAPI* | [**completeTrakt**](docs/TraktControllerAPI.md#completetrakt) | **POST** /api/v1/me/streaming-accounts/trakt/complete | 
 *TraktControllerAPI* | [**disconnectTrakt**](docs/TraktControllerAPI.md#disconnecttrakt) | **DELETE** /api/v1/me/streaming-accounts/trakt | 
 *TraktControllerAPI* | [**getTraktStatus**](docs/TraktControllerAPI.md#gettraktstatus) | **GET** /api/v1/me/streaming-accounts/trakt | 
 *TraktControllerAPI* | [**syncTrakt**](docs/TraktControllerAPI.md#synctrakt) | **POST** /api/v1/me/streaming-accounts/trakt/sync | 
@@ -81,6 +82,7 @@ Class | Method | HTTP request | Description
  - [Bucket](docs/Bucket.md)
  - [BulkMarkResponse](docs/BulkMarkResponse.md)
  - [CommitImport](docs/CommitImport.md)
+ - [CompleteTrakt](docs/CompleteTrakt.md)
  - [ConnectMediaServer](docs/ConnectMediaServer.md)
  - [EpisodeResponse](docs/EpisodeResponse.md)
  - [ExchangeToken](docs/ExchangeToken.md)

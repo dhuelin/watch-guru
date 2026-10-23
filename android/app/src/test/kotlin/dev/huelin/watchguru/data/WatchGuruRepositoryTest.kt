@@ -118,6 +118,9 @@ class WatchGuruRepositoryTest {
         },
         trakt = object : dev.huelin.watchguru.api.apis.TraktControllerApi {
             override suspend fun authorizeTrakt() = fail()
+            override suspend fun completeTrakt(
+                completeTrakt: dev.huelin.watchguru.api.models.CompleteTrakt,
+            ) = fail()
             override suspend fun disconnectTrakt() = fail()
             override suspend fun getTraktStatus() = fail()
             override suspend fun syncTrakt() = fail()

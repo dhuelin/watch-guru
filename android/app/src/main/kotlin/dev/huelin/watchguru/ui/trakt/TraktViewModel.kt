@@ -6,6 +6,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.huelin.watchguru.api.models.SyncResultResponse
 import dev.huelin.watchguru.api.models.TraktStatusResponse
 import dev.huelin.watchguru.data.ApiResult
+import dev.huelin.watchguru.data.TraktCallback
+import dev.huelin.watchguru.data.TraktCallbacks
 import dev.huelin.watchguru.data.WatchGuruRepository
 import dev.huelin.watchguru.ui.components.UiState
 import kotlinx.coroutines.Job
@@ -19,14 +21,16 @@ import javax.inject.Inject
  * Connecting Trakt.
  *
  * Authorising happens in a browser, so this screen cannot watch it happen: the
- * user leaves, approves, and comes back. [load] is therefore called again when
- * the screen resumes rather than only when it is created -- coming back to a
- * screen that still says "not connected" after connecting is the failure this
- * avoids.
+ * user leaves, approves, and Trakt sends the browser back to the app through
+ * [dev.huelin.watchguru.TraktCallbackActivity]. [load] runs again when the
+ * screen resumes, and that is when it finishes the flow with whatever callback
+ * arrived -- under this app's session, which is what stops a forwarded
+ * authorisation link from connecting somebody else's Trakt account.
  */
 @HiltViewModel
 class TraktViewModel @Inject constructor(
     private val repository: WatchGuruRepository,
+    private val callbacks: TraktCallbacks,
 ) : ViewModel() {
 
     private val _status = MutableStateFlow<UiState<TraktStatusResponse>>(UiState.Loading)
@@ -53,6 +57,10 @@ class TraktViewModel @Inject constructor(
     }
 
     fun load() {
+        callbacks.take()?.let {
+            complete(it)
+            return
+        }
         loading?.cancel()
         loading = viewModelScope.launch {
             _status.value = when (val current = _status.value) {
@@ -84,6 +92,24 @@ class TraktViewModel @Inject constructor(
                 // application, and no amount of retrying changes that.
                 is ApiResult.Failure -> _error.value =
                     "Trakt cannot be connected from this server right now."
+            }
+            _busy.value = false
+        }
+    }
+
+    private fun complete(callback: TraktCallback) {
+        loading?.cancel()
+        loading = viewModelScope.launch {
+            _busy.value = true
+            when (val result = repository.completeTrakt(callback.code, callback.state)) {
+                is ApiResult.Success -> _status.value = UiState.Content(result.value)
+                is ApiResult.Failure -> {
+                    _error.value = "Trakt did not finish connecting. Start again from here."
+                    _status.value = when (val status = repository.traktStatus()) {
+                        is ApiResult.Success -> UiState.Content(status.value)
+                        is ApiResult.Failure -> UiState.Error(status)
+                    }
+                }
             }
             _busy.value = false
         }

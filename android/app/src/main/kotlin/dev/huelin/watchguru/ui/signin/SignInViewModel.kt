@@ -10,6 +10,7 @@ import dev.huelin.watchguru.data.GoogleSignIn
 import dev.huelin.watchguru.data.LocalDataCleaner
 import dev.huelin.watchguru.data.SessionEvents
 import dev.huelin.watchguru.data.SessionRepository
+import dev.huelin.watchguru.data.SignInNonce
 import dev.huelin.watchguru.data.TokenStore
 import dev.huelin.watchguru.data.WatchGuruRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -100,8 +101,11 @@ class SignInViewModel @Inject constructor(
 
         viewModelScope.launch {
             _state.value = AuthState.SigningIn
-            _state.value = when (val result = googleSignIn.signIn(activityContext)) {
-                is GoogleSignIn.Result.Success -> exchange(result.idToken)
+            // Google gets the hash, the backend the raw value: a token that
+            // leaks on its own cannot start a session, nor be used twice.
+            val nonce = SignInNonce.make()
+            _state.value = when (val result = googleSignIn.signIn(activityContext, nonce.hashed)) {
+                is GoogleSignIn.Result.Success -> exchange(result.idToken, nonce)
                 // Dismissing the sheet returns to the sign-in screen rather than
                 // showing an error; the user did not fail at anything.
                 GoogleSignIn.Result.Cancelled -> AuthState.SignedOut
@@ -122,8 +126,8 @@ class SignInViewModel @Inject constructor(
      * renewed without prompting the user again. What is stored is the pair the
      * backend returns, which refreshes silently for thirty days.
      */
-    private suspend fun exchange(providerToken: String): AuthState =
-        when (val result = sessions.exchange(providerToken)) {
+    private suspend fun exchange(providerToken: String, nonce: SignInNonce): AuthState =
+        when (val result = sessions.exchange(providerToken, nonce.raw)) {
             is ApiResult.Success -> {
                 tokens.save(result.value)
                 registerDevice()

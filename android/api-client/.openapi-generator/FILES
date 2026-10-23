@@ -7,6 +7,7 @@ docs/AvailabilityResponse.md
 docs/Bucket.md
 docs/BulkMarkResponse.md
 docs/CommitImport.md
+docs/CompleteTrakt.md
 docs/ConnectMediaServer.md
 docs/EpisodeResponse.md
 docs/ExchangeToken.md
@@ -99,6 +100,7 @@ src/main/kotlin/dev/huelin/watchguru/api/models/AvailabilityResponse.kt
 src/main/kotlin/dev/huelin/watchguru/api/models/Bucket.kt
 src/main/kotlin/dev/huelin/watchguru/api/models/BulkMarkResponse.kt
 src/main/kotlin/dev/huelin/watchguru/api/models/CommitImport.kt
+src/main/kotlin/dev/huelin/watchguru/api/models/CompleteTrakt.kt
 src/main/kotlin/dev/huelin/watchguru/api/models/ConnectMediaServer.kt
 src/main/kotlin/dev/huelin/watchguru/api/models/EpisodeResponse.kt
 src/main/kotlin/dev/huelin/watchguru/api/models/ExchangeToken.kt
@@ -159,6 +161,7 @@ src/test/kotlin/dev/huelin/watchguru/api/models/AvailabilityResponseTest.kt
 src/test/kotlin/dev/huelin/watchguru/api/models/BucketTest.kt
 src/test/kotlin/dev/huelin/watchguru/api/models/BulkMarkResponseTest.kt
 src/test/kotlin/dev/huelin/watchguru/api/models/CommitImportTest.kt
+src/test/kotlin/dev/huelin/watchguru/api/models/CompleteTraktTest.kt
 src/test/kotlin/dev/huelin/watchguru/api/models/ConnectMediaServerTest.kt
 src/test/kotlin/dev/huelin/watchguru/api/models/EpisodeResponseTest.kt
 src/test/kotlin/dev/huelin/watchguru/api/models/ExchangeTokenTest.kt

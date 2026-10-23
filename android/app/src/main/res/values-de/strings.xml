@@ -139,7 +139,7 @@
     <string name="action_trakt_connect">Trakt verbinden</string>
     <string name="action_trakt_sync">Jetzt synchronisieren</string>
     <string name="action_trakt_disconnect">Trennen</string>
-    <string name="trakt_waiting">Bestätige die Verbindung in deinem Browser und komm dann hierher zurück.</string>
+    <string name="trakt_waiting">Bestätige die Verbindung in deinem Browser. Trakt schickt dich direkt hierher zurück.</string>
     <string name="trakt_last_synced">Zuletzt synchronisiert %1$s</string>
     <string name="trakt_recent_syncs">Letzte Synchronisierungen</string>
     <string name="trakt_sync_problems">Konnte nicht zugeordnet werden: %1$s</string>

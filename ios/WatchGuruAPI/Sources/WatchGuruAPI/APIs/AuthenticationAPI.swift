@@ -23,7 +23,7 @@ open class AuthenticationAPI {
     /**
      Exchange a provider ID token for a session
      - POST /api/v1/auth/session
-     - Verifies the provider's ID token and returns an access token and a refresh token issued by this service. Provisions the account on first use.
+     - Verifies the provider's ID token and returns an access token and a refresh token issued by this service. Provisions the account on first use. The token must carry the SHA-256 (lowercase hex) of the nonce sent alongside it, and each token can be exchanged only once.
      - Bearer Token:
        - type: http
        - name: bearerAuth

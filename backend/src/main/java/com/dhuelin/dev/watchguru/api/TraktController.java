@@ -1,6 +1,7 @@
 package com.dhuelin.dev.watchguru.api;
 
 import com.dhuelin.dev.watchguru.api.dto.ApiMapper;
+import com.dhuelin.dev.watchguru.api.dto.Requests;
 import com.dhuelin.dev.watchguru.api.dto.Responses;
 import com.dhuelin.dev.watchguru.security.CurrentUserService;
 import com.dhuelin.dev.watchguru.streaming.domain.LinkedStreamingAccount;
@@ -8,10 +9,12 @@ import com.dhuelin.dev.watchguru.streaming.repository.SyncRunRepository;
 import com.dhuelin.dev.watchguru.streaming.trakt.TraktConnectionService;
 import com.dhuelin.dev.watchguru.streaming.trakt.TraktSyncService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -28,6 +31,11 @@ import java.util.Optional;
  * token is sealed with a key from the deployment's configuration and never
  * reaches either app -- which is also why the OAuth exchange happens on the
  * server: a client secret shipped in two app binaries is not a secret.
+ *
+ * <p>The flow is: {@code authorize} returns a trakt.tv URL; the app opens it
+ * in a browser session; Trakt redirects to the callback, which redirects to
+ * the app's own scheme; the app posts the code and state to {@code complete}.
+ * The last hop is what makes it safe -- see {@link #complete}.
  *
  * <p>Trakt is the integration worth having, because other people solved the
  * hard part: anybody scrobbling from Plex, Kodi or Infuse already has their
@@ -67,8 +75,24 @@ public class TraktController {
     public Responses.TraktAuthorizationResponse authorize() {
         String url = connections.authorizeUrl(currentUser.require(), requestBaseUrl());
         return new Responses.TraktAuthorizationResponse(url,
-                "Open this in a browser and approve. Come back to the app when Trakt says you can "
-                        + "close the page.");
+                "Open this in a browser and approve. Trakt sends you back to the app, which "
+                        + "finishes connecting.");
+    }
+
+    /**
+     * Finishes an authorisation with the code Trakt returned.
+     *
+     * <p>Called by the app once the browser hands it the callback, and
+     * authenticated with the app's own session. That is the check the browser
+     * callback could never make: the flow is completed only for the account
+     * that started it, so an authorisation link forwarded to somebody else
+     * connects nothing.
+     */
+    @PostMapping("/complete")
+    @Operation(operationId = "completeTrakt")
+    public Responses.TraktStatusResponse complete(@Valid @RequestBody Requests.CompleteTrakt request) {
+        connections.complete(currentUser.require(), request.state(), request.code(), requestBaseUrl());
+        return status();
     }
 
     /** Whether Trakt is connected, and what the last few syncs did. */

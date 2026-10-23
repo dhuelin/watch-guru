@@ -22,3 +22,26 @@ struct TraktAuthorizationURLTests {
         #expect(!TraktModel.isTraktAuthorizationURL(url))
     }
 }
+
+/// Only the backend's redirect to the app's own scheme completes a connection.
+struct TraktCallbackURLTests {
+
+    @Test func readsCodeAndState() throws {
+        let url = try #require(URL(string: "watchguru://trakt/callback?code=abc&state=s%2Ft"))
+        let parameters = try #require(TraktModel.callbackParameters(url))
+        #expect(parameters.code == "abc")
+        #expect(parameters.state == "s/t")
+    }
+
+    @Test func refusesAnythingElse() throws {
+        for value in [
+            "https://trakt.tv/callback?code=a&state=b",
+            "watchguru://other/callback?code=a&state=b",
+            "watchguru://trakt/callback?code=a",
+            "watchguru://trakt/callback?code=&state=b",
+        ] {
+            let url = try #require(URL(string: value))
+            #expect(TraktModel.callbackParameters(url) == nil)
+        }
+    }
+}

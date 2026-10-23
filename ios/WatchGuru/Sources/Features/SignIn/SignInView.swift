@@ -34,6 +34,12 @@ struct SignInView: View {
                 // authorisation and never again; .email so the backend can link
                 // an Apple account to a Google one for the same person.
                 request.requestedScopes = [.fullName, .email]
+                // Apple gets only the hash; the raw value goes to Watch Guru
+                // with the token, which is what makes the token single-use.
+                // The button calls this on the main thread, but its closure
+                // type does not say so, hence assumeIsolated rather than a
+                // Task: the nonce has to be on the request before it returns.
+                request.nonce = MainActor.assumeIsolated { model.beginSignIn().hashed }
             } onCompletion: { result in
                 Task { await model.complete(result) }
             }

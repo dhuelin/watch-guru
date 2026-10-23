@@ -43,6 +43,30 @@
         </activity>
 
         <!--
+          Where the browser lands after Trakt. Exported and BROWSABLE because a
+          browser has to be able to open it; it trusts nothing it is given,
+          only passing the code and state on to be finished under this app's
+          session. No screen of its own, so it is translucent and leaves no
+          trace in Recents.
+        -->
+        <activity
+            android:name=".TraktCallbackActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="watchguru"
+                    android:host="trakt"
+                    android:path="/callback" />
+            </intent-filter>
+        </activity>
+
+        <!--
           The home-screen widget. exported="true" is required: the launcher is
           another app and has to be able to bind it.
         -->
