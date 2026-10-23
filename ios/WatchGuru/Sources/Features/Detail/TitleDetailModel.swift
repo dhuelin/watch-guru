@@ -200,7 +200,7 @@ final class TitleDetailModel {
 
     /// Nil becomes `clearRating` rather than a nil rating: the generated client
     /// drops nil fields, and the server reads a missing rating as "unchanged".
-    static func ratingUpdate(_ rating: Int?) -> UpdateWatchlistItem {
+    nonisolated static func ratingUpdate(_ rating: Int?) -> UpdateWatchlistItem {
         guard let rating else { return UpdateWatchlistItem(clearRating: true) }
         return UpdateWatchlistItem(rating: Double(rating))
     }
