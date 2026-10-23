@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.layout.layout
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -29,6 +27,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -42,8 +42,8 @@ import dev.huelin.watchguru.api.models.SeasonsResponse
 import dev.huelin.watchguru.api.models.TitleProgress
 import dev.huelin.watchguru.api.models.TitleResponse
 import dev.huelin.watchguru.api.models.UpdateWatchlistItem
-import dev.huelin.watchguru.ui.components.ErrorView
 import dev.huelin.watchguru.ui.components.Backdrop
+import dev.huelin.watchguru.ui.components.ErrorView
 import dev.huelin.watchguru.ui.components.Poster
 import dev.huelin.watchguru.ui.components.UiState
 import java.time.LocalDate
@@ -261,13 +261,6 @@ private fun TitleDetailContent(
 }
 
 /**
- * Where the user is, and the single action that moves them forward.
- *
- * The whole product is judged on this button. It is full width and reachable
- * without scrolling on a detail screen, because people press it repeatedly,
- * on a sofa, one-handed.
- */
-/**
  * The backdrop across the top, the poster overlapping its faded lower edge,
  * and the title and its details beside the poster on the plain screen.
  *
@@ -341,6 +334,13 @@ private fun DetailHeader(title: TitleResponse) {
     }
 }
 
+/**
+ * Where the user is, and the single action that moves them forward.
+ *
+ * The whole product is judged on this button. It is full width and reachable
+ * without scrolling on a detail screen, because people press it repeatedly,
+ * on a sofa, one-handed.
+ */
 @Composable
 private fun EpisodeProgress(
     progress: TitleProgress,
