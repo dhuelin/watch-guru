@@ -31,6 +31,7 @@ import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import kotlin.math.abs
 
 /**
  * A row that records a viewing when swiped from the start edge.
@@ -73,7 +74,9 @@ fun SwipeToMark(
             // thresholds are made for dismissing with an undo: 56dp, or any
             // flick at all, which here would untick an episode from a
             // slightly diagonal scroll, with nothing to take it back.
-            val far = state.requireOffset() >= width * FIRE_FRACTION
+            // Absolute: in a right-to-left layout a swipe from the start
+            // edge moves the row left, so its offset is negative.
+            val far = abs(state.requireOffset()) >= width * FIRE_FRACTION
             if (value == SwipeToDismissBoxValue.StartToEnd && far) {
                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                 currentOnSwipe.value()
