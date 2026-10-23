@@ -84,8 +84,10 @@ Where they differ, they differ on purpose:
   title; removal asks first, with a `confirmationDialog`.
 - `ContentUnavailableView` for empty and error states, so they inherit the
   system's layout and Dynamic Type behaviour.
-- Semantic system colours, so dark mode and increased contrast come free —
-  where Android uses Material 3 dynamic colour drawn from the wallpaper.
+- Semantic system colours, so dark mode and increased contrast come free,
+  plus three brand roles in the asset catalog (accent, screen, card). Lists of
+  titles are cards on the tinted screen: see `Design/Surfaces.swift` and the
+  Colour and Surfaces sections of `docs/DESIGN.md`.
 
 ## Sign-in
 

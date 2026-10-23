@@ -12,7 +12,17 @@ import androidx.compose.ui.unit.sp
  * Sizes are in sp throughout so the user's font-size setting is honoured; no
  * screen may hardcode a dp text size.
  */
-val WatchGuruTypography = Typography()
+val WatchGuruTypography = Typography().let { base ->
+    // Heavier titles than Material's defaults: at Regular weight a screen's
+    // name and a title's name are no louder than the metadata under them.
+    base.copy(
+        headlineLarge = base.headlineLarge.copy(fontWeight = FontWeight.Bold),
+        headlineMedium = base.headlineMedium.copy(fontWeight = FontWeight.Bold),
+        headlineSmall = base.headlineSmall.copy(fontWeight = FontWeight.Bold),
+        titleLarge = base.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+        titleMedium = base.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+    )
+}
 
 /**
  * For anything that changes in place: a progress counter, an episode count, a

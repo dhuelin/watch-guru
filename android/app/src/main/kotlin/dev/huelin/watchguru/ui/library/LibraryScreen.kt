@@ -1,7 +1,6 @@
 package dev.huelin.watchguru.ui.library
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -39,6 +38,8 @@ import dev.huelin.watchguru.R
 import dev.huelin.watchguru.api.apis.WatchlistControllerApi
 import dev.huelin.watchguru.api.models.WatchlistItemResponse
 import dev.huelin.watchguru.ui.components.ErrorView
+import dev.huelin.watchguru.ui.components.RowCard
+import dev.huelin.watchguru.ui.components.RowCardList
 import dev.huelin.watchguru.ui.components.FullScreenMessage
 import dev.huelin.watchguru.ui.components.SkeletonList
 import dev.huelin.watchguru.ui.components.Poster
@@ -83,7 +84,11 @@ fun LibraryScreen(
 
             val content = items.contentOrNull()
             when {
-                content != null -> LazyColumn(modifier = Modifier.fillMaxSize()) {
+                content != null -> LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = RowCardList.contentPadding,
+                    verticalArrangement = RowCardList.spacing,
+                ) {
                     items(content, key = { it.id }) { item ->
                         LibraryRow(item = item, onOpen = { onOpenTitle(TitleId(item.title.id)) })
                     }
@@ -109,66 +114,67 @@ fun LibraryScreen(
 private fun LibraryRow(item: WatchlistItemResponse, onOpen: () -> Unit) {
     val style = item.status.style()
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onOpen)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Poster(url = item.title.posterUrl, title = item.title.primaryTitle, modifier = Modifier.width(56.dp))
+    RowCard(onClick = onOpen) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Poster(url = item.title.posterUrl, title = item.title.primaryTitle, modifier = Modifier.width(64.dp))
 
-        Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
-            Text(
-                text = item.title.primaryTitle,
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // Icon and label alongside the colour: status is never conveyed
-                // by colour alone.
-                Icon(
-                    imageVector = style.icon,
-                    contentDescription = null,
-                    tint = style.color,
-                    modifier = Modifier.width(16.dp),
-                )
+            Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
                 Text(
-                    text = stringResource(style.label),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = style.color,
-                    modifier = Modifier.padding(start = 4.dp),
+                    text = item.title.primaryTitle,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
-            }
 
-            // Progress now arrives with the list itself, gathered for the
-            // whole page in one query, so this costs no extra request. It is
-            // null for films, which have no episode progress -- a bar there
-            // would be meaningless rather than merely empty.
-            item.progress?.let { progress ->
-                val progressLabel = pluralStringResource(
-                    R.plurals.cd_progress,
-                    progress.airedEpisodes,
-                    progress.watchedEpisodes,
-                    progress.airedEpisodes,
-                )
-                LinearProgressIndicator(
-                    progress = { progress.watchedEpisodes.toFloat() / progress.airedEpisodes.coerceAtLeast(1) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 6.dp)
-                        // Read as a sentence rather than a percentage a screen
-                        // reader has to interpret.
-                        .semantics { contentDescription = progressLabel },
-                )
-                Text(
-                    text = "${progress.watchedEpisodes} / ${progress.airedEpisodes}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 2.dp),
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Icon and label alongside the colour: status is never conveyed
+                    // by colour alone.
+                    Icon(
+                        imageVector = style.icon,
+                        contentDescription = null,
+                        tint = style.color,
+                        modifier = Modifier.width(16.dp),
+                    )
+                    Text(
+                        text = stringResource(style.label),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = style.color,
+                        modifier = Modifier.padding(start = 4.dp),
+                    )
+                }
+
+                // Progress now arrives with the list itself, gathered for the
+                // whole page in one query, so this costs no extra request. It is
+                // null for films, which have no episode progress -- a bar there
+                // would be meaningless rather than merely empty.
+                item.progress?.let { progress ->
+                    val progressLabel = pluralStringResource(
+                        R.plurals.cd_progress,
+                        progress.airedEpisodes,
+                        progress.watchedEpisodes,
+                        progress.airedEpisodes,
+                    )
+                    LinearProgressIndicator(
+                        progress = { progress.watchedEpisodes.toFloat() / progress.airedEpisodes.coerceAtLeast(1) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 6.dp)
+                            // Read as a sentence rather than a percentage a screen
+                            // reader has to interpret.
+                            .semantics { contentDescription = progressLabel },
+                    )
+                    Text(
+                        text = "${progress.watchedEpisodes} / ${progress.airedEpisodes}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 2.dp),
+                    )
+                }
             }
         }
     }

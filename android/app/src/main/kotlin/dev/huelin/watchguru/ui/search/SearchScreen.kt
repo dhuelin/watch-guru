@@ -1,6 +1,5 @@
 package dev.huelin.watchguru.ui.search
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.size
@@ -47,6 +46,8 @@ import dev.huelin.watchguru.api.models.LibraryEntry
 import dev.huelin.watchguru.api.models.SearchHit
 import dev.huelin.watchguru.api.models.WatchlistItemResponse
 import dev.huelin.watchguru.ui.components.ErrorView
+import dev.huelin.watchguru.ui.components.RowCard
+import dev.huelin.watchguru.ui.components.RowCardList
 import dev.huelin.watchguru.ui.components.FullScreenMessage
 import dev.huelin.watchguru.ui.components.SkeletonList
 import dev.huelin.watchguru.ui.components.Poster
@@ -127,7 +128,11 @@ fun SearchScreen(
 
             val content = state.contentOrNull()
             when {
-                content != null -> LazyColumn(modifier = Modifier.fillMaxSize()) {
+                content != null -> LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = RowCardList.contentPadding,
+                    verticalArrangement = RowCardList.spacing,
+                ) {
                     if (!isSearching) {
                         // Labelled, because an unlabelled list of films on a
                         // search screen reads as results for something the
@@ -137,7 +142,7 @@ fun SearchScreen(
                                 text = stringResource(R.string.trending_this_week),
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp),
+                                modifier = Modifier.padding(start = 4.dp, top = 4.dp),
                             )
                         }
                     }
@@ -191,67 +196,68 @@ private fun SearchResultRow(
     onOpen: () -> Unit,
     onAdd: () -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = !opening, onClick = onOpen)
-            .padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Poster(url = hit.posterUrl, title = hit.title, modifier = Modifier.width(56.dp))
-            // Over the poster, because opening a result now waits on an import
-            // and a tap with no visible answer gets tapped again.
-            if (opening) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    strokeWidth = 2.dp,
-                )
-            }
-        }
-
-        Column(
+    RowCard(onClick = onOpen, enabled = !opening) {
+        Row(
             modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 12.dp),
+                .fillMaxWidth()
+                .padding(start = 10.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = hit.title,
-                style = MaterialTheme.typography.titleMedium,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            // Read before buildString, not inside it: stringResource is a
-            // composable and buildString's lambda is not one, so the call has
-            // to happen out here.
-            val type = stringResource(
-                when (hit.titleType) {
-                    SearchHit.TitleType.MOVIE -> R.string.title_type_film
-                    SearchHit.TitleType.TV_SERIES -> R.string.title_type_series
-                },
-            )
-            Text(
-                text = buildString {
-                    append(type)
-                    hit.releaseDate?.let { append(" · ${it.year}") }
-                    // A null rating is omitted rather than shown as 0.0: most
-                    // titles genuinely have no rating yet.
-                    hit.providerRating?.let { append(" · ${it.stripTrailingZeros().toPlainString()}") }
-                },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            if (addedAs != null) {
-                AddedBadge(addedAs)
+            Box(contentAlignment = Alignment.Center) {
+                Poster(url = hit.posterUrl, title = hit.title, modifier = Modifier.width(64.dp))
+                // Over the poster, because opening a result now waits on an import
+                // and a tap with no visible answer gets tapped again.
+                if (opening) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp,
+                    )
+                }
             }
-        }
 
-        AddControl(
-            title = hit.title,
-            added = addedAs != null,
-            adding = adding,
-            onAdd = onAdd,
-        )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp),
+            ) {
+                Text(
+                    text = hit.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                // Read before buildString, not inside it: stringResource is a
+                // composable and buildString's lambda is not one, so the call has
+                // to happen out here.
+                val type = stringResource(
+                    when (hit.titleType) {
+                        SearchHit.TitleType.MOVIE -> R.string.title_type_film
+                        SearchHit.TitleType.TV_SERIES -> R.string.title_type_series
+                    },
+                )
+                Text(
+                    text = buildString {
+                        append(type)
+                        hit.releaseDate?.let { append(" · ${it.year}") }
+                        // A null rating is omitted rather than shown as 0.0: most
+                        // titles genuinely have no rating yet.
+                        hit.providerRating?.let { append(" · ${it.stripTrailingZeros().toPlainString()}") }
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                if (addedAs != null) {
+                    AddedBadge(addedAs)
+                }
+            }
+
+            AddControl(
+                title = hit.title,
+                added = addedAs != null,
+                adding = adding,
+                onAdd = onAdd,
+            )
+        }
     }
 }
 
