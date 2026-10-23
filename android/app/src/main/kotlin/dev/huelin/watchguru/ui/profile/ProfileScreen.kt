@@ -17,6 +17,9 @@ import androidx.compose.material.icons.outlined.UploadFile
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -27,6 +30,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import dev.huelin.watchguru.api.models.UserResponse
 import dev.huelin.watchguru.data.AccountIdentity
+import dev.huelin.watchguru.data.Appearance
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -93,6 +97,7 @@ fun ProfileScreen(
     val accountError by signIn.accountError.collectAsStateWithLifecycle()
     val regionError by viewModel.regionError.collectAsStateWithLifecycle()
     val savingRegion by viewModel.savingRegion.collectAsStateWithLifecycle()
+    val appearance by viewModel.appearance.collectAsStateWithLifecycle()
     var confirmingDelete by rememberSaveable { mutableStateOf(false) }
     var choosingRegion by rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -240,6 +245,16 @@ fun ProfileScreen(
                     onClick = onOpenNotifications,
                 )
 
+                // Three segments rather than a row that opens a dialog: there
+                // are only three answers, and the current one should show
+                // without a tap.
+                GroupHeader(stringResource(R.string.profile_group_appearance))
+                AppearanceChoice(
+                    selected = appearance,
+                    onSelect = viewModel::setAppearance,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
                 ListItem(
@@ -348,6 +363,35 @@ private fun GroupHeader(text: String) {
             .padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 4.dp)
             .semantics { heading() },
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AppearanceChoice(
+    selected: Appearance,
+    onSelect: (Appearance) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val options = Appearance.entries
+    SingleChoiceSegmentedButtonRow(modifier = modifier.fillMaxWidth()) {
+        options.forEachIndexed { index, option ->
+            SegmentedButton(
+                selected = option == selected,
+                onClick = { onSelect(option) },
+                shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+            ) {
+                Text(
+                    stringResource(
+                        when (option) {
+                            Appearance.SYSTEM -> R.string.appearance_system
+                            Appearance.LIGHT -> R.string.appearance_light
+                            Appearance.DARK -> R.string.appearance_dark
+                        },
+                    ),
+                )
+            }
+        }
+    }
 }
 
 /** A row that opens another screen: icon, title, what it is for, chevron. */

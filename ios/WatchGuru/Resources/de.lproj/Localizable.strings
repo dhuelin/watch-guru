@@ -156,6 +156,10 @@
 "Connect Plex" = "Plex verbinden";
 "Delete account" = "Konto löschen";
 "Deleting your account removes your library, progress and history permanently." = "Das Löschen deines Kontos entfernt deine Bibliothek, deinen Fortschritt und deinen Verlauf dauerhaft.";
+"Appearance" = "Erscheinungsbild";
+"System" = "System";
+"Light" = "Hell";
+"Dark" = "Dunkel";
 "Preferences" = "Einstellungen";
 "Search countries" = "Länder suchen";
 "Sign out" = "Abmelden";

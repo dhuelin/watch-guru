@@ -348,6 +348,10 @@
     <string name="profile_group_viewing">Your viewing</string>
     <string name="profile_group_connections">Connections</string>
     <string name="profile_group_data">Data</string>
+    <string name="profile_group_appearance">Appearance</string>
+    <string name="appearance_system">System</string>
+    <string name="appearance_light">Light</string>
+    <string name="appearance_dark">Dark</string>
     <string name="profile_history_detail">Everything you have watched, day by day</string>
     <string name="profile_stats_detail">Time watched, streaks and favourites</string>
     <string name="profile_region_value">Showing offers for %1$s</string>

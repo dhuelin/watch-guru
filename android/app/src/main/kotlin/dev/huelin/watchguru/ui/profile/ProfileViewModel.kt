@@ -6,6 +6,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dev.huelin.watchguru.api.models.UpdateProfile
 import dev.huelin.watchguru.api.models.UserResponse
 import dev.huelin.watchguru.data.ApiResult
+import dev.huelin.watchguru.data.Appearance
+import dev.huelin.watchguru.data.AppearanceStore
 import dev.huelin.watchguru.data.ProfileEvents
 import dev.huelin.watchguru.data.WatchGuruRepository
 import dev.huelin.watchguru.data.valueOrNull
@@ -22,7 +24,12 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val repository: WatchGuruRepository,
     private val profileEvents: ProfileEvents,
+    private val appearanceStore: AppearanceStore,
 ) : ViewModel() {
+
+    val appearance: StateFlow<Appearance> = appearanceStore.appearance
+
+    fun setAppearance(appearance: Appearance) = appearanceStore.set(appearance)
 
     private val _profile = MutableStateFlow<UiState<UserResponse>>(UiState.Loading)
     val profile: StateFlow<UiState<UserResponse>> = _profile.asStateFlow()
