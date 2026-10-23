@@ -34,15 +34,16 @@ struct SearchView: View {
                     if !model.isSearching {
                         // Named, because an unlabelled list of films on a
                         // search screen reads as results for something the user
-                        // did not type.
-                        Section("Trending this week") {
-                            rows(hits, model: model)
+                        // did not type. A header with no rows of its own: each
+                        // result is a card, and a card is a section, which
+                        // cannot sit inside another one.
+                        Section {} header: {
+                            Text("Trending this week")
                         }
-                    } else {
-                        rows(hits, model: model)
                     }
+                    rows(hits, model: model)
                 }
-                .listStyle(.plain)
+                .cardList()
             } else {
                 switch model.visible {
                 case .loading:
@@ -74,28 +75,30 @@ struct SearchView: View {
     @ViewBuilder
     private func rows(_ hits: [SearchHit], model: SearchModel) -> some View {
         ForEach(hits, id: \.providerId) { hit in
-            // The server's entry covers anything added before this screen
-            // opened, on this device or another; `added` covers what was added
-            // since, without waiting for a reload.
-            let alreadyAdded = hit.library != nil || model.added.contains(hit.providerId)
-            NavigationLink(value: ProviderTitle(hit)) {
-                SearchResultRow(
-                    hit: hit,
-                    alreadyAdded: alreadyAdded,
-                    isAdding: model.adding.contains(hit.providerId),
-                    add: { Task { await model.addToLibrary(hit) } }
-                )
-            }
-            // Kept as a shortcut beside the visible button. On its own it was
-            // the only way to add from here, and nothing on screen said so.
-            .swipeActions(edge: .trailing) {
-                if !alreadyAdded {
-                    Button {
-                        Task { await model.addToLibrary(hit) }
-                    } label: {
-                        Label("Add", systemImage: "plus")
+            CardRow {
+                // The server's entry covers anything added before this screen
+                // opened, on this device or another; `added` covers what was added
+                // since, without waiting for a reload.
+                let alreadyAdded = hit.library != nil || model.added.contains(hit.providerId)
+                NavigationLink(value: ProviderTitle(hit)) {
+                    SearchResultRow(
+                        hit: hit,
+                        alreadyAdded: alreadyAdded,
+                        isAdding: model.adding.contains(hit.providerId),
+                        add: { Task { await model.addToLibrary(hit) } }
+                    )
+                }
+                // Kept as a shortcut beside the visible button. On its own it was
+                // the only way to add from here, and nothing on screen said so.
+                .swipeActions(edge: .trailing) {
+                    if !alreadyAdded {
+                        Button {
+                            Task { await model.addToLibrary(hit) }
+                        } label: {
+                            Label("Add", systemImage: "plus")
+                        }
+                        .tint(.accentColor)
                     }
-                    .tint(.accentColor)
                 }
             }
         }
@@ -111,7 +114,7 @@ private struct SearchResultRow: View {
     var body: some View {
         HStack(spacing: 12) {
             PosterView(url: hit.posterUrl.flatMap(URL.init(string:)), title: hit.title)
-                .frame(width: 48)
+                .frame(width: 56)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(hit.title)

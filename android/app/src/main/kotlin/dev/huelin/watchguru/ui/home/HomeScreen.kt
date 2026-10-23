@@ -1,7 +1,5 @@
 package dev.huelin.watchguru.ui.home
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,8 +11,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.PlayCircle
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -48,6 +44,8 @@ import dev.huelin.watchguru.R
 import dev.huelin.watchguru.api.models.UpNextResponse
 import dev.huelin.watchguru.ui.components.ErrorView
 import dev.huelin.watchguru.ui.components.FullScreenMessage
+import dev.huelin.watchguru.ui.components.RowCard
+import dev.huelin.watchguru.ui.components.RowCardList
 import dev.huelin.watchguru.ui.components.SkeletonList
 import dev.huelin.watchguru.ui.components.SwipeToMark
 import dev.huelin.watchguru.ui.components.markAction
@@ -124,8 +122,8 @@ fun HomeScreen(
         when {
             content != null -> LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(padding),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = RowCardList.contentPadding,
+                verticalArrangement = RowCardList.spacing,
             ) {
                 items(content, key = { it.titleId }) { entry ->
                     UpNextCard(
@@ -174,18 +172,19 @@ private fun UpNextCard(
     SwipeToMark(
         enabled = !busy,
         onSwipe = onMarkWatched,
-        shape = CardDefaults.shape,
+        shape = MaterialTheme.shapes.large,
     ) {
-        Card(modifier = Modifier.fillMaxWidth()) {
+        RowCard(
+            onClick = onOpen,
+            // On the node TalkBack focuses, the clickable card.
+            modifier = Modifier.markAction(enabled = !busy, label = markLabel, onAction = onMarkWatched),
+        ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(onClick = onOpen)
-                    // On the node TalkBack focuses, the clickable row.
-                    .markAction(enabled = !busy, label = markLabel, onAction = onMarkWatched)
                     .padding(12.dp),
             ) {
-                Poster(url = entry.posterUrl, title = entry.primaryTitle, modifier = Modifier.width(64.dp))
+                Poster(url = entry.posterUrl, title = entry.primaryTitle, modifier = Modifier.width(80.dp))
 
                 Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
                     Text(

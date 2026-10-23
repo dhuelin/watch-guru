@@ -42,32 +42,36 @@ struct HomeView: View {
     @ViewBuilder
     private func content(_ model: HomeModel) -> some View {
         if let entries = model.state.value {
-            List(entries, id: \.titleId) { entry in
-                NavigationLink(value: entry.titleId) {
-                    UpNextRow(
-                        entry: entry,
-                        busy: model.marking.contains(entry.titleId)
-                    ) {
-                        Task { await model.markWatched(entry) }
-                    }
-                }
-                // The same call as the row's button, through the offline
-                // queue; the button stays, since a swipe is never found by
-                // someone who was not shown it. From the trailing edge, as
-                // on the title screen's episodes, where the leading one
-                // belongs to going back: one direction to learn for marking.
-                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                    if !model.marking.contains(entry.titleId) {
-                        Button {
-                            Task { await model.markWatched(entry) }
-                        } label: {
-                            Label("Mark watched", systemImage: "checkmark.circle")
+            List {
+                ForEach(entries, id: \.titleId) { entry in
+                    CardRow {
+                        NavigationLink(value: entry.titleId) {
+                            UpNextRow(
+                                entry: entry,
+                                busy: model.marking.contains(entry.titleId)
+                            ) {
+                                Task { await model.markWatched(entry) }
+                            }
                         }
-                        .tint(.accentColor)
+                        // The same call as the row's button, through the offline
+                        // queue; the button stays, since a swipe is never found by
+                        // someone who was not shown it. From the trailing edge, as
+                        // on the title screen's episodes, where the leading one
+                        // belongs to going back: one direction to learn for marking.
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            if !model.marking.contains(entry.titleId) {
+                                Button {
+                                    Task { await model.markWatched(entry) }
+                                } label: {
+                                    Label("Mark watched", systemImage: "checkmark.circle")
+                                }
+                                .tint(.accentColor)
+                            }
+                        }
                     }
                 }
             }
-            .listStyle(.plain)
+            .cardList()
             .refreshable { await model.load() }
             .navigationDestination(for: Int64.self) { TitleDetailView(titleId: $0) }
         } else {
@@ -105,7 +109,7 @@ private struct UpNextRow: View {
 
         layout {
             PosterView(url: entry.posterUrl.flatMap(URL.init(string:)), title: entry.primaryTitle)
-                .frame(width: large ? 96 : 56)
+                .frame(width: large ? 96 : 72)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(entry.primaryTitle).font(.headline).lineLimit(large ? 3 : 1)
