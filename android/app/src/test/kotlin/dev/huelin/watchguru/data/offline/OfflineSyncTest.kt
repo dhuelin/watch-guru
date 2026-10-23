@@ -294,4 +294,30 @@ class OfflineSyncTest {
         assertNull(mark.clientRef)
         assertEquals(4L, mark.episodeId)
     }
+
+    @Test
+    fun `a cleared rating survives a restart`() {
+        // Without the flag a rating cleared offline would replay as an empty
+        // update, and the old score would come back on the next reload.
+        val files = InMemoryFileStore()
+        queue(files).enqueue { PendingMutation.UpdateLibraryItem(it, itemId = 7, clearRating = true) }
+
+        val update = queue(files).pending().single() as PendingMutation.UpdateLibraryItem
+        assertEquals(true, update.clearRating)
+        assertNull(update.rating)
+    }
+
+    @Test
+    fun `a library update queued before ratings could be cleared still replays`() {
+        val files = InMemoryFileStore()
+        val current = json.encodeToString(
+            ListSerializer(PendingMutation.serializer()),
+            listOf(PendingMutation.UpdateLibraryItem(id = 1, itemId = 7, rating = 8.0, clearRating = false)),
+        )
+        files.write("pending-mutations.json", current.replace(""","clearRating":false""", ""))
+
+        val update = queue(files).pending().single() as PendingMutation.UpdateLibraryItem
+        assertNull(update.clearRating)
+        assertEquals(8.0, update.rating!!, 0.0)
+    }
 }

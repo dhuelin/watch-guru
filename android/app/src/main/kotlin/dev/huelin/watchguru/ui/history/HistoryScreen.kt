@@ -4,7 +4,6 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,7 +16,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.History
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -57,6 +55,7 @@ import dev.huelin.watchguru.api.models.WatchEventResponse
 import dev.huelin.watchguru.data.HistoryDays
 import dev.huelin.watchguru.ui.components.ErrorView
 import dev.huelin.watchguru.ui.components.FullScreenMessage
+import dev.huelin.watchguru.ui.components.SkeletonList
 import dev.huelin.watchguru.ui.components.UiState
 import dev.huelin.watchguru.ui.components.contentOrNull
 import dev.huelin.watchguru.ui.components.failureMessage
@@ -189,11 +188,10 @@ fun HistoryScreen(
                 }
             }
 
-            events is UiState.Loading -> Column(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) { CircularProgressIndicator() }
+            events is UiState.Loading -> SkeletonList(
+                modifier = Modifier.padding(padding),
+                posterWidth = null,
+            )
 
             events is UiState.Error -> ErrorView(
                 failure = (events as UiState.Error).failure,

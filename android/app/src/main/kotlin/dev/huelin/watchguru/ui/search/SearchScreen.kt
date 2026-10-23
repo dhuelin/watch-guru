@@ -43,10 +43,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.huelin.watchguru.R
+import dev.huelin.watchguru.api.models.LibraryEntry
 import dev.huelin.watchguru.api.models.SearchHit
 import dev.huelin.watchguru.api.models.WatchlistItemResponse
 import dev.huelin.watchguru.ui.components.ErrorView
 import dev.huelin.watchguru.ui.components.FullScreenMessage
+import dev.huelin.watchguru.ui.components.SkeletonList
 import dev.huelin.watchguru.ui.components.Poster
 import dev.huelin.watchguru.ui.components.UiState
 import dev.huelin.watchguru.ui.components.contentOrNull
@@ -142,7 +144,9 @@ fun SearchScreen(
                     items(content, key = { it.providerId }) { hit ->
                         SearchResultRow(
                             hit = hit,
-                            addedAs = added[hit.providerId],
+                            // The server's entry covers anything added before
+                            // this screen opened, here or on another device.
+                            addedAs = added[hit.providerId] ?: hit.library?.let(::libraryStatus),
                             adding = hit.providerId in adding,
                             opening = opening == hit.providerId,
                             onOpen = { viewModel.open(hit) },
@@ -151,12 +155,7 @@ fun SearchScreen(
                     }
                 }
 
-                // Near the top rather than centred: with the keyboard up, the
-                // middle of the screen is behind it.
-                state is UiState.Loading -> Column(
-                    modifier = Modifier.fillMaxSize().padding(top = 48.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) { CircularProgressIndicator() }
+                state is UiState.Loading -> SkeletonList()
 
                 state is UiState.Error -> ErrorView(
                     failure = (state as UiState.Error).failure,
@@ -315,3 +314,7 @@ private fun AddControl(
         }
     }
 }
+
+/** A library entry's status as the badge draws it; null for one this build does not know. */
+private fun libraryStatus(entry: LibraryEntry): WatchlistItemResponse.Status? =
+    WatchlistItemResponse.Status.entries.firstOrNull { it.value == entry.status.value }

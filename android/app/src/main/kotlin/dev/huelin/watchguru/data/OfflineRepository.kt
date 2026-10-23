@@ -185,6 +185,7 @@ class OfflineRepository(
                 itemId = itemId,
                 status = update.status?.name,
                 rating = update.rating?.toDouble(),
+                clearRating = update.clearRating,
             )
         }
 
@@ -266,6 +267,7 @@ class OfflineRepository(
             mutation.itemId,
             UpdateWatchlistItem(
                 rating = mutation.rating?.toBigDecimal(),
+                clearRating = mutation.clearRating,
                 status = mutation.status
                     ?.let { runCatching { UpdateWatchlistItem.Status.valueOf(it) }.getOrNull() },
             ),

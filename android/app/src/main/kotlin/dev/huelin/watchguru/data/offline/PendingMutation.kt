@@ -114,6 +114,8 @@ sealed interface PendingMutation {
      *   rating queued offline is otherwise dropped on replay -- the mutation
      *   would be sent with only its status and quietly forget what the user
      *   actually typed.
+     * @param clearRating true when the user took their rating back. Defaulted
+     *   so that anything queued by an older build still decodes.
      */
     @Serializable
     data class UpdateLibraryItem(
@@ -121,6 +123,7 @@ sealed interface PendingMutation {
         val itemId: Long,
         val status: String? = null,
         val rating: Double? = null,
+        val clearRating: Boolean? = null,
     ) : PendingMutation {
         override val target: String get() = "item:$itemId"
     }

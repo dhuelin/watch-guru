@@ -15,7 +15,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.VideoLibrary
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -41,6 +40,7 @@ import dev.huelin.watchguru.api.apis.WatchlistControllerApi
 import dev.huelin.watchguru.api.models.WatchlistItemResponse
 import dev.huelin.watchguru.ui.components.ErrorView
 import dev.huelin.watchguru.ui.components.FullScreenMessage
+import dev.huelin.watchguru.ui.components.SkeletonList
 import dev.huelin.watchguru.ui.components.Poster
 import dev.huelin.watchguru.ui.components.UiState
 import dev.huelin.watchguru.ui.components.contentOrNull
@@ -89,11 +89,7 @@ fun LibraryScreen(
                     }
                 }
 
-                items is UiState.Loading -> Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                ) { CircularProgressIndicator() }
+                items is UiState.Loading -> SkeletonList()
 
                 items is UiState.Error -> ErrorView(
                     failure = (items as UiState.Error).failure,
