@@ -57,6 +57,11 @@ final class SignInModel {
     private let client: WatchGuruClient
     private let sessions: SessionClient
 
+    /// The nonce of the sign-in in progress, from the moment Apple's sheet is
+    /// asked for until its result arrives. Not observed: nothing renders it.
+    @ObservationIgnored
+    private var pendingNonce: SignInNonce?
+
     init(tokens: TokenStore, client: WatchGuruClient, sessions: SessionClient) {
         self.tokens = tokens
         self.client = client
@@ -64,11 +69,24 @@ final class SignInModel {
         state = tokens.tokens() == nil ? .signedOut : .signedIn
     }
 
+    /// Starts a sign-in: a fresh nonce, whose hash goes into Apple's request.
+    func beginSignIn() -> SignInNonce {
+        let nonce = SignInNonce.make()
+        pendingNonce = nonce
+        return nonce
+    }
+
     /// Handles the result handed back by `SignInWithAppleButton`.
     func complete(_ result: Result<ASAuthorization, Error>) async {
+        let nonce = pendingNonce
+        pendingNonce = nil
         switch result {
         case .success(let authorization):
-            await store(authorization)
+            guard let nonce else {
+                state = .failed("That sign-in could not be completed. Please try again.")
+                return
+            }
+            await store(authorization, nonce: nonce)
 
         case .failure(let error as ASAuthorizationError) where error.code == .canceled:
             // Backing out of the sheet is not a failure worth showing.
@@ -79,7 +97,7 @@ final class SignInModel {
         }
     }
 
-    private func store(_ authorization: ASAuthorization) async {
+    private func store(_ authorization: ASAuthorization, nonce: SignInNonce) async {
         guard
             let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
             let data = credential.identityToken,
@@ -95,7 +113,7 @@ final class SignInModel {
         // cannot be renewed without putting the sheet in front of the user
         // again; what this stores refreshes silently for thirty days.
         do {
-            tokens.save(try await sessions.exchange(providerToken: token))
+            tokens.save(try await sessions.exchange(providerToken: token, nonce: nonce.raw))
         } catch {
             // Apple accepted the user, we did not. Almost always a
             // configuration mismatch — the bundle id is not in the backend's

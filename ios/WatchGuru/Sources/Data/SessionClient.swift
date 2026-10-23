@@ -21,10 +21,11 @@ actor SessionClient {
     ///
     /// Also the account-creation call: the backend provisions a user the first
     /// time it sees a valid token from a trusted issuer.
-    func exchange(providerToken: String) async throws(APIFailure) -> Tokens {
+    /// - Parameter nonce: the raw nonce whose SHA-256 the token carries.
+    func exchange(providerToken: String, nonce: String) async throws(APIFailure) -> Tokens {
         try await run {
             try await AuthenticationAPI.createSession(
-                exchangeToken: ExchangeToken(providerToken: providerToken),
+                exchangeToken: ExchangeToken(providerToken: providerToken, nonce: nonce),
                 apiConfiguration: $0
             )
         }

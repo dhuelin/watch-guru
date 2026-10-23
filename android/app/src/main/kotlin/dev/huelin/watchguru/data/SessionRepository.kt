@@ -29,9 +29,11 @@ class SessionRepository(
      *
      * Also the account-creation call: the backend provisions a user the first
      * time it sees a valid token from a trusted issuer.
+     *
+     * @param nonce the raw nonce whose hash the token carries; see [SignInNonce].
      */
-    suspend fun exchange(providerToken: String): ApiResult<Tokens> = withContext(io) {
-        callForTokens { auth.createSession(ExchangeToken(providerToken)) }
+    suspend fun exchange(providerToken: String, nonce: String): ApiResult<Tokens> = withContext(io) {
+        callForTokens { auth.createSession(ExchangeToken(providerToken, nonce)) }
     }
 
     /**
