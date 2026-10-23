@@ -24,12 +24,20 @@ ever stored, so it is stored the way one should be:
   other order would leave a live token at Trakt that nobody can revoke.
 - **Authenticated as well as encrypted**, so a row somebody edited in the
   database fails to open rather than decrypting to something subtly different.
+  Each row is also bound to its own reference, so a sealed token copied onto
+  another user's row does not open there either.
+- **Finished by the app, not the browser.** Trakt redirects to this service,
+  which hands the code straight on to the app (`watchguru://trakt/callback`).
+  The app completes the connection with its own session, and the server only
+  accepts that for the account that started it. Otherwise somebody could start
+  a connection on their own account, send the Trakt link to someone else, and
+  have that person's history land in the sender's library once they approved.
 
 ## Setting it up
 
 1. **Profile → Connect Trakt.** The app opens trakt.tv in a browser rather than
    a web view, so you can see whose address bar you are typing a password into.
-2. Approve. Trakt sends you back to a page that says you can close it.
+2. Approve. Trakt sends you straight back to the app, which finishes connecting.
 3. History starts arriving within a couple of hours, or immediately if you tap
    **Sync now**.
 
@@ -68,6 +76,23 @@ Two settings, both in [`DEPLOYMENT.md`](DEPLOYMENT.md):
   free [Trakt application registration](https://trakt.tv/oauth/applications),
   whose redirect URI must be `<public base url>/api/v1/streaming/trakt/callback`.
 - `WATCH_GURU_CREDENTIALS_SECRET`, the key that seals the tokens.
+
+### Rotating the key
+
+Every row records which key sealed it, and a key can be retired without
+anybody having to reconnect:
+
+1. Generate a new key and give it a new id: set `WATCH_GURU_CREDENTIALS_SECRET`
+   to it and `WATCH_GURU_CREDENTIALS_KEY_ID` to, say, `2026-11`.
+2. Move the old pair into `WATCH_GURU_CREDENTIALS_RETIRED_KEYS` as
+   `<old id>:<old base64>` (comma-separate several). Deploy.
+3. At startup, and daily after that, every row still under a retired key is
+   resealed under the new one. The log says how many were moved, and how many
+   could not be opened with any configured key.
+4. Once a startup logs nothing to move, drop the retired key.
+
+The same startup pass moved rows written before October 2026 onto the current
+format, which binds each sealed token to its row.
 
 Without the first pair, connecting Trakt is refused up front with a message
 saying so — rather than after the user has already approved, which is the worst
