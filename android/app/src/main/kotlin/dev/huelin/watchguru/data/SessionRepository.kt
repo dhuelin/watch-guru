@@ -33,7 +33,7 @@ class SessionRepository(
      * @param nonce the raw nonce whose hash the token carries; see [SignInNonce].
      */
     suspend fun exchange(providerToken: String, nonce: String): ApiResult<Tokens> = withContext(io) {
-        callForTokens { auth.createSession(ExchangeToken(providerToken, nonce)) }
+        callForTokens { auth.createSession(ExchangeToken(nonce = nonce, providerToken = providerToken)) }
     }
 
     /**

@@ -15,7 +15,7 @@ interface AuthenticationApi {
     /**
      * POST api/v1/auth/session
      * Exchange a provider ID token for a session
-     * Verifies the provider&#39;s ID token and returns an access token and a refresh token issued by this service. Provisions the account on first use.
+     * Verifies the provider&#39;s ID token and returns an access token and a refresh token issued by this service. Provisions the account on first use. The token must carry the SHA-256 (lowercase hex) of the nonce sent alongside it, and each token can be exchanged only once.
      * Responses:
      *  - 200: OK
      *

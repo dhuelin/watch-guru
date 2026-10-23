@@ -72,7 +72,7 @@
     },
     "/api/v1/auth/session" : {
       "post" : {
-        "description" : "Verifies the provider's ID token and returns an access token and a refresh token issued by this service. Provisions the account on first use.",
+        "description" : "Verifies the provider's ID token and returns an access token and a refresh token issued by this service. Provisions the account on first use. The token must carry the SHA-256 (lowercase hex) of the nonce sent alongside it, and each token can be exchanged only once.",
         "operationId" : "createSession",
         "requestBody" : {
           "content" : {
@@ -588,6 +588,34 @@
         "tags" : [ "trakt-controller" ]
       }
     },
+    "/api/v1/me/streaming-accounts/trakt/complete" : {
+      "post" : {
+        "operationId" : "completeTrakt",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CompleteTrakt"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TraktStatusResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "trakt-controller" ]
+      }
+    },
     "/api/v1/me/streaming-accounts/trakt/sync" : {
       "post" : {
         "operationId" : "syncTrakt",
@@ -1051,7 +1079,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "minLength" : 1
+            "maxLength" : 200,
+            "minLength" : 0
           }
         }, {
           "in" : "query",
@@ -1060,7 +1089,9 @@
           "schema" : {
             "type" : "integer",
             "format" : "int32",
-            "default" : 1
+            "default" : 1,
+            "maximum" : 500,
+            "minimum" : 1
           }
         }, {
           "in" : "query",
@@ -1095,7 +1126,9 @@
           "schema" : {
             "type" : "integer",
             "format" : "int32",
-            "default" : 1
+            "default" : 1,
+            "maximum" : 500,
+            "minimum" : 1
           }
         }, {
           "in" : "query",
@@ -1287,6 +1320,22 @@
         },
         "required" : [ "rows" ]
       },
+      "CompleteTrakt" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "maxLength" : 512,
+            "minLength" : 0
+          },
+          "state" : {
+            "type" : "string",
+            "maxLength" : 128,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "code", "state" ]
+      },
       "ConnectMediaServer" : {
         "type" : "object",
         "properties" : {
@@ -1348,13 +1397,18 @@
       "ExchangeToken" : {
         "type" : "object",
         "properties" : {
+          "nonce" : {
+            "type" : "string",
+            "maxLength" : 128,
+            "minLength" : 16
+          },
           "providerToken" : {
             "type" : "string",
             "maxLength" : 4096,
             "minLength" : 0
           }
         },
-        "required" : [ "providerToken" ]
+        "required" : [ "nonce", "providerToken" ]
       },
       "GenreResponse" : {
         "type" : "object",
@@ -2266,14 +2320,10 @@
             "minLength" : 0
           },
           "language" : {
-            "type" : "string",
-            "maxLength" : 16,
-            "minLength" : 0
+            "type" : "string"
           },
           "region" : {
-            "type" : "string",
-            "maxLength" : 2,
-            "minLength" : 2
+            "type" : "string"
           },
           "timeZone" : {
             "type" : "string",
@@ -2311,7 +2361,9 @@
             "type" : "boolean"
           },
           "notes" : {
-            "type" : "string"
+            "type" : "string",
+            "maxLength" : 4000,
+            "minLength" : 0
           },
           "rating" : {
             "type" : "number",

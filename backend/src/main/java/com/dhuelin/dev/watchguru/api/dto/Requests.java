@@ -76,6 +76,17 @@ public final class Requests {
     ) {
     }
 
+    /**
+     * What Trakt handed back to the app at the end of an authorisation.
+     *
+     * @param code  Trakt's authorisation code, exchanged on the server
+     * @param state the value issued when the flow started
+     */
+    public record CompleteTrakt(
+            @NotBlank @Size(max = 512) String code,
+            @NotBlank @Size(max = 128) String state) {
+    }
+
     /** Adds a title by its provider id, importing it into the catalog first. */
     public record AddToWatchlist(
             @NotNull TitleType titleType,

@@ -130,10 +130,38 @@ class TraktSyncIntegrationTest {
     @Test
     @DisplayName("a callback whose state was never issued connects nothing")
     void refusesAForgedCallback() {
-        assertThatThrownBy(() -> connections.complete("not-a-real-state", "code", null))
+        assertThatThrownBy(() -> connections.complete(user, "not-a-real-state", "code", null))
                 .isInstanceOf(TraktConnectionService.NotAvailableException.class);
 
         assertThat(accounts.findByUserIdAndStreamingServiceSlug(user.getId(), "trakt")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("an authorisation started by one account cannot be finished by another")
+    void refusesALinkForwardedToSomebodyElse() {
+        // The account-linking CSRF: the sender starts a flow on their own
+        // account and gets the victim to approve it. The victim's app holds the
+        // victim's session, so the state names somebody other than the caller.
+        AppUser sender = users.save(new AppUser("sender-" + System.nanoTime() + "@example.com", "Sender"));
+        String state = states.issue(sender.getId(), "trakt", Duration.ofMinutes(10));
+
+        assertThatThrownBy(() -> connections.complete(user, state, "the-code", null))
+                .isInstanceOf(TraktConnectionService.NotAvailableException.class);
+
+        // Nothing is connected for either of them, Trakt was never asked for a
+        // token, and the state is spent so the sender cannot redeem it now.
+        assertThat(accounts.findByUserIdAndStreamingServiceSlug(user.getId(), "trakt")).isEmpty();
+        assertThat(accounts.findByUserIdAndStreamingServiceSlug(sender.getId(), "trakt")).isEmpty();
+        verify(trakt, never()).exchange(any(), any());
+        assertThatThrownBy(() -> connections.complete(sender, state, "the-code", null))
+                .isInstanceOf(TraktConnectionService.NotAvailableException.class);
+    }
+
+    @Test
+    @DisplayName("the browser callback is handed to the app with its parameters encoded")
+    void handsTheCallbackToTheApp() {
+        assertThat(connections.appCallbackUri("a b&c", "s/t"))
+                .isEqualTo("watchguru://trakt/callback?code=a%20b%26c&state=s/t");
     }
 
     @Test
@@ -249,7 +277,7 @@ class TraktSyncIntegrationTest {
                         Duration.ofDays(90).toSeconds(), 0L, "public", "Bearer"));
 
         String state = states.issue(user.getId(), "trakt", Duration.ofMinutes(10));
-        return connections.complete(state, "the-code", null);
+        return connections.complete(user, state, "the-code", null);
     }
 
     private void givenHistory(TraktResponses.HistoryItem... items) {

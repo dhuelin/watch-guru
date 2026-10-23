@@ -184,6 +184,9 @@ watch-guru:
     # items; the cursor makes the next run continue where this one stopped.
     max-pages: 20
     state-ttl: 10m
+    # Where the browser callback hands the code to the app, which finishes the
+    # flow with its own session. Both apps register this scheme.
+    app-callback-uri: watchguru://trakt/callback
   credentials:
     # Base64 of at least 32 random bytes (`openssl rand -base64 32`), the
     # AES-GCM key that seals third-party access tokens. No generated fallback:

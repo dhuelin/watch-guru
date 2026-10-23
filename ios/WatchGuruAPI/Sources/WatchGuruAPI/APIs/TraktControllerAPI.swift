@@ -46,6 +46,43 @@ open class TraktControllerAPI {
 
     /**
 
+     - parameter completeTrakt: (body)  
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: TraktStatusResponse
+     */
+    open class func completeTrakt(completeTrakt: CompleteTrakt, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) async throws(ErrorResponse) -> TraktStatusResponse {
+        return try await completeTraktWithRequestBuilder(completeTrakt: completeTrakt, apiConfiguration: apiConfiguration).execute().body
+    }
+
+    /**
+     - POST /api/v1/me/streaming-accounts/trakt/complete
+     - Bearer Token:
+       - type: http
+       - name: bearerAuth
+     - parameter completeTrakt: (body)  
+     - parameter apiConfiguration: The configuration for the http request.
+     - returns: RequestBuilder<TraktStatusResponse> 
+     */
+    open class func completeTraktWithRequestBuilder(completeTrakt: CompleteTrakt, apiConfiguration: WatchGuruAPIAPIConfiguration = WatchGuruAPIAPIConfiguration.shared) -> RequestBuilder<TraktStatusResponse> {
+        let localVariablePath = "/api/v1/me/streaming-accounts/trakt/complete"
+        let localVariableURLString = apiConfiguration.basePath + localVariablePath
+        let localVariableParameters = JSONEncodingHelper.encodingParameters(forEncodableObject: completeTrakt, codableHelper: apiConfiguration.codableHelper)
+
+        let localVariableUrlComponents = URLComponents(string: localVariableURLString)
+
+        let localVariableNillableHeaders: [String: (any Sendable)?] = [
+            "Content-Type": "application/json",
+        ]
+
+        let localVariableHeaderParameters = APIHelper.rejectNilHeaders(localVariableNillableHeaders)
+
+        let localVariableRequestBuilder: RequestBuilder<TraktStatusResponse>.Type = apiConfiguration.requestBuilderFactory.getBuilder()
+
+        return localVariableRequestBuilder.init(method: "POST", URLString: (localVariableUrlComponents?.string ?? localVariableURLString), parameters: localVariableParameters, headers: localVariableHeaderParameters, requiresAuthentication: true, apiConfiguration: apiConfiguration)
+    }
+
+    /**
+
      - parameter apiConfiguration: The configuration for the http request.
      - returns: Void
      */

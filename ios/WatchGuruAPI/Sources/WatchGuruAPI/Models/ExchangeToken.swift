@@ -9,14 +9,18 @@ import Foundation
 
 public struct ExchangeToken: Sendable, Codable, Hashable {
 
+    public static let nonceRule = StringRule(minLength: 16, maxLength: 128, pattern: nil)
     public static let providerTokenRule = StringRule(minLength: 0, maxLength: 4096, pattern: nil)
+    public var nonce: String
     public var providerToken: String
 
-    public init(providerToken: String) {
+    public init(nonce: String, providerToken: String) {
+        self.nonce = nonce
         self.providerToken = providerToken
     }
 
     public enum CodingKeys: String, CodingKey, CaseIterable {
+        case nonce
         case providerToken
     }
 
@@ -24,6 +28,7 @@ public struct ExchangeToken: Sendable, Codable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(nonce, forKey: .nonce)
         try container.encode(providerToken, forKey: .providerToken)
     }
 }

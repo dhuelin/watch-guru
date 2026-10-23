@@ -32,6 +32,9 @@ import java.time.Duration;
  *                     where this one stopped
  * @param stateTtl     how long an authorisation started in a browser stays
  *                     redeemable
+ * @param appCallbackUri where the callback hands the code and state on to, so
+ *                     the signed-in app can finish the flow. Both apps
+ *                     register this scheme; changing it means changing them
  */
 @ConfigurationProperties(prefix = "watch-guru.trakt")
 public record TraktProperties(
@@ -44,7 +47,8 @@ public record TraktProperties(
         @DefaultValue("20") int maxPages,
         @DefaultValue("10m") Duration stateTtl,
         @DefaultValue("5s") Duration connectTimeout,
-        @DefaultValue("15s") Duration readTimeout
+        @DefaultValue("15s") Duration readTimeout,
+        @DefaultValue("watchguru://trakt/callback") String appCallbackUri
 ) {
 
     /** Whether this deployment has been given a Trakt application to act as. */

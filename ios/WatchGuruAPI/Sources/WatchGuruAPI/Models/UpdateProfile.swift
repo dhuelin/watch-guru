@@ -10,8 +10,6 @@ import Foundation
 public struct UpdateProfile: Sendable, Codable, Hashable {
 
     public static let displayNameRule = StringRule(minLength: 0, maxLength: 128, pattern: nil)
-    public static let languageRule = StringRule(minLength: 0, maxLength: 16, pattern: nil)
-    public static let regionRule = StringRule(minLength: 2, maxLength: 2, pattern: nil)
     public static let timeZoneRule = StringRule(minLength: 0, maxLength: 64, pattern: nil)
     public var displayName: String?
     public var language: String?

@@ -31,11 +31,15 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
+ * @param nonce 
  * @param providerToken 
  */
 @Serializable
 
 data class ExchangeToken (
+
+    @SerialName(value = "nonce")
+    val nonce: kotlin.String,
 
     @SerialName(value = "providerToken")
     val providerToken: kotlin.String

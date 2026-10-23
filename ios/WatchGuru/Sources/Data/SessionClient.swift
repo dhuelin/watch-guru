@@ -25,7 +25,7 @@ actor SessionClient {
     func exchange(providerToken: String, nonce: String) async throws(APIFailure) -> Tokens {
         try await run {
             try await AuthenticationAPI.createSession(
-                exchangeToken: ExchangeToken(providerToken: providerToken, nonce: nonce),
+                exchangeToken: ExchangeToken(nonce: nonce, providerToken: providerToken),
                 apiConfiguration: $0
             )
         }

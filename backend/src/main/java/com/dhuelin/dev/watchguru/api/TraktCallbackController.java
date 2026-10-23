@@ -1,10 +1,8 @@
 package com.dhuelin.dev.watchguru.api;
 
 import com.dhuelin.dev.watchguru.streaming.trakt.TraktConnectionService;
-import com.dhuelin.dev.watchguru.streaming.trakt.TraktException;
 import io.swagger.v3.oas.annotations.Hidden;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,27 +10,29 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
 
 /**
  * Where Trakt sends the user's browser back.
  *
- * <p>Unauthenticated to the filter chain, and guarded by the {@code state}
- * instead: the request arrives from a browser that has just been at trakt.tv
- * and carries no bearer token of ours. The state is single-use, expiring, and
- * says which user began the flow -- without it, anybody who could reach this
- * URL could attach their own Trakt account to somebody else's library.
+ * <p>Unauthenticated to the filter chain, because the request arrives from a
+ * browser that has just been at trakt.tv and carries no bearer token of ours.
+ * Which is exactly why it no longer connects anything: it passes the code and
+ * state on to the app, and the app finishes with its own session -- see
+ * {@link TraktConnectionService#appCallbackUri}. A link forwarded to somebody
+ * else now dead-ends on their phone instead of connecting their Trakt account
+ * to the sender's library.
  *
- * <p>Answers in HTML because a person is reading it. This is the one endpoint
- * in the service whose audience is a browser rather than an app, and a JSON
- * problem document is not something to leave somebody looking at.
+ * <p>Answers in HTML when it has to stop, because a person is reading it. This
+ * is the one endpoint in the service whose audience is a browser rather than
+ * an app, and a JSON problem document is not something to leave somebody
+ * looking at.
  */
 @RestController
 @RequestMapping("/api/v1/streaming/trakt")
 @Hidden
 public class TraktCallbackController {
-
-    private static final Logger log = LoggerFactory.getLogger(TraktCallbackController.class);
 
     private final TraktConnectionService connections;
 
@@ -54,18 +54,15 @@ public class TraktCallbackController {
                     "That link is incomplete. Start again from the app.");
         }
 
-        try {
-            connections.complete(state, code, requestBaseUrl());
-            return page(HttpStatus.OK, "Trakt connected",
-                    "You can close this page and go back to the app. Your history will start "
-                            + "arriving within a couple of hours, or immediately if you tap Sync now.");
-        } catch (TraktConnectionService.NotAvailableException e) {
-            return page(HttpStatus.BAD_REQUEST, "That link is no longer valid", e.getMessage());
-        } catch (TraktException e) {
-            log.warn("Trakt callback failed: {}", e.toString());
-            return page(HttpStatus.BAD_GATEWAY, "Trakt could not be reached",
-                    "Nothing has been connected. Try again from the app in a few minutes.");
-        }
+        // A redirect rather than a page with a link: the app's browser session
+        // is waiting for exactly this scheme and closes on it. Nothing here is
+        // checked or spent -- that happens when the app presents it -- so a
+        // stray request to this URL changes nothing.
+        return ResponseEntity.status(HttpStatus.FOUND)
+                .location(URI.create(connections.appCallbackUri(code, state)))
+                .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .header("Referrer-Policy", "no-referrer")
+                .build();
     }
 
     /**
@@ -89,7 +86,4 @@ public class TraktCallbackController {
         return ResponseEntity.status(status).contentType(MediaType.TEXT_HTML).body(html);
     }
 
-    private String requestBaseUrl() {
-        return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
-    }
 }
