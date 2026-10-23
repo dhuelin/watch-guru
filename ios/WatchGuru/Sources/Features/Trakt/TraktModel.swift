@@ -4,10 +4,12 @@ import WatchGuruAPI
 
 /// Connecting Trakt.
 ///
-/// Authorising happens in a browser, so this screen cannot watch it happen: the
-/// user leaves, approves, and comes back. The view reloads on becoming active
-/// again rather than only on appear — coming back to a screen that still says
-/// "not connected" after connecting is the failure worth designing against.
+/// Authorising happens in a browser session. Trakt sends the browser to the
+/// backend's callback, which redirects to ``callbackScheme``; the session closes
+/// on that and hands the URL back here, and ``finish(callback:)`` completes the
+/// flow with this app's own session. The server will only connect Trakt for the
+/// account that started the flow, so an authorisation link forwarded to someone
+/// else connects nothing.
 @Observable
 @MainActor
 final class TraktModel {
@@ -18,6 +20,8 @@ final class TraktModel {
     /// What the sync the user just asked for did, until they leave.
     var lastSync: SyncResultResponse?
     var isBusy = false
+    /// From asking for an authorisation URL until the browser hands back.
+    var isConnecting = false
     var failureMessage: String?
 
     init(client: WatchGuruClient) {
@@ -60,6 +64,43 @@ final class TraktModel {
             failureMessage = "Trakt cannot be connected from this server right now."
             return nil
         }
+    }
+
+    /// The scheme the backend's callback redirects to. The browser session
+    /// watches for it; nothing else in the app registers it.
+    nonisolated static let callbackScheme = "watchguru"
+
+    /// Completes an authorisation from the URL the browser session returned.
+    func finish(callback: URL) async {
+        guard let parameters = Self.callbackParameters(callback) else {
+            failureMessage = "Trakt did not finish connecting. Try again."
+            return
+        }
+        isBusy = true
+        defer { isBusy = false }
+
+        do {
+            // Hoisted for the region based isolation checker; see syncNow.
+            let status = try await client.completeTrakt(code: parameters.code, state: parameters.state)
+            state = .content(status)
+        } catch {
+            failureMessage = "Trakt did not finish connecting. Start again from here."
+        }
+    }
+
+    /// The code and state from `watchguru://trakt/callback?code=…&state=…`, or
+    /// nil for anything else.
+    nonisolated static func callbackParameters(_ url: URL) -> (code: String, state: String)? {
+        guard url.scheme?.lowercased() == callbackScheme,
+              url.host?.lowercased() == "trakt",
+              url.path == "/callback",
+              let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems,
+              let code = items.first(where: { $0.name == "code" })?.value, !code.isEmpty,
+              let state = items.first(where: { $0.name == "state" })?.value, !state.isEmpty
+        else {
+            return nil
+        }
+        return (code, state)
     }
 
     /// Only an https page on trakt.tv is somewhere to send the user to approve.

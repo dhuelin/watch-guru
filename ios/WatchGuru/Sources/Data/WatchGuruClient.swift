@@ -418,10 +418,23 @@ actor WatchGuruClient {
 
     /// Starts an authorisation and returns where to send the user.
     ///
-    /// Nothing is connected until they come back through the callback, so the
-    /// screen asks again afterwards rather than assuming.
+    /// Nothing is connected until the browser hands the result back and
+    /// ``completeTrakt(code:state:)`` succeeds.
     func authorizeTrakt() async throws(APIFailure) -> TraktAuthorizationResponse {
         try await run { try await TraktControllerAPI.authorizeTrakt(apiConfiguration: $0) }
+    }
+
+    /// Finishes an authorisation with what Trakt handed back.
+    ///
+    /// Sent with this app's session, which is the point: the server connects
+    /// Trakt only for the account that started the flow.
+    func completeTrakt(code: String, state: String) async throws(APIFailure) -> TraktStatusResponse {
+        try await run {
+            try await TraktControllerAPI.completeTrakt(
+                completeTrakt: CompleteTrakt(code: code, state: state),
+                apiConfiguration: $0
+            )
+        }
     }
 
     /// Reads everything watched since the last sync, now.

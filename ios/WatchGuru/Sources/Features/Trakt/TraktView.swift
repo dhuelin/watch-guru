@@ -1,16 +1,18 @@
+import AuthenticationServices
 import SwiftUI
 import WatchGuruAPI
 
 /// Connecting Trakt.
 ///
-/// The authorisation opens in a browser rather than a web view, so the user can
-/// see the address bar says trakt.tv before typing a password there. That also
-/// means this screen loses sight of them for a moment, so it reloads when the
-/// app becomes active again.
+/// The authorisation opens in a browser session rather than a web view, so the
+/// user can see the address bar says trakt.tv before typing a password there.
+/// The session closes itself when Trakt sends the browser back, and the screen
+/// still reloads when the app becomes active, in case it was left some other
+/// way.
 struct TraktView: View {
 
     @Environment(Session.self) private var session
-    @Environment(\.openURL) private var openURL
+    @Environment(\.webAuthenticationSession) private var webAuthenticationSession
     @Environment(\.scenePhase) private var scenePhase
     @State private var model: TraktModel?
 
@@ -43,7 +45,7 @@ struct TraktView: View {
         .onChange(of: scenePhase) { _, phase in
             // Back from the browser: what changed happened elsewhere, so the
             // only way to know is to ask.
-            if phase == .active, let model {
+            if phase == .active, let model, !model.isConnecting {
                 Task { await model.load() }
             }
         }
@@ -55,6 +57,38 @@ struct TraktView: View {
         } message: {
             Text(model?.failureMessage ?? "")
         }
+    }
+
+    /// Opens Trakt in a browser session and finishes with what it hands back.
+    private func connect(model: TraktModel) async {
+        // The browser session's permission prompt makes the scene inactive and
+        // active again; reloading then would race the completion below and
+        // could show "not connected" over a connection that just succeeded.
+        model.isConnecting = true
+        defer { model.isConnecting = false }
+
+        guard let url = await model.authorizationURL() else { return }
+        let callback: URL
+        do {
+            if #available(iOS 17.4, *) {
+                callback = try await webAuthenticationSession.authenticate(
+                    using: url,
+                    callback: .customScheme(TraktModel.callbackScheme),
+                    preferredBrowserSession: .shared,
+                    additionalHeaderFields: [:]
+                )
+            } else {
+                callback = try await webAuthenticationSession.authenticate(
+                    using: url,
+                    callbackURLScheme: TraktModel.callbackScheme,
+                    preferredBrowserSession: .shared
+                )
+            }
+        } catch {
+            // Closing the sheet or pressing Deny is an answer, not a fault.
+            return
+        }
+        await model.finish(callback: callback)
     }
 
     private func form(status: TraktStatusResponse, model: TraktModel) -> some View {
@@ -91,19 +125,14 @@ struct TraktView: View {
                     .disabled(model.isBusy)
                 } else {
                     Button("Connect Trakt") {
-                        Task {
-                            if let url = await model.authorizationURL() {
-                                openURL(url)
-                            }
-                        }
+                        Task { await connect(model: model) }
                     }
                     .disabled(model.isBusy)
                 }
             } footer: {
                 Text(status.connected
                     ? "Syncing also runs by itself every couple of hours."
-                    : "This opens trakt.tv in your browser. Come back here when it says you can "
-                        + "close the page.")
+                    : "This opens trakt.tv. Approve there and you come straight back here.")
             }
 
             if !status.recentRuns.isEmpty {
