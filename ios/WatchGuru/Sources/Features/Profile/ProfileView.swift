@@ -134,13 +134,19 @@ struct ProfileView: View {
                 // Appearance stays reachable when the profile cannot load: it
                 // is kept on the phone, and being offline is no reason to be
                 // stuck with a theme.
-                VStack(spacing: 0) {
-                    FailureView(failure: failure) { Task { await load() } }
-                    List {
+                //
+                // One list, so it scrolls like the loaded screen does and
+                // nothing is cut off at large text sizes: the failure and its
+                // Retry as a row of their own, then the picker.
+                List {
+                    Section {
+                        FailureView(failure: failure) { Task { await load() } }
+                            .frame(minHeight: 320)
+                            .listRowBackground(Color.clear)
+                    }
+                    Section("Preferences") {
                         appearancePicker
                     }
-                    .frame(maxHeight: 120)
-                    .scrollDisabled(true)
                 }
             case .loading:
                 ProgressView()

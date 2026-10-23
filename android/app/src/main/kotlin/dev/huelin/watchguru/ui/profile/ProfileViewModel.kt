@@ -1,11 +1,8 @@
 package dev.huelin.watchguru.ui.profile
 
-import android.content.Context
-import androidx.glance.appwidget.updateAll
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dev.huelin.watchguru.api.models.UpdateProfile
 import dev.huelin.watchguru.api.models.UserResponse
 import dev.huelin.watchguru.data.ApiResult
@@ -15,7 +12,6 @@ import dev.huelin.watchguru.data.ProfileEvents
 import dev.huelin.watchguru.data.WatchGuruRepository
 import dev.huelin.watchguru.data.valueOrNull
 import dev.huelin.watchguru.ui.components.UiState
-import dev.huelin.watchguru.widget.UpNextWidget
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +25,6 @@ class ProfileViewModel @Inject constructor(
     private val repository: WatchGuruRepository,
     private val profileEvents: ProfileEvents,
     private val appearanceStore: AppearanceStore,
-    @ApplicationContext private val appContext: Context,
 ) : ViewModel() {
 
     val appearance: StateFlow<Appearance> = appearanceStore.appearance
@@ -38,11 +33,7 @@ class ProfileViewModel @Inject constructor(
 
     val wallpaperColours: StateFlow<Boolean> = appearanceStore.wallpaperColours
 
-    fun setWallpaperColours(on: Boolean) {
-        appearanceStore.setWallpaperColours(on)
-        // The widget reads the choice when it draws, so it is asked to draw.
-        viewModelScope.launch { runCatching { UpNextWidget().updateAll(appContext) } }
-    }
+    fun setWallpaperColours(on: Boolean) = appearanceStore.setWallpaperColours(on)
 
     private val _profile = MutableStateFlow<UiState<UserResponse>>(UiState.Loading)
     val profile: StateFlow<UiState<UserResponse>> = _profile.asStateFlow()

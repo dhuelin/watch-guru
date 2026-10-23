@@ -3,6 +3,8 @@ package dev.huelin.watchguru.widget
 import android.content.Context
 import android.os.Build
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -75,9 +77,13 @@ class UpNextWidget : GlanceAppWidget() {
         // Loaded before provideContent, not inside it: the content lambda is
         // recomposed and must stay free of suspending work.
         val state = loadUpNextWidgetState(context, limit = MaximumRows)
-        val wallpaperColours = context.widgetDependencies().appearance().wallpaperColours.value
+        val appearance = context.widgetDependencies().appearance()
 
         provideContent {
+            // Collected rather than read once: while the widget's session is
+            // alive, a redraw recomposes this content without running
+            // provideGlance again, and a value read above would be stale.
+            val wallpaperColours by appearance.wallpaperColours.collectAsState()
             GlanceTheme(colors = widgetColors(wallpaperColours)) {
                 Content(state)
             }

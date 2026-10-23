@@ -3,10 +3,16 @@ package dev.huelin.watchguru.data
 import android.app.UiModeManager
 import android.content.Context
 import android.os.Build
+import androidx.glance.appwidget.updateAll
 import dagger.hilt.android.qualifiers.ApplicationContext
+import dev.huelin.watchguru.widget.UpNextWidget
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,6 +31,7 @@ enum class Appearance { SYSTEM, LIGHT, DARK }
 class AppearanceStore @Inject constructor(@ApplicationContext private val context: Context) {
 
     private val prefs = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE)
+    private val widgetScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     private val _appearance = MutableStateFlow(
         prefs.getString(KEY, null)
@@ -56,6 +63,10 @@ class AppearanceStore @Inject constructor(@ApplicationContext private val contex
     fun setWallpaperColours(on: Boolean) {
         prefs.edit().putBoolean(KEY_WALLPAPER, on).apply()
         _wallpaperColours.value = on
+        // The widget follows the same choice. Redrawn on a scope of its own,
+        // not the screen's, so leaving Profile straight away does not cancel
+        // it; a launcher with no widget placed is not an error.
+        widgetScope.launch { runCatching { UpNextWidget().updateAll(context) } }
     }
 
     /**
