@@ -11,21 +11,27 @@ struct WatchGuruApp: App {
     @UIApplicationDelegateAdaptor(PushDelegate.self) private var pushDelegate
 
     @State private var session = Session()
+    @AppStorage(Appearance.storageKey) private var appearance = Appearance.system
 
     var body: some Scene {
         WindowGroup {
-            // Everything behind the token. Showing the tab bar first and then
-            // 401-ing on every screen would be a worse first launch than a
-            // sign-in screen.
-            switch session.signIn.state {
-            case .signedIn:
-                RootView()
-                    .environment(session)
-            case .checking:
-                ProgressView()
-            case .signedOut, .signingIn, .failed:
-                SignInView(model: session.signIn)
+            Group {
+                // Everything behind the token. Showing the tab bar first and
+                // then 401-ing on every screen would be a worse first launch
+                // than a sign-in screen.
+                switch session.signIn.state {
+                case .signedIn:
+                    RootView()
+                        .environment(session)
+                case .checking:
+                    ProgressView()
+                case .signedOut, .signingIn, .failed:
+                    SignInView(model: session.signIn)
+                }
             }
+            // At the root, sign-in included, so the choice made in Profile
+            // holds from the first frame of the next launch.
+            .preferredColorScheme(appearance.colorScheme)
         }
     }
 }
