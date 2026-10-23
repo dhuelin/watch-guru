@@ -163,6 +163,10 @@
 "Connect Plex" = "Connect Plex";
 "Delete account" = "Delete account";
 "Deleting your account removes your library, progress and history permanently." = "Deleting your account removes your library, progress and history permanently.";
+"Appearance" = "Appearance";
+"System" = "System";
+"Light" = "Light";
+"Dark" = "Dark";
 "Preferences" = "Preferences";
 "Search countries" = "Search countries";
 "Sign out" = "Sign out";

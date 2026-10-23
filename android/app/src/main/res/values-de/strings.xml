@@ -301,6 +301,10 @@
     <string name="profile_group_viewing">Was du schaust</string>
     <string name="profile_group_connections">Verbindungen</string>
     <string name="profile_group_data">Daten</string>
+    <string name="profile_group_appearance">Erscheinungsbild</string>
+    <string name="appearance_system">System</string>
+    <string name="appearance_light">Hell</string>
+    <string name="appearance_dark">Dunkel</string>
     <string name="profile_history_detail">Alles, was du gesehen hast, Tag für Tag</string>
     <string name="profile_stats_detail">Sehzeit, Tage in Folge und Favoriten</string>
     <string name="profile_region_value">Angebote für %1$s</string>

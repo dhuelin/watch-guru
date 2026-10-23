@@ -14,6 +14,7 @@ struct ProfileView: View {
     @State private var confirmingDelete = false
     @State private var regionFailed = false
     @State private var isSavingRegion = false
+    @AppStorage(Appearance.storageKey) private var appearance = Appearance.system
 
     var body: some View {
         Group {
@@ -108,6 +109,14 @@ struct ProfileView: View {
                         // recognises.
                         LabeledContent("Language", value: AccountIdentity.languageName(user.language))
                         LabeledContent("Time zone", value: AccountIdentity.timeZoneName(user.timeZone))
+                        // The one preference here kept on the phone rather
+                        // than the account, which is why it is a control
+                        // among read-only lines.
+                        Picker("Appearance", selection: $appearance) {
+                            ForEach(Appearance.allCases) { option in
+                                Text(option.label).tag(option)
+                            }
+                        }
                     } header: {
                         Text("Preferences")
                     }
