@@ -171,6 +171,15 @@ struct TitleDetailView: View {
         .listStyle(.plain)
         .screenBackground()
         .environment(\.defaultMinListRowHeight, 0)
+        // On the whole list rather than on a button: an episode marked deep
+        // in a season, by tap or swipe, is felt even when the progress button
+        // at the top has scrolled away. Only when a known count goes up, so
+        // unmarking is quiet and so is the progress arriving after the screen
+        // opens, which goes from nothing to a number.
+        .sensoryFeedback(.success, trigger: model.progress?.watchedEpisodes) { old, new in
+            guard let old, let new else { return false }
+            return new > old
+        }
         .navigationTitle(title.primaryTitle)
     }
 }
@@ -276,7 +285,6 @@ private struct EpisodeProgressView: View {
                 // Names the episode, so VoiceOver says which one is about to be
                 // marked rather than just "button".
                 .accessibilityLabel("Mark \(code) watched")
-                .sensoryFeedback(.success, trigger: progress.watchedEpisodes)
             } else {
                 // Caught up is a real state and deserves saying, not a gap.
                 Text("You're all caught up.")
