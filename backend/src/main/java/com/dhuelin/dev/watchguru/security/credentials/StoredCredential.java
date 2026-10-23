@@ -18,9 +18,9 @@ import java.time.Instant;
  * One sealed credential.
  *
  * <p>Nothing here is readable without the deployment's key: the row holds
- * ciphertext, the nonce it was sealed with, and which key did it. That is the
- * whole point -- a database dump, a backup, or a support query over this table
- * yields no access token.
+ * ciphertext, the nonce it was sealed with, which key did it, and in which
+ * format. That is the whole point -- a database dump, a backup, or a support
+ * query over this table yields no access token.
  */
 @Entity
 @Table(name = "streaming_credential")
@@ -44,6 +44,14 @@ public class StoredCredential {
 
     @Column(name = "key_id", nullable = false, length = 64)
     private String keyId;
+
+    /**
+     * How the row was sealed. 0 is the original format, with no associated
+     * data; 1 binds the ciphertext to its {@code credential_ref}, so a sealed
+     * value copied onto another row no longer opens there.
+     */
+    @Column(name = "format_version", nullable = false)
+    private int formatVersion;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;

@@ -190,6 +190,9 @@ watch-guru:
     # a key invented at boot would lose every connection on the next restart.
     secret: ${WATCH_GURU_CREDENTIALS_SECRET:}
     key-id: ${WATCH_GURU_CREDENTIALS_KEY_ID:primary}
+    # Keys that still open old rows during a rotation, as id:base64 pairs
+    # separated by commas. See docs/DEPLOYMENT.md for the rotation steps.
+    retired-keys: ${WATCH_GURU_CREDENTIALS_RETIRED_KEYS:}
   catalog:
     # How long a cached title detail record is considered fresh.
     detail-ttl: 7d
