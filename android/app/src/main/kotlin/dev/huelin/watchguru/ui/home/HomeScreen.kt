@@ -50,6 +50,7 @@ import dev.huelin.watchguru.ui.components.ErrorView
 import dev.huelin.watchguru.ui.components.FullScreenMessage
 import dev.huelin.watchguru.ui.components.SkeletonList
 import dev.huelin.watchguru.ui.components.SwipeToMark
+import dev.huelin.watchguru.ui.components.markAction
 import dev.huelin.watchguru.ui.components.Poster
 import dev.huelin.watchguru.ui.components.UiState
 import dev.huelin.watchguru.ui.components.contentOrNull
@@ -172,7 +173,6 @@ private fun UpNextCard(
     // call as the button, so it gets the same undo snackbar.
     SwipeToMark(
         enabled = !busy,
-        actionLabel = markLabel,
         onSwipe = onMarkWatched,
         shape = CardDefaults.shape,
     ) {
@@ -181,6 +181,8 @@ private fun UpNextCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable(onClick = onOpen)
+                    // On the node TalkBack focuses, the clickable row.
+                    .markAction(enabled = !busy, label = markLabel, onAction = onMarkWatched)
                     .padding(12.dp),
             ) {
                 Poster(url = entry.posterUrl, title = entry.primaryTitle, modifier = Modifier.width(64.dp))

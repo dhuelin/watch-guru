@@ -37,6 +37,7 @@ import dev.huelin.watchguru.R
 import dev.huelin.watchguru.api.models.EpisodeResponse
 import dev.huelin.watchguru.api.models.SeasonResponse
 import dev.huelin.watchguru.ui.components.SwipeToMark
+import dev.huelin.watchguru.ui.components.markAction
 
 /**
  * A season, collapsed to a header until opened.
@@ -136,13 +137,20 @@ private fun EpisodeRow(
 
     SwipeToMark(
         enabled = episode.aired && !marking,
-        actionLabel = if (episode.watched) unwatchLabel else watchLabel,
         onSwipe = onToggle,
         undo = episode.watched,
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                // Merged, so TalkBack has one node for the row to carry the
+                // swipe's action; the circle and the menu keep their own focus.
+                .semantics(mergeDescendants = true) {}
+                .markAction(
+                    enabled = episode.aired && !marking,
+                    label = if (episode.watched) unwatchLabel else watchLabel,
+                    onAction = onToggle,
+                )
                 // Opaque, so the swipe background only shows where the row has
                 // been dragged away from.
                 .background(MaterialTheme.colorScheme.surface)

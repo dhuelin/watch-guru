@@ -53,8 +53,10 @@ struct HomeView: View {
                 }
                 // The same call as the row's button, through the offline
                 // queue; the button stays, since a swipe is never found by
-                // someone who was not shown it.
-                .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                // someone who was not shown it. From the trailing edge, as
+                // on the title screen's episodes, where the leading one
+                // belongs to going back: one direction to learn for marking.
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                     if !model.marking.contains(entry.titleId) {
                         Button {
                             Task { await model.markWatched(entry) }

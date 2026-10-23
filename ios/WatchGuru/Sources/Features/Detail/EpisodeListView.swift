@@ -135,9 +135,9 @@ private struct EpisodeRow: View {
         // episodes can be ticked off without aiming at each one; a partial
         // swipe also offers marking everything up to here.
         //
-        // From the trailing edge, not the leading one where Up Next has it:
-        // this screen is pushed, and since iOS 26 a rightward swipe anywhere
-        // on a pushed screen goes back, before a row's actions ever see it.
+        // From the trailing edge, as on Up Next: this screen is pushed, and
+        // since iOS 26 a rightward swipe anywhere on a pushed screen goes
+        // back, before a row's actions ever see it.
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             if episode.aired && !isMarking {
                 Button(action: markWatched) {
@@ -152,10 +152,11 @@ private struct EpisodeRow: View {
                 Button(action: markUpTo) {
                     Label("Mark all up to here", systemImage: "checkmark.circle.badge.checkmark")
                 }
-                .tint(.indigo)
+                // Grey rather than another violet: beside "Mark watched" the
+                // two read as one colour, and this one marks a whole run.
+                .tint(.gray)
             }
         }
-        .sensoryFeedback(.success, trigger: episode.watched) { _, watched in watched }
     }
 
     private var label: String {

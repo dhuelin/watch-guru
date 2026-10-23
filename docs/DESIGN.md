@@ -276,7 +276,7 @@ These should differ, and a reviewer should not file bugs about them:
 | | iOS | Android |
 |---|---|---|
 | Navigation | `NavigationStack`, large titles | Bottom bar, predictive back |
-| Row actions | Swipe actions, context menus; a full swipe marks watched (leading on Up Next, trailing on a pushed screen, where a leading swipe goes back) | Swipe from the start edge marks watched; swipe-to-dismiss with undo snackbar deletes |
+| Row actions | Swipe actions, context menus; a full trailing swipe marks watched (the leading edge belongs to going back) | Swipe from the start edge marks watched; swipe-to-dismiss with undo snackbar deletes |
 | Confirmation | `.confirmationDialog` | Snackbar with undo |
 | Sharing | Share sheet | Android share sheet |
 | Widgets | WidgetKit, Lock Screen, StandBy | Glance, resizable, dynamic colour |
