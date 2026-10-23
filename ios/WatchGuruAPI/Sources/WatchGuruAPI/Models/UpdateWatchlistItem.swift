@@ -17,17 +17,20 @@ public struct UpdateWatchlistItem: Sendable, Codable, Hashable {
         case dropped = "DROPPED"
     }
     public static let ratingRule = NumericRule<Double>(minimum: 0.0, exclusiveMinimum: false, maximum: 10.0, exclusiveMaximum: false, multipleOf: nil)
+    public var clearRating: Bool?
     public var notes: String?
     public var rating: Double?
     public var status: Status?
 
-    public init(notes: String? = nil, rating: Double? = nil, status: Status? = nil) {
+    public init(clearRating: Bool? = nil, notes: String? = nil, rating: Double? = nil, status: Status? = nil) {
+        self.clearRating = clearRating
         self.notes = notes
         self.rating = rating
         self.status = status
     }
 
     public enum CodingKeys: String, CodingKey, CaseIterable {
+        case clearRating
         case notes
         case rating
         case status
@@ -37,6 +40,7 @@ public struct UpdateWatchlistItem: Sendable, Codable, Hashable {
 
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(clearRating, forKey: .clearRating)
         try container.encodeIfPresent(notes, forKey: .notes)
         try container.encodeIfPresent(rating, forKey: .rating)
         try container.encodeIfPresent(status, forKey: .status)

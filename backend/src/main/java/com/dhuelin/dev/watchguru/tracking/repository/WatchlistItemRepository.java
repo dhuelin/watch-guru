@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +31,17 @@ public interface WatchlistItemRepository extends JpaRepository<WatchlistItem, Lo
      * would mean the "what do I watch now" screen could miss the answer.
      */
     List<WatchlistItem> findByUserIdAndStatus(Long userId, WatchStatus status);
+
+    /**
+     * The caller's entries among a page of provider results.
+     *
+     * <p>By TMDB id alone; a film and a series can share one, so callers still
+     * match on the title type.
+     */
+    @EntityGraph(attributePaths = "title")
+    @Query("select w from WatchlistItem w where w.user.id = :userId and w.title.tmdbId in :tmdbIds")
+    List<WatchlistItem> findByUserIdAndTmdbIds(@Param("userId") Long userId,
+                                               @Param("tmdbIds") Collection<Long> tmdbIds);
 
     @Query("select w.status as status, count(w) as count from WatchlistItem w where w.user.id = :userId group by w.status")
     List<StatusCount> countByStatus(@Param("userId") Long userId);

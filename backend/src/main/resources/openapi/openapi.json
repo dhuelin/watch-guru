@@ -1783,6 +1783,9 @@
       "SearchHit" : {
         "type" : "object",
         "properties" : {
+          "library" : {
+            "$ref" : "#/components/schemas/LibraryEntry"
+          },
           "originalTitle" : {
             "type" : "string"
           },
@@ -2304,6 +2307,9 @@
       "UpdateWatchlistItem" : {
         "type" : "object",
         "properties" : {
+          "clearRating" : {
+            "type" : "boolean"
+          },
           "notes" : {
             "type" : "string"
           },

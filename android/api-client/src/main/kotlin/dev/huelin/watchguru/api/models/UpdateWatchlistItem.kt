@@ -31,6 +31,7 @@ import kotlinx.serialization.Contextual
 /**
  * 
  *
+ * @param clearRating 
  * @param notes 
  * @param rating 
  * @param status 
@@ -38,6 +39,9 @@ import kotlinx.serialization.Contextual
 @Serializable
 
 data class UpdateWatchlistItem (
+
+    @SerialName(value = "clearRating")
+    val clearRating: kotlin.Boolean? = null,
 
     @SerialName(value = "notes")
     val notes: kotlin.String? = null,

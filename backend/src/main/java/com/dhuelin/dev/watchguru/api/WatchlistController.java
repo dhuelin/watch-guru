@@ -136,6 +136,8 @@ public class WatchlistController {
         }
         if (request.rating() != null) {
             item = watchlist.rate(userId, itemId, request.rating());
+        } else if (request.clearsRating()) {
+            item = watchlist.rate(userId, itemId, null);
         }
         if (request.notes() != null) {
             item = watchlist.setNotes(userId, itemId, request.notes());
