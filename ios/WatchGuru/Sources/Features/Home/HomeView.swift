@@ -51,6 +51,19 @@ struct HomeView: View {
                         Task { await model.markWatched(entry) }
                     }
                 }
+                // The same call as the row's button, through the offline
+                // queue; the button stays, since a swipe is never found by
+                // someone who was not shown it.
+                .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                    if !model.marking.contains(entry.titleId) {
+                        Button {
+                            Task { await model.markWatched(entry) }
+                        } label: {
+                            Label("Mark watched", systemImage: "checkmark.circle")
+                        }
+                        .tint(.accentColor)
+                    }
+                }
             }
             .listStyle(.plain)
             .refreshable { await model.load() }

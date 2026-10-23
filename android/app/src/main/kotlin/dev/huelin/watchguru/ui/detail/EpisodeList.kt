@@ -1,5 +1,6 @@
 package dev.huelin.watchguru.ui.detail
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import dev.huelin.watchguru.R
 import dev.huelin.watchguru.api.models.EpisodeResponse
 import dev.huelin.watchguru.api.models.SeasonResponse
+import dev.huelin.watchguru.ui.components.SwipeToMark
 
 /**
  * A season, collapsed to a header until opened.
@@ -116,6 +118,8 @@ fun SeasonSection(
  * The watched control is the highest-traffic thing in the app. It is a
  * 48dp target because people press it repeatedly, on a sofa, one-handed, and
  * its accessibility label names the episode rather than announcing "button".
+ * Swiping the row from the start edge does the same as the circle, for
+ * ticking off a run of episodes without aiming at it each time.
  */
 @Composable
 private fun EpisodeRow(
@@ -125,95 +129,105 @@ private fun EpisodeRow(
     onMarkUpTo: () -> Unit,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
+    // Hoisted: stringResource is composable and the semantics lambda is
+    // not, so the label has to be resolved before the modifier is built.
+    val watchLabel = stringResource(R.string.cd_mark_episode_watched, episode.code)
+    val unwatchLabel = stringResource(R.string.cd_mark_episode_unwatched, episode.code)
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 8.dp, top = 4.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    SwipeToMark(
+        enabled = episode.aired && !marking,
+        actionLabel = if (episode.watched) unwatchLabel else watchLabel,
+        onSwipe = onToggle,
+        undo = episode.watched,
     ) {
-        // Hoisted: stringResource is composable and the semantics lambda is
-        // not, so the label has to be resolved before the modifier is built.
-        val watchLabel = stringResource(R.string.cd_mark_episode_watched, episode.code)
-        val unwatchLabel = stringResource(R.string.cd_mark_episode_unwatched, episode.code)
-
-        IconButton(
-            onClick = onToggle,
-            // An unaired episode cannot be watched, so the control is disabled
-            // rather than offering something that would be rejected. A watched
-            // one is now un-markable, which is the common correction: people
-            // tick the row below the one they meant.
-            enabled = episode.aired && !marking,
+        Row(
             modifier = Modifier
-                .size(48.dp)
-                .semantics {
-                    contentDescription = if (episode.watched) {
-                        unwatchLabel
-                    } else {
-                        watchLabel
-                    }
-                },
+                .fillMaxWidth()
+                // Opaque, so the swipe background only shows where the row has
+                // been dragged away from.
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(start = 8.dp, top = 4.dp, bottom = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                imageVector = if (episode.watched) Icons.Filled.CheckCircle else Icons.Outlined.Circle,
-                contentDescription = null,
-                tint = if (episode.watched) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-            )
-        }
 
-        Column(modifier = Modifier.weight(1f).padding(horizontal = 8.dp)) {
-            Text(
-                text = "${episode.code}${episode.name?.let { " · $it" } ?: ""}",
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = if (episode.aired) {
-                    MaterialTheme.colorScheme.onSurface
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-            )
-            if (!episode.aired) {
-                Text(
-                    text = episode.airDate
-                        ?.let { stringResource(R.string.episode_airs_on, it) }
-                        ?: stringResource(R.string.episode_not_aired),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            } else if (episode.watchCount > 1) {
-                Text(
-                    text = pluralStringResource(
-                        R.plurals.episode_watch_count,
-                        episode.watchCount,
-                        episode.watchCount,
-                    ),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+            IconButton(
+                onClick = onToggle,
+                // An unaired episode cannot be watched, so the control is disabled
+                // rather than offering something that would be rejected. A watched
+                // one is now un-markable, which is the common correction: people
+                // tick the row below the one they meant.
+                enabled = episode.aired && !marking,
+                modifier = Modifier
+                    .size(48.dp)
+                    .semantics {
+                        contentDescription = if (episode.watched) {
+                            unwatchLabel
+                        } else {
+                            watchLabel
+                        }
+                    },
+            ) {
+                Icon(
+                    imageVector = if (episode.watched) Icons.Filled.CheckCircle else Icons.Outlined.Circle,
+                    contentDescription = null,
+                    tint = if (episode.watched) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                 )
             }
-        }
 
-        if (episode.aired) {
-            Box {
-                IconButton(onClick = { menuOpen = true }) {
-                    Icon(
-                        imageVector = Icons.Outlined.ExpandMore,
-                        contentDescription = stringResource(R.string.cd_more_actions, episode.code),
+            Column(modifier = Modifier.weight(1f).padding(horizontal = 8.dp)) {
+                Text(
+                    text = "${episode.code}${episode.name?.let { " · $it" } ?: ""}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = if (episode.aired) {
+                        MaterialTheme.colorScheme.onSurface
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
+                if (!episode.aired) {
+                    Text(
+                        text = episode.airDate
+                            ?.let { stringResource(R.string.episode_airs_on, it) }
+                            ?: stringResource(R.string.episode_not_aired),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else if (episode.watchCount > 1) {
+                    Text(
+                        text = pluralStringResource(
+                            R.plurals.episode_watch_count,
+                            episode.watchCount,
+                            episode.watchCount,
+                        ),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.action_mark_up_to_here)) },
-                        onClick = {
-                            menuOpen = false
-                            onMarkUpTo()
-                        },
-                    )
+            }
+
+            if (episode.aired) {
+                Box {
+                    IconButton(onClick = { menuOpen = true }) {
+                        Icon(
+                            imageVector = Icons.Outlined.ExpandMore,
+                            contentDescription = stringResource(R.string.cd_more_actions, episode.code),
+                        )
+                    }
+                    DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_mark_up_to_here)) },
+                            onClick = {
+                                menuOpen = false
+                                onMarkUpTo()
+                            },
+                        )
+                    }
                 }
             }
         }

@@ -5,6 +5,9 @@ import WatchGuruAPI
 ///
 /// Long-running series have twenty seasons; rendering every episode of every
 /// one at once is both slow and unreadable.
+///
+/// Meant for a List: the header, each episode and the closing divider are
+/// separate rows, so each episode can have swipe actions of its own.
 struct SeasonSection: View {
     let season: SeasonResponse
     let isExpanded: Bool
@@ -14,7 +17,9 @@ struct SeasonSection: View {
     let markUpTo: (EpisodeResponse) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        // A Section, so the List lays out the header, each episode and the
+        // divider as rows of their own.
+        Section {
             Button(action: toggle) {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
@@ -31,6 +36,7 @@ struct SeasonSection: View {
             .buttonStyle(.plain)
             .padding(.vertical, 10)
             .accessibilityLabel(isExpanded ? "Collapse \(title)" : "Expand \(title)")
+            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
 
             if isExpanded {
                 ForEach(season.episodes, id: \.id) { episode in
@@ -39,10 +45,14 @@ struct SeasonSection: View {
                     } markUpTo: {
                         markUpTo(episode)
                     }
+                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
                 }
             }
 
-            Divider()
+            // In a VStack: a List row lays out horizontally, and a bare
+            // Divider there is drawn as a vertical rule.
+            VStack { Divider() }
+                .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
         }
     }
 
@@ -120,15 +130,32 @@ private struct EpisodeRow: View {
         }
         .contentShape(Rectangle())
         // Swipe rather than an overflow button: it is the gesture iOS users
-        // already have, and it keeps the row uncluttered.
-        .swipeActions(edge: .leading, allowsFullSwipe: false) {
-            if episode.aired {
+        // already have, and it keeps the row uncluttered. A full swipe runs
+        // the first action, the same toggle as the circle, so a run of
+        // episodes can be ticked off without aiming at each one; a partial
+        // swipe also offers marking everything up to here.
+        //
+        // From the trailing edge, not the leading one where Up Next has it:
+        // this screen is pushed, and since iOS 26 a rightward swipe anywhere
+        // on a pushed screen goes back, before a row's actions ever see it.
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            if episode.aired && !isMarking {
+                Button(action: markWatched) {
+                    if episode.watched {
+                        Label("Mark unwatched", systemImage: "circle")
+                    } else {
+                        Label("Mark watched", systemImage: "checkmark.circle")
+                    }
+                }
+                .tint(episode.watched ? .gray : .accentColor)
+
                 Button(action: markUpTo) {
                     Label("Mark all up to here", systemImage: "checkmark.circle.badge.checkmark")
                 }
-                .tint(.accentColor)
+                .tint(.indigo)
             }
         }
+        .sensoryFeedback(.success, trigger: episode.watched) { _, watched in watched }
     }
 
     private var label: String {
