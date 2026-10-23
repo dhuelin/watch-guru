@@ -11,7 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -163,18 +163,20 @@ private fun TitleDetailContent(
                     )
                 }
 
+                // The database stores two decimal places, so 8.4 arrives as
+                // 8.40; the trailing zero is noise on screen.
                 // Two rating sources, always labelled so they cannot be
                 // confused, and each omitted entirely when absent rather than
                 // rendered as 0.0.
                 title.providerRating?.let {
                     Text(
-                        text = stringResource(R.string.detail_rating_tmdb, it.toPlainString()),
+                        text = stringResource(R.string.detail_rating_tmdb, it.stripTrailingZeros().toPlainString()),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
                 title.imdbRating?.let {
                     Text(
-                        text = stringResource(R.string.detail_rating_imdb, it.toPlainString()),
+                        text = stringResource(R.string.detail_rating_imdb, it.stripTrailingZeros().toPlainString()),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
@@ -363,7 +365,8 @@ private fun EpisodeProgress(
                     .padding(top = 8.dp)
                     .semantics { contentDescription = markLabel },
             ) {
-                Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                // A check, as on Up Next: this records a viewing, it does not play one.
+                Icon(Icons.Outlined.CheckCircle, contentDescription = null)
                 Text(
                     text = stringResource(R.string.action_mark_watched),
                     modifier = Modifier.padding(start = 8.dp),

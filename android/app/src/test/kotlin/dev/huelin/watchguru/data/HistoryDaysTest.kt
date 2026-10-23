@@ -89,6 +89,34 @@ class HistoryDaysTest {
         assertEquals("2 viewings", HistoryDays.spokenSummary(several))
     }
 
+    @Test
+    fun `a film rewatch has no stray separator in front`() {
+        // Films have no episode code, and the row used to read " · rewatch".
+        val film = event(1).copy(rewatch = true)
+
+        assertEquals("Rewatch", HistoryDays.details(film, "Rewatch"))
+    }
+
+    @Test
+    fun `an episode line joins every part that is there`() {
+        val episode = event(1).copy(
+            episodeCode = "S01E03",
+            episodeName = "Undertow",
+            rewatch = true,
+            streamingServiceName = "Netflix",
+        )
+
+        assertEquals("S01E03 · Undertow · Rewatch · Netflix", HistoryDays.details(episode, "Rewatch"))
+    }
+
+    @Test
+    fun `missing and blank parts leave no doubled separator`() {
+        val episode = event(1).copy(episodeCode = "S01E03", episodeName = " ", streamingServiceName = "Netflix")
+
+        assertEquals("S01E03 · Netflix", HistoryDays.details(episode, "Rewatch"))
+        assertEquals("", HistoryDays.details(event(2), "Rewatch"))
+    }
+
     private fun event(
         id: Long,
         watchedAt: OffsetDateTime = OffsetDateTime.of(2026, 9, 13, 19, 0, 0, 0, ZoneOffset.UTC),

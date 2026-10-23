@@ -11,17 +11,27 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
@@ -31,6 +41,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.huelin.watchguru.R
 import dev.huelin.watchguru.api.models.UpNextResponse
@@ -39,6 +52,8 @@ import dev.huelin.watchguru.ui.components.FullScreenMessage
 import dev.huelin.watchguru.ui.components.Poster
 import dev.huelin.watchguru.ui.components.UiState
 import dev.huelin.watchguru.ui.components.contentOrNull
+import dev.huelin.watchguru.ui.components.failureMessage
+import dev.huelin.watchguru.ui.navigation.TitleId
 
 /**
  * Up Next: what to put on now.
@@ -47,46 +62,97 @@ import dev.huelin.watchguru.ui.components.contentOrNull
  * episode to play and a button that records it. The point is that logging an
  * episode never needs navigation — this is where most marking happens.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onOpenTitle: (Long) -> Unit,
+    onOpenTitle: (TitleId) -> Unit,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val upNext by viewModel.upNext.collectAsStateWithLifecycle()
     val marking by viewModel.marking.collectAsStateWithLifecycle()
+    val lastMarked by viewModel.lastMarked.collectAsStateWithLifecycle()
+    val failure by viewModel.failure.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    val content = upNext.contentOrNull()
-    when {
-        content != null -> LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            items(content, key = { it.titleId }) { entry ->
-                UpNextCard(
-                    entry = entry,
-                    busy = entry.titleId in marking,
-                    onOpen = { onOpenTitle(entry.titleId) },
-                    onMarkWatched = { viewModel.markWatched(entry) },
-                )
-            }
+    // ON_RESUME covers both ways back: from another screen in the app and
+    // from another app. Either way something may have been marked meanwhile.
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) viewModel.onResume()
         }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
-        upNext is UiState.Loading -> Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) { CircularProgressIndicator() }
-
-        upNext is UiState.Error -> ErrorView(
-            failure = (upNext as UiState.Error).failure,
-            onRetry = viewModel::refresh,
+    val markedText = lastMarked?.let {
+        stringResource(R.string.snackbar_marked_watched, it.episodeCode, it.title)
+    }
+    val undoLabel = stringResource(R.string.action_undo)
+    LaunchedEffect(lastMarked) {
+        if (markedText == null) return@LaunchedEffect
+        val result = snackbarHostState.showSnackbar(
+            message = markedText,
+            actionLabel = undoLabel,
+            duration = SnackbarDuration.Short,
         )
+        when (result) {
+            SnackbarResult.ActionPerformed -> viewModel.undoLastMark()
+            SnackbarResult.Dismissed -> viewModel.dismissLastMark()
+        }
+    }
 
-        else -> FullScreenMessage(
-            icon = Icons.Outlined.PlayCircle,
-            message = stringResource(R.string.empty_up_next),
-        )
+    val failureText = failure?.let { failureMessage(it) }
+    LaunchedEffect(failure) {
+        if (failureText != null) {
+            snackbarHostState.showSnackbar(failureText)
+            viewModel.dismissFailure()
+        }
+    }
+
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = {
+            // Named for what it shows rather than for the tab: "Home" says
+            // where you are, "Up Next" says what the list is.
+            TopAppBar(title = { Text(stringResource(R.string.title_up_next)) })
+        },
+    ) { padding ->
+        val content = upNext.contentOrNull()
+        when {
+            content != null -> LazyColumn(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                items(content, key = { it.titleId }) { entry ->
+                    UpNextCard(
+                        entry = entry,
+                        busy = entry.titleId in marking,
+                        onOpen = { onOpenTitle(TitleId(entry.titleId)) },
+                        onMarkWatched = { viewModel.markWatched(entry) },
+                    )
+                }
+            }
+
+            upNext is UiState.Loading -> Column(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) { CircularProgressIndicator() }
+
+            upNext is UiState.Error -> ErrorView(
+                failure = (upNext as UiState.Error).failure,
+                onRetry = viewModel::refresh,
+                modifier = Modifier.padding(padding),
+            )
+
+            else -> FullScreenMessage(
+                icon = Icons.Outlined.PlayCircle,
+                message = stringResource(R.string.empty_up_next),
+                modifier = Modifier.padding(padding),
+            )
+        }
     }
 }
 
@@ -152,7 +218,9 @@ private fun UpNextCard(
                         .padding(top = 8.dp)
                         .semantics { contentDescription = markLabel },
                 ) {
-                    Icon(Icons.Filled.PlayArrow, contentDescription = null)
+                    // A check, not a play arrow: the button records a viewing, and
+                    // play would promise it starts one.
+                    Icon(Icons.Outlined.CheckCircle, contentDescription = null)
                     Text(
                         text = stringResource(R.string.action_mark_watched),
                         modifier = Modifier.padding(start = 8.dp),

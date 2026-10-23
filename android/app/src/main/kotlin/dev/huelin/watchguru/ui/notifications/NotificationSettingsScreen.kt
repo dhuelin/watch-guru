@@ -2,8 +2,10 @@ package dev.huelin.watchguru.ui.notifications
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -31,6 +33,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -45,6 +48,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import dev.huelin.watchguru.R
 import dev.huelin.watchguru.api.models.NotificationSettingsResponse
 import dev.huelin.watchguru.api.models.SeriesNotificationResponse
@@ -77,13 +83,40 @@ fun NotificationSettingsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var permitted by remember { mutableStateOf(notificationsPermitted(context)) }
+    // Whether Android has said no. After that the system prompt may not show
+    // again, so the way forward is Android's own settings screen.
+    var denied by remember { mutableStateOf(false) }
+    // Set when the switch asked for permission, so a grant also turns the
+    // setting on: the user's tap was a request for notifications, not for a
+    // permission dialog.
+    var enableOnGrant by remember { mutableStateOf(false) }
     val request = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         permitted = granted
+        denied = !granted
         // Granting is the moment the backend can usefully be told about this
         // device, rather than the next launch.
-        if (granted) viewModel.registerDevice()
+        if (granted) {
+            viewModel.registerDevice()
+            if (enableOnGrant) viewModel.setEnabled(true)
+        }
+        enableOnGrant = false
+    }
+
+    // Coming back from Android's settings is the other way permission changes.
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                val now = notificationsPermitted(context)
+                if (now && !permitted) viewModel.registerDevice()
+                permitted = now
+                if (now) denied = false
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     LaunchedEffect(error) {
@@ -136,8 +169,19 @@ fun NotificationSettingsScreen(
                         settings = settings,
                         busy = busy,
                         permitted = permitted,
+                        denied = denied,
                         onAskPermission = { request.launch(Manifest.permission.POST_NOTIFICATIONS) },
-                        onSetEnabled = viewModel::setEnabled,
+                        onOpenSystemSettings = { context.startActivity(appNotificationSettings(context)) },
+                        onSetEnabled = { on ->
+                            // Turning it on without permission asks for the
+                            // permission first; the setting follows the answer.
+                            if (on && !permitted) {
+                                enableOnGrant = true
+                                request.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            } else {
+                                viewModel.setEnabled(on)
+                            }
+                        },
                         onSetSeries = viewModel::setSeries,
                         modifier = Modifier.padding(padding),
                     )
@@ -152,7 +196,9 @@ private fun Settings(
     settings: NotificationSettingsResponse,
     busy: Boolean,
     permitted: Boolean,
+    denied: Boolean,
     onAskPermission: () -> Unit,
+    onOpenSystemSettings: () -> Unit,
     onSetEnabled: (Boolean) -> Unit,
     onSetSeries: (Long, Boolean) -> Unit,
     modifier: Modifier = Modifier,
@@ -163,9 +209,12 @@ private fun Settings(
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
     ) {
+        // On only when a notification could actually arrive. The server's
+        // setting alone said On on a phone that had never been asked for
+        // permission, which is a switch promising something it cannot do.
         SwitchRow(
             label = stringResource(R.string.notifications_new_episodes),
-            checked = settings.enabled,
+            checked = settings.enabled && permitted,
             enabled = !busy,
             onChange = onSetEnabled,
         )
@@ -175,16 +224,26 @@ private fun Settings(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
-        // Said only when it is actually the obstacle. A permission prompt on a
-        // screen where notifications are switched off anyway is noise.
-        if (settings.enabled && !permitted) {
+        // Said only when it is actually the obstacle: the setting is on, or
+        // the user just tried to turn it on, and Android is what stands
+        // between it and a notification.
+        if (!permitted && (settings.enabled || denied)) {
             Text(
-                text = stringResource(R.string.notifications_permission_needed),
+                text = stringResource(
+                    if (denied) R.string.notifications_permission_denied else R.string.notifications_permission_needed,
+                ),
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(top = 16.dp),
             )
-            Button(onClick = onAskPermission, modifier = Modifier.padding(top = 8.dp)) {
-                Text(stringResource(R.string.action_allow_notifications))
+            Button(
+                onClick = if (denied) onOpenSystemSettings else onAskPermission,
+                modifier = Modifier.padding(top = 8.dp),
+            ) {
+                Text(
+                    stringResource(
+                        if (denied) R.string.action_open_android_settings else R.string.action_allow_notifications,
+                    ),
+                )
             }
         }
 
@@ -231,7 +290,7 @@ private fun Settings(
                     // Greyed rather than hidden when the global switch is off:
                     // the per-series choices still exist and come back when it
                     // is turned on again.
-                    enabled = !busy && settings.enabled,
+                    enabled = !busy && settings.enabled && permitted,
                     onChange = { onSetSeries(series.titleId, it) },
                 )
             }
@@ -299,3 +358,8 @@ private fun notificationsPermitted(context: Context): Boolean =
         // transitive one is how a build breaks on an unrelated upgrade.
         context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
         PackageManager.PERMISSION_GRANTED
+
+/** Android's own notification settings for this app, the way back from a "no". */
+private fun appNotificationSettings(context: Context): Intent =
+    Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+        .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)

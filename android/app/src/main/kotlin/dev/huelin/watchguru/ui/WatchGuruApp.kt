@@ -5,9 +5,13 @@ import android.content.Context
 import android.content.ContextWrapper
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -112,24 +116,40 @@ private fun SignedInScaffold(signIn: SignInViewModel) {
     val currentDestination = backStackEntry?.destination
 
     Scaffold(
+        // No insets of its own. Every screen inside draws its own top bar, and
+        // that bar already pads for the status bar; when this outer Scaffold
+        // padded for it too, every screen opened with about 100dp of blank
+        // space above its title. The bottom is covered by the NavigationBar,
+        // which pads for the gesture area itself.
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             NavigationBar {
                 TopLevelDestination.entries.forEach { destination ->
+                    // Works for sub-screens too, because each one sits in its
+                    // tab's nested graph: title detail opened from Library is
+                    // under "library" in the hierarchy.
                     val selected =
                         currentDestination?.hierarchy?.any { it.route == destination.route } == true
                     NavigationBarItem(
                         selected = selected,
                         onClick = {
-                            navController.navigate(destination.route) {
-                                // Standard bottom-bar behaviour: tapping a tab
-                                // returns to its root rather than growing the
-                                // back stack, and re-tapping the current tab
-                                // does not push a duplicate.
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+                            if (selected) {
+                                // Reselecting the tab you are on goes to its
+                                // root. Restoring saved state here would return
+                                // to whatever sub-screen was last open, which
+                                // is the opposite of what the tap asks for.
+                                navController.popBackStack(destination.rootRoute, inclusive = false)
+                            } else {
+                                navController.navigate(destination.route) {
+                                    // Standard bottom-bar behaviour: switching
+                                    // tabs keeps each tab's own stack, and does
+                                    // not grow one long back stack across them.
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
                             }
                         },
                         icon = { Icon(destination.icon, contentDescription = null) },
@@ -139,7 +159,13 @@ private fun SignedInScaffold(signIn: SignInViewModel) {
             }
         },
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                // Tells the inner Scaffolds the bottom bar has already taken
+                // the bottom inset, so they do not pad for it a second time.
+                .consumeWindowInsets(padding),
+        ) {
             // Only when there is something to say. A permanent "synced" badge
             // is noise; "3 changes waiting" is information, and it is the
             // honest answer to "did my taps on the train count?".
@@ -149,6 +175,13 @@ private fun SignedInScaffold(signIn: SignInViewModel) {
             WatchGuruNavHost(
                 navController = navController,
                 signIn = signIn,
+                // With the banner on top it has already cleared the status bar,
+                // so the screen below must not clear it again.
+                modifier = if (pending > 0) {
+                    Modifier.consumeWindowInsets(WindowInsets.statusBars)
+                } else {
+                    Modifier
+                },
             )
         }
     }
@@ -171,7 +204,11 @@ private fun PendingChangesBanner(count: Int) {
         Text(
             text = pluralStringResource(R.plurals.pending_changes, count, count),
             style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier = Modifier
+                // The banner is the top of the screen when it shows, so it is
+                // the one that clears the status bar.
+                .statusBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
         )
     }
 }

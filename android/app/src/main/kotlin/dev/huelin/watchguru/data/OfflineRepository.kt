@@ -101,22 +101,32 @@ class OfflineRepository(
      * screen has to know the difference, because it cannot show a server id it
      * does not have, and pretending otherwise is how an optimistic UI ends up
      * lying.
+     *
+     * @param onSent given the server's id for the new history entry when the
+     *   mark was sent rather than queued. It is what makes an exact undo
+     *   possible: deleting that one entry takes back this viewing and nothing
+     *   else, where unmarking the episode would also erase earlier viewings of
+     *   it.
      */
-    suspend fun markEpisodeWatched(episodeId: Long, titleId: Long): Written {
+    suspend fun markEpisodeWatched(
+        episodeId: Long,
+        titleId: Long,
+        onSent: (eventId: Long) -> Unit = {},
+    ): Written {
         val watchedAt = clock()
         // Minted here, before the first attempt, and reused by every replay of
         // it: a reference made at send time would be a new one each try, which
         // is the same as having none.
         val clientRef = newClientRef()
-        return write(
-            network.markEpisodeWatched(
-                LogEpisodeWatched(
-                    clientRef = clientRef,
-                    episodeId = episodeId,
-                    watchedAt = watchedAt.atOffset(ZoneOffset.UTC),
-                )
+        val result = network.markEpisodeWatched(
+            LogEpisodeWatched(
+                clientRef = clientRef,
+                episodeId = episodeId,
+                watchedAt = watchedAt.atOffset(ZoneOffset.UTC),
             )
-        ) { id ->
+        )
+        if (result is ApiResult.Success) onSent(result.value.id)
+        return write(result) { id ->
             PendingMutation.MarkEpisodeWatched(
                 id = id,
                 episodeId = episodeId,

@@ -36,6 +36,29 @@ object HistoryDays {
             .sortedByDescending { it.date }
 
     /**
+     * The second line of a history row: episode, name, rewatch, service.
+     *
+     * Collected and joined rather than appended with a leading separator each:
+     * a film has no episode code, so the old way began a film rewatch with a
+     * stray " · ". Any part may be missing, and the separator only ever sits
+     * between two parts that are both there.
+     *
+     * @param rewatchLabel the localised word, passed in so this stays free of
+     *   Android resources
+     */
+    fun details(event: WatchEventResponse, rewatchLabel: String): String =
+        listOfNotNull(
+            event.episodeCode,
+            event.episodeName,
+            // A rewatch is marked as such: the history is a record of
+            // viewings, not of first viewings.
+            rewatchLabel.takeIf { event.rewatch },
+            event.streamingServiceName,
+        )
+            .filter { it.isNotBlank() }
+            .joinToString(" · ")
+
+    /**
      * How many separate viewings a day holds, said in one line.
      *
      * A count rather than a list of titles: the titles are directly underneath,

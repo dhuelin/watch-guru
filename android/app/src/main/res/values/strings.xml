@@ -143,9 +143,6 @@
     <string name="server_last_heard">Last heard from your server %1$s</string>
     <string name="server_recent_deliveries">Recent deliveries</string>
     <string name="server_other_services">Netflix, Prime Video and Apple TV cannot work this way: none of them offers any way to ask what you watched. Import their export instead \u2014 re-importing duplicates nothing.</string>
-    <string name="action_connect_plex">Connect Plex</string>
-    <string name="action_connect_jellyfin">Connect Jellyfin</string>
-    <string name="action_connect_emby">Connect Emby</string>
 
     <!-- Connecting Trakt (#39). The explainer leads with what it brings,
          because "connect Trakt" means nothing to somebody who has not heard
@@ -165,7 +162,6 @@
         <item quantity="one">Recorded %1$d viewing.</item>
         <item quantity="other">Recorded %1$d viewings.</item>
     </plurals>
-    <string name="action_connect_trakt">Connect Trakt</string>
 
     <!-- History timeline and editing (#22). The search box says what it
          searches, because "Search" over a screen full of dates reads as a
@@ -288,13 +284,12 @@
          and a sentence that wraps three times is worse than no sentence. -->
     <!-- New-episode notifications (#19). -->
     <string name="title_notifications">Notifications</string>
-    <string name="action_notification_settings">Notification settings</string>
     <string name="notifications_new_episodes">New episodes</string>
-    <string name="notifications_new_episodes_detail">Told when a new episode of something you are watching airs.</string>
-    <string name="notifications_permission_needed">Android has not been asked yet whether Watch Guru may notify you.</string>
+    <string name="notifications_new_episodes_detail">Get notified when a new episode of a series you\'re watching airs.</string>
+    <string name="notifications_permission_needed">Android is not allowing Watch Guru to send notifications yet, so this stays off until you allow them.</string>
     <string name="action_allow_notifications">Allow notifications</string>
     <string name="notifications_no_devices">This device is not registered for notifications yet, so nothing can arrive on it.</string>
-    <string name="notifications_series_detail">Turn a series off on its own screen. Switching one back on here removes it from this list.</string>
+    <string name="notifications_series_detail">These series will not notify you. Mute a series on its own page; switch it back on here to unmute it.</string>
     <string name="notifications_series_heading">Muted series</string>
     <string name="notifications_no_series">You have not muted anything. Every series in your library can notify you.</string>
     <string name="detail_notify_new_episodes">Notify me about new episodes</string>
@@ -326,7 +321,7 @@
     </plurals>
     <string name="episode_next">Next: %1$s</string>
     <string name="episode_all_caught_up">You\'re all caught up.</string>
-    <string name="history_rewatch">rewatch</string>
+    <string name="history_rewatch">Rewatch</string>
     <string name="stats_busiest_month">Busiest month: %1$s · %2$d h</string>
     <string name="stats_hero_hours">%1$d h</string>
     <string name="stats_hero_minutes">%1$d min</string>
@@ -334,4 +329,35 @@
         <item quantity="one">Watched %1$d time</item>
         <item quantity="other">Watched %1$d times</item>
     </plurals>
+
+    <!-- UI/UX review fixes: search, undo, profile, notifications. -->
+    <string name="error_not_found">That could not be found. It may have been removed.</string>
+    <string name="error_session">Your session has ended. Please sign in again.</string>
+    <string name="error_server">The Watch Guru server ran into a problem. Try again in a moment.</string>
+    <string name="action_clear_search">Clear search</string>
+    <string name="cd_in_library">%1$s is in your library</string>
+    <string name="cd_add_title_to_library">Add %1$s to your library</string>
+    <string name="title_up_next">Up Next</string>
+    <string name="snackbar_marked_watched">Marked %1$s of %2$s watched</string>
+    <string name="action_undo">Undo</string>
+    <string name="snackbar_entry_deleted">Deleted %1$s from your history</string>
+    <string name="action_edit_entry">Edit</string>
+    <string name="action_delete_entry">Delete</string>
+    <string name="profile_group_viewing">Your viewing</string>
+    <string name="profile_group_connections">Connections</string>
+    <string name="profile_group_data">Data</string>
+    <string name="profile_history_detail">Everything you have watched, day by day</string>
+    <string name="profile_stats_detail">Time watched, streaks and favourites</string>
+    <string name="profile_region_value">Showing offers for %1$s</string>
+    <string name="profile_my_services_detail">Services you subscribe to are listed first</string>
+    <string name="profile_import_detail">From another app\'s export file</string>
+    <string name="profile_notifications_detail">When a new episode of a series you are watching airs</string>
+    <string name="profile_connected">Connected</string>
+    <string name="profile_not_connected">Not connected</string>
+    <string name="profile_signed_in_with_google">Signed in with Google</string>
+    <string name="server_name_plex">Plex</string>
+    <string name="server_name_jellyfin">Jellyfin</string>
+    <string name="server_name_emby">Emby</string>
+    <string name="notifications_permission_denied">Notifications are turned off for Watch Guru in Android\'s settings.</string>
+    <string name="action_open_android_settings">Open Android settings</string>
 </resources>

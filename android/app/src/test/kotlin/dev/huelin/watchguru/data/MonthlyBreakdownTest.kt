@@ -22,14 +22,14 @@ class MonthlyBreakdownTest {
         MonthBucket(year = year, month = month, viewings = 1, minutes = minutes)
 
     @Test
-    fun `the summary reads every month in order, with its value`() {
+    fun `the summary reads every month in order, with its value in hours`() {
         val spoken = MonthlyBreakdown.spokenSummary(
             listOf(month(2026, 1, 120), month(2026, 2, 45)),
             english,
         )
 
         assertEquals(
-            "Minutes watched by month: Jan 2026, 120 minutes, Feb 2026, 45 minutes",
+            "Hours watched by month: Jan 2026, 2 hours, Feb 2026, 0.8 hours",
             spoken,
         )
     }
@@ -59,5 +59,43 @@ class MonthlyBreakdownTest {
     fun `labels are month and year, so December and January do not blur together`() {
         assertEquals("Dec 2025", MonthlyBreakdown.label(month(2025, 12, 10), english))
         assertEquals("Jan 2026", MonthlyBreakdown.label(month(2026, 1, 10), english))
+    }
+
+    @Test
+    fun `months with nothing watched are filled in, so the axis is continuous`() {
+        // The server leaves out empty months; July vanished between June and
+        // August and the bars looked like a continuous run.
+        val filled = MonthlyBreakdown.filled(listOf(month(2026, 8, 30), month(2026, 6, 90)))
+
+        assertEquals(listOf(6, 7, 8), filled.map { it.month })
+        assertEquals(listOf(90L, 0L, 30L), filled.map { it.minutes })
+    }
+
+    @Test
+    fun `filling crosses the new year`() {
+        val filled = MonthlyBreakdown.filled(listOf(month(2025, 11, 10), month(2026, 2, 10)))
+
+        assertEquals(
+            listOf(2025 to 11, 2025 to 12, 2026 to 1, 2026 to 2),
+            filled.map { it.year to it.month },
+        )
+    }
+
+    @Test
+    fun `nothing to fill stays nothing`() {
+        assertTrue(MonthlyBreakdown.filled(emptyList()).isEmpty())
+    }
+
+    @Test
+    fun `axis labels are short month names, not single letters`() {
+        assertEquals("Jun", MonthlyBreakdown.shortMonth(month(2026, 6, 0), english))
+        assertEquals("Jul", MonthlyBreakdown.shortMonth(month(2026, 7, 0), english))
+    }
+
+    @Test
+    fun `hours are whole when whole and one decimal otherwise`() {
+        assertEquals("3", MonthlyBreakdown.hours(180, english))
+        assertEquals("1.5", MonthlyBreakdown.hours(90, english))
+        assertEquals("1,5", MonthlyBreakdown.hours(90, Locale.GERMAN))
     }
 }

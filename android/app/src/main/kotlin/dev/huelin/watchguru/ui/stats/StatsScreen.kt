@@ -1,10 +1,14 @@
 package dev.huelin.watchguru.ui.stats
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -13,12 +17,13 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -26,9 +31,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -148,16 +153,21 @@ private fun StatsContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PeriodSelector(period: StatsPeriod, onPeriod: (StatsPeriod) -> Unit) {
     // One filter row above everything it scopes, rather than a control per
     // section: every figure below moves together, and the row says so.
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        StatsPeriod.entries.forEach { entry ->
-            FilterChip(
+    //
+    // Segmented rather than filter chips: exactly one period is always
+    // selected, which is what a segmented row says and a chip row does not.
+    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+        StatsPeriod.entries.forEachIndexed { index, entry ->
+            SegmentedButton(
                 selected = entry == period,
                 onClick = { onPeriod(entry) },
-                label = { Text(stringResource(entry.label())) },
+                shape = SegmentedButtonDefaults.itemShape(index = index, count = StatsPeriod.entries.size),
+                label = { Text(stringResource(entry.label()), maxLines = 1) },
             )
         }
     }
@@ -281,22 +291,38 @@ private fun Breakdown(heading: String, buckets: List<Bucket>) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            LinearProgressIndicator(
-                progress = { bucket.minutes.toFloat() / peak },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 4.dp)
-                    // The bar is a picture of the figure beside it, so it says
-                    // nothing extra to a screen reader.
-                    //
-                    // clearAndSetSemantics rather than an empty description:
-                    // an empty one leaves the node in the tree, and the
-                    // progress indicator's own range info with it, so the
-                    // reader still stops on a decorative bar and reads a
-                    // percentage nobody needs. This drops the node entirely.
-                    .clearAndSetSemantics { },
-            )
+            ProportionBar(fraction = bucket.minutes.toFloat() / peak)
         }
+    }
+}
+
+/**
+ * A plain filled bar: this bucket's share of the largest one.
+ *
+ * Not a LinearProgressIndicator. Material 3's indicator draws a stop dot and a
+ * gap at the end of its track, which made these read as progress towards
+ * something -- and a genre is not 40% finished.
+ *
+ * Decorative to a screen reader: the bar is a picture of the figure beside
+ * it, and has no semantics of its own to stop on.
+ */
+@Composable
+private fun ProportionBar(fraction: Float) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 4.dp)
+            .height(6.dp)
+            .clip(MaterialTheme.shapes.extraSmall)
+            .background(MaterialTheme.colorScheme.surfaceVariant),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(fraction.coerceIn(0f, 1f))
+                .fillMaxHeight()
+                .clip(MaterialTheme.shapes.extraSmall)
+                .background(MaterialTheme.colorScheme.primary),
+        )
     }
 }
 
