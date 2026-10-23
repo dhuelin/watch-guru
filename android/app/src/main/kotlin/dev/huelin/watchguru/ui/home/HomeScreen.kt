@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -48,6 +49,7 @@ import dev.huelin.watchguru.api.models.UpNextResponse
 import dev.huelin.watchguru.ui.components.ErrorView
 import dev.huelin.watchguru.ui.components.FullScreenMessage
 import dev.huelin.watchguru.ui.components.SkeletonList
+import dev.huelin.watchguru.ui.components.SwipeToMark
 import dev.huelin.watchguru.ui.components.Poster
 import dev.huelin.watchguru.ui.components.UiState
 import dev.huelin.watchguru.ui.components.contentOrNull
@@ -161,68 +163,77 @@ private fun UpNextCard(
     onOpen: () -> Unit,
     onMarkWatched: () -> Unit,
 ) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onOpen)
-                .padding(12.dp),
-        ) {
-            Poster(url = entry.posterUrl, title = entry.primaryTitle, modifier = Modifier.width(64.dp))
+    val markLabel = stringResource(
+        R.string.cd_mark_next_episode,
+        entry.nextEpisodeCode,
+        entry.primaryTitle,
+    )
+    // A swipe from the start edge marks the episode too, through the same
+    // call as the button, so it gets the same undo snackbar.
+    SwipeToMark(
+        enabled = !busy,
+        actionLabel = markLabel,
+        onSwipe = onMarkWatched,
+        shape = CardDefaults.shape,
+    ) {
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onOpen)
+                    .padding(12.dp),
+            ) {
+                Poster(url = entry.posterUrl, title = entry.primaryTitle, modifier = Modifier.width(64.dp))
 
-            Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
-                Text(
-                    text = entry.primaryTitle,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = buildString {
-                        append(entry.nextEpisodeCode)
-                        entry.nextEpisodeName?.let { append(" · $it") }
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                if (entry.airedEpisodes > 0) {
-                    val progressLabel = pluralStringResource(
-                        R.plurals.cd_progress,
-                        entry.airedEpisodes,
-                        entry.watchedEpisodes,
-                        entry.airedEpisodes,
-                    )
-                    LinearProgressIndicator(
-                        progress = { entry.watchedEpisodes.toFloat() / entry.airedEpisodes },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp)
-                            .semantics { contentDescription = progressLabel },
-                    )
-                }
-
-                val markLabel = stringResource(
-                    R.string.cd_mark_next_episode,
-                    entry.nextEpisodeCode,
-                    entry.primaryTitle,
-                )
-                FilledTonalButton(
-                    onClick = onMarkWatched,
-                    enabled = !busy,
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .semantics { contentDescription = markLabel },
-                ) {
-                    // A check, not a play arrow: the button records a viewing, and
-                    // play would promise it starts one.
-                    Icon(Icons.Outlined.CheckCircle, contentDescription = null)
+                Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
                     Text(
-                        text = stringResource(R.string.action_mark_watched),
-                        modifier = Modifier.padding(start = 8.dp),
+                        text = entry.primaryTitle,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
+                    Text(
+                        text = buildString {
+                            append(entry.nextEpisodeCode)
+                            entry.nextEpisodeName?.let { append(" · $it") }
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+
+                    if (entry.airedEpisodes > 0) {
+                        val progressLabel = pluralStringResource(
+                            R.plurals.cd_progress,
+                            entry.airedEpisodes,
+                            entry.watchedEpisodes,
+                            entry.airedEpisodes,
+                        )
+                        LinearProgressIndicator(
+                            progress = { entry.watchedEpisodes.toFloat() / entry.airedEpisodes },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp)
+                                .semantics { contentDescription = progressLabel },
+                        )
+                    }
+
+                    FilledTonalButton(
+                        onClick = onMarkWatched,
+                        enabled = !busy,
+                        modifier = Modifier
+                            .padding(top = 8.dp)
+                            .semantics { contentDescription = markLabel },
+                    ) {
+                        // A check, not a play arrow: the button records a viewing, and
+                        // play would promise it starts one.
+                        Icon(Icons.Outlined.CheckCircle, contentDescription = null)
+                        Text(
+                            text = stringResource(R.string.action_mark_watched),
+                            modifier = Modifier.padding(start = 8.dp),
+                        )
+                    }
                 }
             }
         }

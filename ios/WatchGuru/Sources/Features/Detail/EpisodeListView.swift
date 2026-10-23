@@ -120,15 +120,28 @@ private struct EpisodeRow: View {
         }
         .contentShape(Rectangle())
         // Swipe rather than an overflow button: it is the gesture iOS users
-        // already have, and it keeps the row uncluttered.
-        .swipeActions(edge: .leading, allowsFullSwipe: false) {
-            if episode.aired {
+        // already have, and it keeps the row uncluttered. A full swipe runs
+        // the first action, the same toggle as the circle, so a run of
+        // episodes can be ticked off without aiming at each one; a partial
+        // swipe also offers marking everything up to here.
+        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+            if episode.aired && !isMarking {
+                Button(action: markWatched) {
+                    if episode.watched {
+                        Label("Mark unwatched", systemImage: "circle")
+                    } else {
+                        Label("Mark watched", systemImage: "checkmark.circle")
+                    }
+                }
+                .tint(episode.watched ? .gray : .accentColor)
+
                 Button(action: markUpTo) {
                     Label("Mark all up to here", systemImage: "checkmark.circle.badge.checkmark")
                 }
-                .tint(.accentColor)
+                .tint(.indigo)
             }
         }
+        .sensoryFeedback(.success, trigger: episode.watched) { _, watched in watched }
     }
 
     private var label: String {
