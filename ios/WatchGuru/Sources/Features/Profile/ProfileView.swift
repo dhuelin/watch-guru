@@ -23,13 +23,28 @@ struct ProfileView: View {
                     Section {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(user.displayName).font(.headline)
-                            Text(user.email).font(.subheadline).foregroundStyle(.secondary)
+                            // A synthetic relay address is not shown: it is
+                            // not something anyone can write to, and under the
+                            // name it read as who the user is.
+                            if let email = AccountIdentity.visibleEmail(user.email) {
+                                Text(email).font(.subheadline).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    // Grouped by what each row is about, rather than one card
+                    // of nine unrelated links.
+                    Section("Your viewing") {
+                        NavigationLink("Viewing history") {
+                            HistoryView()
+                        }
+                        NavigationLink("Statistics") {
+                            StatsView()
                         }
                     }
                     Section {
                         // The region is the one preference here that changes
                         // what the app shows, so it is a control rather than a
-                        // line of text. The rest are read-only for now.
+                        // line of text.
                         NavigationLink {
                             RegionPickerView(currentRegion: user.region) { code in
                                 Task { await setRegion(code) }
@@ -42,20 +57,18 @@ struct ProfileView: View {
                         // order, leaving the server, this screen and the
                         // reload counter disagreeing about the country.
                         .disabled(isSavingRegion)
-                        LabeledContent("Language", value: user.language)
-                        LabeledContent("Time zone", value: user.timeZone)
+                        // Beside Region, because together they answer one
+                        // question: region decides which offers exist, this
+                        // decides which of them the user can already watch.
+                        NavigationLink("My services") {
+                            MyServicesView()
+                        }
                     } header: {
-                        Text("Preferences")
+                        Text("Where to watch")
                     } footer: {
                         Text("Streaming offers are shown for this country.")
                     }
-                    Section {
-                        NavigationLink("Viewing history") {
-                            HistoryView()
-                        }
-                        NavigationLink("Statistics") {
-                            StatsView()
-                        }
+                    Section("Connections") {
                         // One entry per server rather than a list behind
                         // another tap: somebody who runs Jellyfin does not want
                         // to read about Plex.
@@ -71,25 +84,32 @@ struct ProfileView: View {
                         NavigationLink("Connect Trakt") {
                             TraktView()
                         }
-                        // Below the connections rather than above them: a live
+                    }
+                    Section("Data") {
+                        // Its own section below the connections: a live
                         // connection is the better answer for anyone who has
                         // one, and a file import is what is left for everybody
                         // else.
                         NavigationLink("Import a watch history") {
                             ImportView()
                         }
+                    }
+                    Section {
                         // Its own screen rather than a switch here: there is a
                         // global setting and one per series, and a list of
                         // series does not belong on the profile screen.
                         NavigationLink("Notifications") {
                             NotificationSettingsView()
                         }
-                        // Beside Region, because together they answer one
-                        // question: region decides which offers exist, this
-                        // decides which of them the user can already watch.
-                        NavigationLink("My services") {
-                            MyServicesView()
-                        }
+                    }
+                    Section {
+                        // Read-only, and named rather than coded: "en-US" and
+                        // "UTC" are what the server stores, not what a reader
+                        // recognises.
+                        LabeledContent("Language", value: AccountIdentity.languageName(user.language))
+                        LabeledContent("Time zone", value: AccountIdentity.timeZoneName(user.timeZone))
+                    } header: {
+                        Text("Preferences")
                     }
                     Section {
                         Button("Sign out") { session.signIn.signOut() }
@@ -169,6 +189,7 @@ struct ProfileView: View {
             // Hoisted rather than inlined into the case, as in load() below.
             let updated = try await session.client.updateProfile(UpdateProfile(region: code))
             state = .content(updated)
+            session.region = updated.region
             // Any title screen still on a navigation stack is now showing
             // offers for the country the user just left.
             session.profileRevision += 1
@@ -187,6 +208,7 @@ struct ProfileView: View {
             // defeats the region based isolation checker.
             let profile = try await session.client.profile()
             state = .content(profile)
+            session.region = profile.region
         } catch {
             state = .failed(error)
         }

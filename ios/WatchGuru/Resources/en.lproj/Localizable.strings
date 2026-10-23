@@ -274,3 +274,46 @@
 "No services yet" = "No services yet";
 "No streaming services are known for your region yet." = "No streaming services are known for your region yet.";
 "Tell us what you subscribe to and those services are listed first when you look at a title. Nothing is hidden either way." = "Tell us what you subscribe to and those services are listed first when you look at a title. Nothing is hidden either way.";
+
+/* MARK: From the UX review
+
+   Grouped by screen like the rest. Several are looked up with
+   String(localized:) because they reach a view as a String: the failure
+   headings, the filtered-library empty states and the rewatch label. The %@
+   and %lld entries are interpolations, listed by hand for the same reason as
+   the ones above. */
+/* Search */
+"Add %@ to your library" = "Add %@ to your library";
+"TMDB %@" = "TMDB %@";
+/* Library */
+"Show all" = "Show all";
+"Showing: %@" = "Showing: %@";
+"Nothing on your watchlist" = "Nothing on your watchlist";
+"Nothing you're watching" = "Nothing you're watching";
+"Nothing completed" = "Nothing completed";
+"Nothing on hold" = "Nothing on hold";
+"Nothing dropped" = "Nothing dropped";
+"Remove %@ from your library?" = "Remove %@ from your library?";
+"Its status and your rating go with it. Your viewing history is kept." = "Its status and your rating go with it. Your viewing history is kept.";
+/* Detail */
+"Not rated" = "Not rated";
+"%lld/10" = "%lld/10";
+"Added to your history for today." = "Added to your history for today.";
+"Saved for today. It will be sent when you are back online." = "Saved for today. It will be sent when you are back online.";
+"Offers in %@." = "Offers in %@.";
+/* Profile */
+"Your viewing" = "Your viewing";
+"Connections" = "Connections";
+"Data" = "Data";
+/* History */
+"Rewatch" = "Rewatch";
+/* Stats */
+"Time watched" = "Time watched";
+"Hours" = "Hours";
+/* Failures */
+"Offline" = "Offline";
+"Catalogue unavailable" = "Catalogue unavailable";
+"Not available" = "Not available";
+"Couldn't load this" = "Couldn't load this";
+"This may have been removed, or it isn't in the catalogue yet." = "This may have been removed, or it isn't in the catalogue yet.";
+"Retry" = "Retry";

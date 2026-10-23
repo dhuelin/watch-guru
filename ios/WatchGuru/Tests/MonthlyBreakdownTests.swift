@@ -46,4 +46,30 @@ struct MonthlyBreakdownTests {
         #expect(MonthlyBreakdown.label(month(2025, 12, 10), locale: english).contains("2025"))
         #expect(MonthlyBreakdown.label(month(2026, 1, 10), locale: english).contains("2026"))
     }
+
+    @Test("a month with nothing watched is put back, so the axis does not skip it")
+    func fillsEmptyMonths() {
+        let filled = MonthlyBreakdown.filled([month(2026, 6, 120), month(2026, 8, 60)])
+
+        #expect(filled.map(\.month) == [6, 7, 8])
+        #expect(filled[1].minutes == 0)
+        #expect(filled[0].minutes == 120)
+    }
+
+    @Test("filling crosses the turn of the year in order")
+    func fillsAcrossTheYear() {
+        let filled = MonthlyBreakdown.filled([month(2026, 2, 10), month(2025, 11, 30)])
+
+        #expect(filled.map { "\($0.year)-\($0.month)" } == ["2025-11", "2025-12", "2026-1", "2026-2"])
+    }
+
+    @Test("no months fill to no months")
+    func fillsNothing() {
+        #expect(MonthlyBreakdown.filled([]).isEmpty)
+    }
+
+    @Test("bars are in hours, to match the headline")
+    func barsAreHours() {
+        #expect(MonthlyBreakdown.hours(month(2026, 1, 90)) == 1.5)
+    }
 }

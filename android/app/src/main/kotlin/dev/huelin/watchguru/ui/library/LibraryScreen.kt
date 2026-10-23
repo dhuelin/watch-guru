@@ -1,5 +1,6 @@
 package dev.huelin.watchguru.ui.library
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -15,11 +16,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.VideoLibrary
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -40,61 +44,67 @@ import dev.huelin.watchguru.ui.components.FullScreenMessage
 import dev.huelin.watchguru.ui.components.Poster
 import dev.huelin.watchguru.ui.components.UiState
 import dev.huelin.watchguru.ui.components.contentOrNull
+import dev.huelin.watchguru.ui.navigation.TitleId
 import dev.huelin.watchguru.ui.theme.style
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(
-    onOpenTitle: (Long) -> Unit,
+    onOpenTitle: (TitleId) -> Unit,
     viewModel: LibraryViewModel = hiltViewModel(),
 ) {
     val items by viewModel.items.collectAsStateWithLifecycle()
     val filter by viewModel.filter.collectAsStateWithLifecycle()
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 12.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            FilterChip(
-                selected = filter == null,
-                onClick = { viewModel.setFilter(null) },
-                label = { Text(stringResource(R.string.library_filter_all)) },
-            )
-            WatchlistControllerApi.StatusListWatchlist.entries.forEach { status ->
+    Scaffold(
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.tab_library)) }) },
+    ) { padding ->
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 FilterChip(
-                    selected = filter == status,
-                    onClick = { viewModel.setFilter(status) },
-                    label = { Text(labelFor(status)) },
+                    selected = filter == null,
+                    onClick = { viewModel.setFilter(null) },
+                    label = { Text(stringResource(R.string.library_filter_all)) },
                 )
-            }
-        }
-
-        val content = items.contentOrNull()
-        when {
-            content != null -> LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(content, key = { it.id }) { item ->
-                    LibraryRow(item = item, onOpen = { onOpenTitle(item.title.id) })
+                WatchlistControllerApi.StatusListWatchlist.entries.forEach { status ->
+                    FilterChip(
+                        selected = filter == status,
+                        onClick = { viewModel.setFilter(status) },
+                        label = { Text(stringResource(labelFor(status))) },
+                    )
                 }
             }
 
-            items is UiState.Loading -> Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) { CircularProgressIndicator() }
+            val content = items.contentOrNull()
+            when {
+                content != null -> LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(content, key = { it.id }) { item ->
+                        LibraryRow(item = item, onOpen = { onOpenTitle(TitleId(item.title.id)) })
+                    }
+                }
 
-            items is UiState.Error -> ErrorView(
-                failure = (items as UiState.Error).failure,
-                onRetry = viewModel::refresh,
-            )
+                items is UiState.Loading -> Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) { CircularProgressIndicator() }
 
-            else -> FullScreenMessage(
-                icon = Icons.Outlined.VideoLibrary,
-                message = stringResource(R.string.empty_library),
-            )
+                items is UiState.Error -> ErrorView(
+                    failure = (items as UiState.Error).failure,
+                    onRetry = viewModel::refresh,
+                )
+
+                else -> FullScreenMessage(
+                    icon = Icons.Outlined.VideoLibrary,
+                    message = stringResource(R.string.empty_library),
+                )
+            }
         }
     }
 }
@@ -168,10 +178,13 @@ private fun LibraryRow(item: WatchlistItemResponse, onOpen: () -> Unit) {
     }
 }
 
-private fun labelFor(status: WatchlistControllerApi.StatusListWatchlist): String = when (status) {
-    WatchlistControllerApi.StatusListWatchlist.WATCHLIST -> "Watchlist"
-    WatchlistControllerApi.StatusListWatchlist.WATCHING -> "Watching"
-    WatchlistControllerApi.StatusListWatchlist.COMPLETED -> "Completed"
-    WatchlistControllerApi.StatusListWatchlist.ON_HOLD -> "On hold"
-    WatchlistControllerApi.StatusListWatchlist.DROPPED -> "Dropped"
+// The same strings the status badges use, so a chip and the rows it filters
+// cannot name one status two ways -- and so the chips are translated at all.
+@StringRes
+private fun labelFor(status: WatchlistControllerApi.StatusListWatchlist): Int = when (status) {
+    WatchlistControllerApi.StatusListWatchlist.WATCHLIST -> R.string.status_watchlist
+    WatchlistControllerApi.StatusListWatchlist.WATCHING -> R.string.status_watching
+    WatchlistControllerApi.StatusListWatchlist.COMPLETED -> R.string.status_completed
+    WatchlistControllerApi.StatusListWatchlist.ON_HOLD -> R.string.status_on_hold
+    WatchlistControllerApi.StatusListWatchlist.DROPPED -> R.string.status_dropped
 }

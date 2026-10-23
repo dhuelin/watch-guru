@@ -18,6 +18,8 @@ struct WhereToWatchView: View {
 
     let offers: [AvailabilityResponse]
     let checkedAt: Date?
+    /// The profile's country code, or nil while it is not known.
+    var region: String?
     /// The services the user says they pay for; those ways of watching first.
     var mine: Set<Int64> = []
 
@@ -31,9 +33,7 @@ struct WhereToWatchView: View {
                     Text("Not on any streaming service in your region.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                    Text("Offers for the country set in your profile.")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                    RegionCaption(region: region)
                     CheckedAtLabel(checkedAt: checkedAt)
                 }
             }
@@ -58,14 +58,10 @@ struct WhereToWatchView: View {
                             }
                         }
 
-                        LazyVGrid(
-                            columns: [GridItem(.adaptive(minimum: 140), spacing: 8, alignment: .leading)],
-                            alignment: .leading,
-                            spacing: 8
-                        ) {
-                            ForEach(group.services, id: \.serviceId) { service in
-                                ServiceChip(offer: service)
-                            }
+                        // A plain list rather than a grid of chips: a filled,
+                        // rounded chip reads as a button, and these are not.
+                        ForEach(group.services, id: \.serviceId) { service in
+                            ServiceRow(offer: service)
                         }
                     }
                 }
@@ -75,9 +71,7 @@ struct WhereToWatchView: View {
                         .font(.subheadline)
                 }
 
-                Text("Offers for the country set in your profile.")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                RegionCaption(region: region)
                 CheckedAtLabel(checkedAt: checkedAt)
                 // Required alongside TMDB's own attribution: the availability
                 // data is JustWatch's, and TMDB's terms say so.
@@ -86,6 +80,27 @@ struct WhereToWatchView: View {
                     .foregroundStyle(.secondary)
             }
         }
+    }
+}
+
+/// Which country these offers are for, by name.
+///
+/// "The country set in your profile" was true and made the reader go and look;
+/// naming it lets someone abroad see at a glance that the offers are home's.
+/// The generic sentence stays as the fallback while the profile is unread.
+private struct RegionCaption: View {
+    let region: String?
+
+    var body: some View {
+        Group {
+            if let region {
+                Text("Offers in \(Regions.displayName(region)).")
+            } else {
+                Text("Offers for the country set in your profile.")
+            }
+        }
+        .font(.caption2)
+        .foregroundStyle(.secondary)
     }
 }
 
@@ -107,22 +122,22 @@ private struct CheckedAtLabel: View {
 
 /// One service, named as well as pictured.
 ///
-/// Not a button: the provider has no per-service deep link, so a chip that
-/// looked tappable would open the same web page whichever service was pressed.
-/// The single link below the groups is the honest version of that.
-private struct ServiceChip: View {
+/// Not a button, and drawn so it does not look like one: no fill, no border.
+/// The provider has no per-service deep link, so a row that looked tappable
+/// would open the same web page whichever service was pressed. The single link
+/// below the groups is the honest version of that.
+private struct ServiceRow: View {
     let offer: AvailabilityResponse
 
     var body: some View {
         HStack(spacing: 8) {
             ServiceLogo(url: offer.logoUrl.flatMap(URL.init(string:)), name: offer.serviceName)
+            // Allowed to wrap: at large text a one-line limit cut "Disney+"
+            // to "Disney…" with the rest of the row empty.
             Text(offer.serviceName)
                 .font(.subheadline)
-                .lineLimit(1)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
-        .background(.quaternary, in: RoundedRectangle(cornerRadius: 8))
         // One element for the pair, so VoiceOver says "Netflix" rather than
         // stopping on a decorative image first.
         .accessibilityElement(children: .combine)

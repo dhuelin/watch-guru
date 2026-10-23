@@ -1,8 +1,33 @@
 package dev.huelin.watchguru.ui.profile
 
 import androidx.compose.foundation.clickable
+import androidx.annotation.StringRes
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.outlined.BarChart
+import androidx.compose.material.icons.outlined.DeleteForever
+import androidx.compose.material.icons.outlined.Dns
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Public
+import androidx.compose.material.icons.outlined.Subscriptions
+import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material.icons.outlined.UploadFile
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import dev.huelin.watchguru.api.models.UserResponse
+import dev.huelin.watchguru.data.AccountIdentity
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -25,7 +50,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -43,13 +67,15 @@ import dev.huelin.watchguru.ui.signin.SignInViewModel
  * Region is editable here, and this is the only place it can be changed. It is
  * not a cosmetic preference: it decides which streaming offers the title screen
  * shows, and every account starts on the server's default, which is the wrong
- * country for most people. Language and time zone are shown but not yet
- * editable -- language is passed through to TMDB.
+ * country for most people. Language and time zone are not shown: they are
+ * not editable yet, and as raw codes ("en-US · UTC") they read as debugging
+ * output rather than as settings.
  *
  * [signIn] is the Activity-scoped instance passed down from `WatchGuruApp`, not
  * one resolved here: signing out has to change the state the whole app is gated
  * on, which a per-destination instance would not.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     onOpenHistory: () -> Unit,
@@ -63,12 +89,27 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val profile by viewModel.profile.collectAsStateWithLifecycle()
+    val connections by viewModel.connections.collectAsStateWithLifecycle()
     val accountError by signIn.accountError.collectAsStateWithLifecycle()
     val regionError by viewModel.regionError.collectAsStateWithLifecycle()
     val savingRegion by viewModel.savingRegion.collectAsStateWithLifecycle()
     var confirmingDelete by rememberSaveable { mutableStateOf(false) }
     var choosingRegion by rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    // Connections change on the screens this one opens, so their state is
+    // re-read on the way back rather than shown as it was before.
+    DisposableEffect(lifecycleOwner) {
+        var first = true
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                if (first) first = false else viewModel.loadConnections()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     LaunchedEffect(accountError) {
         accountError?.let {
@@ -85,55 +126,68 @@ fun ProfileScreen(
         }
     }
 
-    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
+    Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.tab_profile)) }) },
+    ) { padding ->
         when (val state = profile) {
             is UiState.Content -> Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
                     .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
+                    .padding(vertical = 8.dp),
             ) {
-                Text(state.value.displayName, style = MaterialTheme.typography.headlineSmall)
-                Text(state.value.email, style = MaterialTheme.typography.bodyMedium)
-                Text(
-                    text = "${state.value.language} · ${state.value.timeZone}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 8.dp),
+                AccountHeader(state.value)
+
+                // Settings-screen grouping rather than a column of links: each
+                // header names the question its rows answer, and Region sits
+                // with My services because together they decide which offers
+                // a title screen shows.
+                GroupHeader(stringResource(R.string.profile_group_viewing))
+                NavRow(
+                    icon = Icons.Outlined.History,
+                    title = stringResource(R.string.action_view_history),
+                    supporting = stringResource(R.string.profile_history_detail),
+                    onClick = onOpenHistory,
+                )
+                NavRow(
+                    icon = Icons.Outlined.BarChart,
+                    title = stringResource(R.string.action_view_stats),
+                    supporting = stringResource(R.string.profile_stats_detail),
+                    onClick = onOpenStats,
                 )
 
+                GroupHeader(stringResource(R.string.where_to_watch))
                 // The region is the one preference here that changes what the
-                // app shows, so it is a control rather than a line of text.
-                // Everything else on this screen is read-only for now.
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(enabled = !savingRegion) { choosingRegion = true }
-                        .padding(vertical = 12.dp),
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
+                // app shows, so its value is the supporting line: the row says
+                // which country it is set to without being opened.
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.region_label)) },
+                    supportingContent = {
                         Text(
-                            text = stringResource(R.string.region_label),
-                            style = MaterialTheme.typography.bodyLarge,
+                            stringResource(
+                                R.string.profile_region_value,
+                                Regions.displayName(state.value.region),
+                            ),
                         )
-                        Text(
-                            text = stringResource(R.string.region_explainer),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    if (savingRegion) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp))
-                    } else {
-                        Text(
-                            text = Regions.displayName(state.value.region),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
+                    },
+                    leadingContent = { Icon(Icons.Outlined.Public, contentDescription = null) },
+                    trailingContent = {
+                        if (savingRegion) {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                        } else {
+                            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null)
+                        }
+                    },
+                    modifier = Modifier.clickable(enabled = !savingRegion) { choosingRegion = true },
+                )
+                NavRow(
+                    icon = Icons.Outlined.Subscriptions,
+                    title = stringResource(R.string.action_my_services),
+                    supporting = stringResource(R.string.profile_my_services_detail),
+                    onClick = onOpenMyServices,
+                )
 
                 if (choosingRegion) {
                     RegionPickerDialog(
@@ -145,72 +199,79 @@ fun ProfileScreen(
                         },
                     )
                 }
-                TextButton(
-                    onClick = onOpenHistory,
-                    modifier = Modifier.padding(top = 16.dp),
-                ) {
-                    Text(stringResource(R.string.action_view_history))
-                }
-                TextButton(onClick = onOpenStats) {
-                    Text(stringResource(R.string.action_view_stats))
-                }
-                // One entry per server rather than a list behind another tap:
+
+                // One row per server rather than a list behind another tap:
                 // somebody who runs Jellyfin does not want to read about Plex.
-                TextButton(onClick = { onOpenServer("plex") }) {
-                    Text(stringResource(R.string.action_connect_plex))
+                GroupHeader(stringResource(R.string.profile_group_connections))
+                MEDIA_SERVERS.forEach { slug ->
+                    NavRow(
+                        icon = Icons.Outlined.Dns,
+                        title = stringResource(serverName(slug)),
+                        supporting = connectionLabel(connections[slug]),
+                        onClick = { onOpenServer(slug) },
+                    )
                 }
-                TextButton(onClick = { onOpenServer("jellyfin") }) {
-                    Text(stringResource(R.string.action_connect_jellyfin))
-                }
-                TextButton(onClick = { onOpenServer("emby") }) {
-                    Text(stringResource(R.string.action_connect_emby))
-                }
-                TextButton(onClick = onOpenTrakt) {
-                    Text(stringResource(R.string.action_connect_trakt))
-                }
+                NavRow(
+                    icon = Icons.Outlined.Sync,
+                    title = stringResource(R.string.title_trakt),
+                    supporting = connectionLabel(connections[TRAKT]),
+                    onClick = onOpenTrakt,
+                )
+
                 // Below the connections rather than above them: a live
                 // connection is the better answer for anyone who has one, and
                 // a file import is what is left for everybody else.
-                TextButton(onClick = onOpenImport) {
-                    Text(stringResource(R.string.action_import_history))
-                }
+                GroupHeader(stringResource(R.string.profile_group_data))
+                NavRow(
+                    icon = Icons.Outlined.UploadFile,
+                    title = stringResource(R.string.action_import_history),
+                    supporting = stringResource(R.string.profile_import_detail),
+                    onClick = onOpenImport,
+                )
 
                 // Its own row rather than a switch here: there is a global
                 // setting and one per series, and a list of series does not
                 // belong on the profile screen.
-                TextButton(onClick = onOpenNotifications) {
-                    Text(stringResource(R.string.action_notification_settings))
-                }
+                GroupHeader(stringResource(R.string.title_notifications))
+                NavRow(
+                    icon = Icons.Outlined.Notifications,
+                    title = stringResource(R.string.notifications_new_episodes),
+                    supporting = stringResource(R.string.profile_notifications_detail),
+                    onClick = onOpenNotifications,
+                )
 
-                // Beside Region, because the two answer the same question
-                // together: region decides which offers exist, this decides
-                // which of them the user can already watch.
-                TextButton(onClick = onOpenMyServices) {
-                    Text(stringResource(R.string.action_my_services))
-                }
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-                HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-
-                TextButton(onClick = signIn::signOut) {
-                    Text(stringResource(R.string.action_sign_out))
-                }
-                TextButton(onClick = { confirmingDelete = true }) {
-                    Text(
-                        text = stringResource(R.string.action_delete_account),
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-                Text(
-                    text = stringResource(R.string.delete_account_footer),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.action_sign_out)) },
+                    leadingContent = {
+                        Icon(Icons.AutoMirrored.Outlined.Logout, contentDescription = null)
+                    },
+                    modifier = Modifier.clickable(onClick = signIn::signOut),
+                )
+                ListItem(
+                    headlineContent = {
+                        Text(
+                            text = stringResource(R.string.action_delete_account),
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    },
+                    supportingContent = { Text(stringResource(R.string.delete_account_footer)) },
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Outlined.DeleteForever,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                    },
+                    modifier = Modifier.clickable { confirmingDelete = true },
                 )
 
                 Text(
                     text = stringResource(R.string.tmdb_attribution),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 32.dp),
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 16.dp),
                 )
             }
 
@@ -250,4 +311,75 @@ fun ProfileScreen(
             },
         )
     }
+}
+
+/**
+ * Who is signed in.
+ *
+ * The address is shown only when it is one the person would recognise. A
+ * synthetic or relay address is a long string of hex under the name, which
+ * reads as a bug, so it is replaced by how they signed in -- on Android that
+ * is always Google, the only sign-in this app offers.
+ */
+@Composable
+private fun AccountHeader(user: UserResponse) {
+    Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(user.displayName, style = MaterialTheme.typography.headlineSmall)
+        Text(
+            text = if (AccountIdentity.isRelayAddress(user.email)) {
+                stringResource(R.string.profile_signed_in_with_google)
+            } else {
+                user.email
+            },
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun GroupHeader(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleSmall,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 4.dp)
+            .semantics { heading() },
+    )
+}
+
+/** A row that opens another screen: icon, title, what it is for, chevron. */
+@Composable
+private fun NavRow(
+    icon: ImageVector,
+    title: String,
+    supporting: String?,
+    onClick: () -> Unit,
+) {
+    ListItem(
+        headlineContent = { Text(title) },
+        supportingContent = supporting?.let { { Text(it) } },
+        leadingContent = { Icon(icon, contentDescription = null) },
+        trailingContent = {
+            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null)
+        },
+        modifier = Modifier.clickable(onClick = onClick),
+    )
+}
+
+@StringRes
+private fun serverName(slug: String): Int = when (slug) {
+    "jellyfin" -> R.string.server_name_jellyfin
+    "emby" -> R.string.server_name_emby
+    else -> R.string.server_name_plex
+}
+
+/** Null while unknown, so a row never claims a state it has not read. */
+@Composable
+private fun connectionLabel(connected: Boolean?): String? = when (connected) {
+    true -> stringResource(R.string.profile_connected)
+    false -> stringResource(R.string.profile_not_connected)
+    null -> null
 }

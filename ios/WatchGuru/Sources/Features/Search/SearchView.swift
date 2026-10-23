@@ -62,8 +62,10 @@ struct SearchView: View {
             }
         }
         .searchable(text: $model.query, prompt: "Search films and series")
-        .navigationDestination(for: Int64.self) { providerId in
-            TitleDetailView(titleId: providerId)
+        // A provider title, never a bare number: a hit's id is TMDB's, and the
+        // detail screen takes ours. ProviderTitleView turns one into the other.
+        .navigationDestination(for: ProviderTitle.self) { title in
+            ProviderTitleView(title: title)
         }
     }
 
@@ -72,14 +74,16 @@ struct SearchView: View {
     @ViewBuilder
     private func rows(_ hits: [SearchHit], model: SearchModel) -> some View {
         ForEach(hits, id: \.providerId) { hit in
-            NavigationLink(value: hit.providerId) {
+            NavigationLink(value: ProviderTitle(hit)) {
                 SearchResultRow(
                     hit: hit,
-                    alreadyAdded: model.added.contains(hit.providerId)
+                    alreadyAdded: model.added.contains(hit.providerId),
+                    isAdding: model.adding.contains(hit.providerId),
+                    add: { Task { await model.addToLibrary(hit) } }
                 )
             }
-            // A swipe to add, because reaching a button on a row is slower
-            // than the gesture iOS users already have.
+            // Kept as a shortcut beside the visible button. On its own it was
+            // the only way to add from here, and nothing on screen said so.
             .swipeActions(edge: .trailing) {
                 Button {
                     Task { await model.addToLibrary(hit) }
@@ -95,6 +99,8 @@ struct SearchView: View {
 private struct SearchResultRow: View {
     let hit: SearchHit
     let alreadyAdded: Bool
+    let isAdding: Bool
+    let add: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
@@ -112,10 +118,28 @@ private struct SearchResultRow: View {
 
             Spacer()
 
+            // The button becomes the confirmation in the same place, so the
+            // row says what the tap did without moving anything under the
+            // finger.
             if alreadyAdded {
                 Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(.secondary)
+                    .font(.title2)
+                    .foregroundStyle(.tint)
+                    .frame(minWidth: 44, minHeight: 44)
                     .accessibilityLabel("Already in your library")
+            } else {
+                Button(action: add) {
+                    Image(systemName: "plus.circle")
+                        .font(.title2)
+                        .frame(minWidth: 44, minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                // Borderless, or a tap anywhere on the row would press it as
+                // well as opening the title: a List hands the whole row to a
+                // default-styled button.
+                .buttonStyle(.borderless)
+                .disabled(isAdding)
+                .accessibilityLabel("Add \(hit.title) to your library")
             }
         }
     }
@@ -135,8 +159,11 @@ private struct SearchResultRow: View {
         }
         // A null rating is omitted rather than shown as 0.0: most titles
         // genuinely have no rating yet.
+        // Named as TMDB's, as on the detail screen: a bare number beside a
+        // title could be anyone's opinion, including the user's own.
         if let rating = hit.providerRating {
-            parts.append(rating.formatted(.number.precision(.fractionLength(1))))
+            let figure = rating.formatted(.number.precision(.fractionLength(1)))
+            parts.append(String(localized: "TMDB \(figure)"))
         }
         return parts.joined(separator: " · ")
     }

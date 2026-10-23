@@ -17,6 +17,7 @@ import dev.huelin.watchguru.api.apis.TraktControllerApi
 import dev.huelin.watchguru.api.apis.TitleControllerApi
 import dev.huelin.watchguru.api.apis.WatchHistoryControllerApi
 import dev.huelin.watchguru.api.apis.WatchlistControllerApi
+import dev.huelin.watchguru.api.infrastructure.Serializer
 import dev.huelin.watchguru.data.AuthInterceptor
 import dev.huelin.watchguru.data.DeviceRegionInterceptor
 import dev.huelin.watchguru.data.EncryptedTokenStore
@@ -28,7 +29,10 @@ import dev.huelin.watchguru.data.TokenStore
 import dev.huelin.watchguru.data.WatchGuruRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.overwriteWith
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -38,6 +42,7 @@ import retrofit2.Retrofit
 // form exists to avoid.
 import retrofit2.create
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
+import java.math.BigDecimal
 import java.util.concurrent.TimeUnit
 import javax.inject.Qualifier
 import javax.inject.Singleton
@@ -69,7 +74,27 @@ object NetworkModule {
         // be fatal.
         ignoreUnknownKeys = true
         explicitNulls = false
+        // The generated models mark every date, timestamp and decimal
+        // @Contextual, so this Json must carry the client's adapters. Without
+        // them any response containing a timestamp fails to decode, which on
+        // screen is "Something went wrong" over a 200.
+        serializersModule = apiSerializers()
     }
+
+    /**
+     * The generated client's adapters, with the decimal one replaced.
+     *
+     * overwriteWith rather than a second contextual() for the same class,
+     * which throws: a SerializersModule refuses to register one type twice.
+     * Overwriting keeps every other generated adapter -- the date ones in
+     * particular -- and survives regenerating the client, which an edit to the
+     * generated BigDecimalAdapter would not. See [DecimalSerializer].
+     */
+    @OptIn(ExperimentalSerializationApi::class)
+    private fun apiSerializers(): SerializersModule =
+        Serializer.kotlinxSerializationAdapters overwriteWith SerializersModule {
+            contextual(BigDecimal::class, DecimalSerializer)
+        }
 
     private fun logging(): HttpLoggingInterceptor = HttpLoggingInterceptor().apply {
         // BASIC, not BODY: bodies carry the tokens themselves and the user's

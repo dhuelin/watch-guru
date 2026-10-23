@@ -40,6 +40,7 @@ fun FullScreenMessage(
     modifier: Modifier = Modifier,
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null,
+    verticalArrangement: Arrangement.Vertical = Arrangement.Center,
 ) {
     Column(
         modifier = modifier
@@ -47,7 +48,7 @@ fun FullScreenMessage(
             .padding(32.dp)
             .semantics { liveRegion = LiveRegionMode.Polite },
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = verticalArrangement,
     ) {
         Icon(
             imageVector = icon,
@@ -77,12 +78,16 @@ fun FullScreenMessage(
  * unreachable TMDB is not an outage, because the user's own library is still
  * current. Telling someone their data is gone when it is not is the worst
  * available answer.
+ *
+ * @param verticalArrangement [Arrangement.Top] on a screen with a text field,
+ *   where the keyboard would otherwise cover a centred Retry button.
  */
 @Composable
 fun ErrorView(
     failure: ApiResult.Failure,
     modifier: Modifier = Modifier,
     onRetry: (() -> Unit)? = null,
+    verticalArrangement: Arrangement.Vertical = Arrangement.Center,
 ) {
     val icon = when (failure) {
         is ApiResult.Failure.Offline, is ApiResult.Failure.Upstream -> Icons.Outlined.CloudOff
@@ -96,6 +101,7 @@ fun ErrorView(
         modifier = modifier,
         actionLabel = onRetry?.let { stringResource(R.string.action_retry) },
         onAction = onRetry,
+        verticalArrangement = verticalArrangement,
     )
 }
 
@@ -110,7 +116,17 @@ fun ErrorView(
 fun failureMessage(failure: ApiResult.Failure): String = when (failure) {
     is ApiResult.Failure.Offline -> stringResource(R.string.error_offline)
     is ApiResult.Failure.Upstream -> stringResource(R.string.error_provider_down)
-    is ApiResult.Failure.NotFound,
-    is ApiResult.Failure.Unauthorised,
-    is ApiResult.Failure.Unexpected -> stringResource(R.string.error_generic)
+    is ApiResult.Failure.NotFound -> stringResource(R.string.error_not_found)
+    is ApiResult.Failure.Unauthorised -> stringResource(R.string.error_session)
+    // A status of 500 and up means our own server answered and failed, which
+    // is worth telling apart from "no connection": retrying in a moment may
+    // help, and checking the Wi-Fi will not. Anything else -- a response that
+    // would not decode, an unexpected 4xx -- has no better description than
+    // the generic one.
+    is ApiResult.Failure.Unexpected ->
+        if ((failure.status ?: 0) >= 500) {
+            stringResource(R.string.error_server)
+        } else {
+            stringResource(R.string.error_generic)
+        }
 }

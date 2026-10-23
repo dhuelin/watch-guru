@@ -62,6 +62,14 @@ final class Session {
     /// screen needs is "reload", not a value it might mistake for the truth.
     var profileRevision = 0
 
+    /// The profile's country code, once something has read it.
+    ///
+    /// Where-to-watch offers are for this country, and the section showing them
+    /// says which one it is. The title screen fills it in if Profile has not,
+    /// and Profile overwrites it whenever it loads or changes the region, so
+    /// the name on a title screen follows the setting.
+    var region: String?
+
     init(
         baseURL: URL = Session.defaultBaseURL,
         tokens: TokenStore = KeychainTokenStore()
@@ -95,12 +103,14 @@ final class Session {
         // cached library is their watch history in all but name, and the queue
         // may hold changes that would otherwise be replayed against whoever
         // signs in next -- attributing one person's viewing to another.
-        signIn.onSignedOut = { @Sendable in
+        signIn.onSignedOut = { @Sendable [weak self] in
             Task { await offline.clearLocalData() }
             // Which services somebody subscribes to is a fact about them, not
             // about the phone. On a shared device, leaving it would greet the
             // next user with the last one's subscriptions.
             Task { @MainActor in myServices.clear() }
+            // The same for the country: the next user's offers are for theirs.
+            Task { @MainActor in self?.region = nil }
         }
 
         // Where this user's new-episode notifications go (#19).

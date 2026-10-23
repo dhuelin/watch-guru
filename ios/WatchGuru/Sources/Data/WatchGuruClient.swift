@@ -131,6 +131,23 @@ actor WatchGuruClient {
         try await run { try await TitleControllerAPI.getTitle(titleId: id, apiConfiguration: $0) }
     }
 
+    /// The catalogue's own record of a title known only by its provider id.
+    ///
+    /// A search or trending hit carries TMDB's id, not ours, and the two are
+    /// different number spaces that happen to share a type. Importing is how
+    /// one becomes the other: the server fetches the title if it has never seen
+    /// it and returns the existing row if it has, so calling this for a title
+    /// already in the catalogue costs a lookup rather than a duplicate.
+    func importTitle(
+        providerId: Int64,
+        titleType: TitleControllerAPI.TitleType_importTitle
+    ) async throws(APIFailure) -> TitleResponse {
+        try await run {
+            try await TitleControllerAPI.importTitle(
+                titleType: titleType, providerId: providerId, apiConfiguration: $0)
+        }
+    }
+
     // MARK: - Library
 
     func library(

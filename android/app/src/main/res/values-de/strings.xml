@@ -132,9 +132,6 @@
     <string name="server_last_heard">Zuletzt von deinem Server gehört %1$s</string>
     <string name="server_recent_deliveries">Letzte Zustellungen</string>
     <string name="server_other_services">Netflix, Prime Video und Apple TV können das nicht: keiner von ihnen bietet eine Möglichkeit zu erfragen, was du gesehen hast. Importiere stattdessen deren Export — ein erneuter Import erzeugt keine Duplikate.</string>
-    <string name="action_connect_plex">Plex verbinden</string>
-    <string name="action_connect_jellyfin">Jellyfin verbinden</string>
-    <string name="action_connect_emby">Emby verbinden</string>
 
     <string name="title_trakt">Trakt</string>
     <string name="trakt_explainer">Wenn du schon zu Trakt scrobbelst — aus Plex, Kodi, Infuse oder woanders — bringt eine Verbindung das alles hierher. Du bestätigst es auf trakt.tv in deinem Browser; Watch Guru sieht dein Trakt-Passwort nie.</string>
@@ -151,7 +148,6 @@
         <item quantity="one">%1$d Sichtung übernommen.</item>
         <item quantity="other">%1$d Sichtungen übernommen.</item>
     </plurals>
-    <string name="action_connect_trakt">Trakt verbinden</string>
 
     <string name="history_search_label">Verlauf durchsuchen</string>
     <string name="history_filter_all">Alles</string>
@@ -243,13 +239,12 @@
     <string name="error_import_commit">Dieser Import ist nicht durchgegangen. Es wurde nichts hinzugefügt.</string>
 
     <string name="title_notifications">Benachrichtigungen</string>
-    <string name="action_notification_settings">Benachrichtigungen</string>
     <string name="notifications_new_episodes">Neue Folgen</string>
-    <string name="notifications_new_episodes_detail">Du erfährst es, wenn eine neue Folge von etwas läuft, das du schaust.</string>
-    <string name="notifications_permission_needed">Android wurde noch nicht gefragt, ob Watch Guru dich benachrichtigen darf.</string>
+    <string name="notifications_new_episodes_detail">Lass dich benachrichtigen, wenn eine neue Folge einer Serie erscheint, die du schaust.</string>
+    <string name="notifications_permission_needed">Android erlaubt Watch Guru noch keine Benachrichtigungen. Bis du sie erlaubst, bleibt das hier aus.</string>
     <string name="action_allow_notifications">Benachrichtigungen erlauben</string>
     <string name="notifications_no_devices">Dieses Gerät ist noch nicht für Benachrichtigungen registriert, hier kann also nichts ankommen.</string>
-    <string name="notifications_series_detail">Eine Serie schaltest du auf ihrem eigenen Bildschirm ab. Schaltest du sie hier wieder ein, verschwindet sie aus dieser Liste.</string>
+    <string name="notifications_series_detail">Diese Serien benachrichtigen dich nicht. Stummschalten kannst du eine Serie auf ihrer eigenen Seite; schalte sie hier wieder ein, um das aufzuheben.</string>
     <string name="notifications_series_heading">Stummgeschaltete Serien</string>
     <string name="notifications_no_series">Du hast nichts stummgeschaltet. Jede Serie in deiner Bibliothek kann dich benachrichtigen.</string>
     <string name="detail_notify_new_episodes">Über neue Folgen benachrichtigen</string>
@@ -279,7 +274,7 @@
     </plurals>
     <string name="episode_next">Als Nächstes: %1$s</string>
     <string name="episode_all_caught_up">Du bist auf dem neuesten Stand.</string>
-    <string name="history_rewatch">erneut gesehen</string>
+    <string name="history_rewatch">Erneut gesehen</string>
     <string name="stats_busiest_month">Aktivster Monat: %1$s · %2$d Std.</string>
     <string name="stats_hero_hours">%1$d Std.</string>
     <string name="stats_hero_minutes">%1$d Min.</string>
@@ -287,4 +282,35 @@
         <item quantity="one">%1$d Mal gesehen</item>
         <item quantity="other">%1$d Mal gesehen</item>
     </plurals>
+
+    <!-- UI/UX review fixes: search, undo, profile, notifications. -->
+    <string name="error_not_found">Das wurde nicht gefunden. Vielleicht wurde es entfernt.</string>
+    <string name="error_session">Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.</string>
+    <string name="error_server">Beim Watch-Guru-Server ist ein Problem aufgetreten. Versuch es gleich noch einmal.</string>
+    <string name="action_clear_search">Suche leeren</string>
+    <string name="cd_in_library">%1$s ist in deiner Bibliothek</string>
+    <string name="cd_add_title_to_library">%1$s zu deiner Bibliothek hinzufügen</string>
+    <string name="title_up_next">Als Nächstes</string>
+    <string name="snackbar_marked_watched">%1$s von %2$s als gesehen markiert</string>
+    <string name="action_undo">Rückgängig</string>
+    <string name="snackbar_entry_deleted">%1$s aus deinem Verlauf gelöscht</string>
+    <string name="action_edit_entry">Bearbeiten</string>
+    <string name="action_delete_entry">Löschen</string>
+    <string name="profile_group_viewing">Was du schaust</string>
+    <string name="profile_group_connections">Verbindungen</string>
+    <string name="profile_group_data">Daten</string>
+    <string name="profile_history_detail">Alles, was du gesehen hast, Tag für Tag</string>
+    <string name="profile_stats_detail">Sehzeit, Tage in Folge und Favoriten</string>
+    <string name="profile_region_value">Angebote für %1$s</string>
+    <string name="profile_my_services_detail">Deine abonnierten Dienste stehen ganz oben</string>
+    <string name="profile_import_detail">Aus der Exportdatei einer anderen App</string>
+    <string name="profile_notifications_detail">Wenn eine neue Folge einer Serie erscheint, die du schaust</string>
+    <string name="profile_connected">Verbunden</string>
+    <string name="profile_not_connected">Nicht verbunden</string>
+    <string name="profile_signed_in_with_google">Mit Google angemeldet</string>
+    <string name="server_name_plex">Plex</string>
+    <string name="server_name_jellyfin">Jellyfin</string>
+    <string name="server_name_emby">Emby</string>
+    <string name="notifications_permission_denied">Benachrichtigungen für Watch Guru sind in den Android-Einstellungen ausgeschaltet.</string>
+    <string name="action_open_android_settings">Android-Einstellungen öffnen</string>
 </resources>

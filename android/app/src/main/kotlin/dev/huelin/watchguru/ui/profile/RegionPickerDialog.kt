@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -15,6 +16,7 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +52,20 @@ fun RegionPickerDialog(
     var query by rememberSaveable { mutableStateOf("") }
     val matches = remember(regions, query) { Regions.search(regions, query) }
 
+    // Opens on the current region rather than on Afghanistan. Otherwise the
+    // one row the user most needs to see -- what it is set to now -- is two
+    // hundred rows away, and the dialog reads as though nothing is selected.
+    val listState = rememberLazyListState(
+        initialFirstVisibleItemIndex = regions
+            .indexOfFirst { it.code.equals(currentRegion, ignoreCase = true) }
+            .coerceAtLeast(0),
+    )
+    // Back to the top of the matches when the query changes, so a search
+    // never opens scrolled past its own first result.
+    LaunchedEffect(query) {
+        if (query.isNotEmpty()) listState.scrollToItem(0)
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.region_picker_title)) },
@@ -63,7 +79,7 @@ fun RegionPickerDialog(
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                LazyColumn(modifier = Modifier.heightIn(max = 360.dp)) {
+                LazyColumn(state = listState, modifier = Modifier.heightIn(max = 360.dp)) {
                     items(matches, key = { it.code }) { region ->
                         val selected = region.code.equals(currentRegion, ignoreCase = true)
                         Row(

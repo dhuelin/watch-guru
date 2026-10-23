@@ -79,7 +79,9 @@ Both apps implement `docs/DESIGN.md`, which shares *meaning* and not pixels.
 Where they differ, they differ on purpose:
 
 - `NavigationStack` per tab, so each tab keeps its own back stack.
-- Swipe actions for add and remove, rather than buttons on the row.
+- Swipe actions for add and remove. Search rows also carry a visible add
+  button, because a swipe nothing on screen reveals was the only way to add a
+  title; removal asks first, with a `confirmationDialog`.
 - `ContentUnavailableView` for empty and error states, so they inherit the
   system's layout and Dynamic Type behaviour.
 - Semantic system colours, so dark mode and increased contrast come free —

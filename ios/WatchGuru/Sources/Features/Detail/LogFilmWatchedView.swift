@@ -19,18 +19,21 @@ struct LogFilmWatchedView: View {
 
     @State private var isPickingDate = false
     @State private var chosenDay = Date.now
+    /// True for a few seconds after "Watched today", so a double tap is one
+    /// viewing rather than a viewing and a rewatch. A film log is not
+    /// idempotent: the server files a second one as watching it again.
+    @State private var coolingDown = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Button("Watched today") { log(Date.now) }
-                    .buttonStyle(.borderedProminent)
-
-                Button("Watched on a date…") {
-                    chosenDay = Date.now
-                    isPickingDate = true
-                }
-                .buttonStyle(.bordered)
+            // Side by side while they fit, stacked when they do not. At
+            // accessibility sizes the row broke words in half ("Watche / d
+            // today") and ran off the screen; ViewThatFits measures each
+            // layout at its ideal size, so the stack is chosen before any
+            // label has to wrap.
+            ViewThatFits(in: .horizontal) {
+                HStack { buttons }
+                VStack(alignment: .leading) { buttons }
             }
             .disabled(isMarking)
 
@@ -75,8 +78,38 @@ struct LogFilmWatchedView: View {
         }
     }
 
+    @ViewBuilder
+    private var buttons: some View {
+        Button {
+            log(Date.now)
+            coolingDown = true
+            Task {
+                try? await Task.sleep(for: .seconds(3))
+                coolingDown = false
+            }
+        } label: {
+            Text("Watched today").frame(maxWidth: .infinity)
+        }
+        .prominentAction()
+        .disabled(coolingDown)
+
+        Button {
+            chosenDay = Date.now
+            isPickingDate = true
+        } label: {
+            Text("Watched on a date…").frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
+    }
+
     private func message(for outcome: TitleDetailModel.FilmLog) -> String {
         switch outcome {
+        // "Today" rather than today's date: the date reads as if the user had
+        // picked one, when they pressed the button that does not ask.
+        case .logged(let day) where Calendar.current.isDateInToday(day):
+            String(localized: "Added to your history for today.")
+        case .queued(let day) where Calendar.current.isDateInToday(day):
+            String(localized: "Saved for today. It will be sent when you are back online.")
         case .logged(let day):
             String(localized:
                 "Added to your history for \(day.formatted(date: .abbreviated, time: .omitted)).")

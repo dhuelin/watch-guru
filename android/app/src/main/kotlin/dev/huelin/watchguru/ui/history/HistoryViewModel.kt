@@ -11,12 +11,14 @@ import dev.huelin.watchguru.data.WatchGuruRepository
 import dev.huelin.watchguru.ui.components.UiState
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -163,23 +165,68 @@ class HistoryViewModel @Inject constructor(
     }
 
     /**
-     * Deletes one entry, optimistically.
+     * An entry the user has deleted but the server has not been told about.
      *
-     * The row goes immediately and comes back if the call fails. Deleting the
-     * last entry for an episode also makes that episode unwatched again --
-     * handled server-side, so a refresh is what surfaces it rather than
-     * anything guessed here.
+     * Deleting waits for the undo snackbar to go: the row disappears at once,
+     * and the call is only made when the snackbar times out, is swiped away,
+     * or the screen is left. Undo then needs no server call at all, which is
+     * the only kind of undo that cannot fail -- re-creating a history entry
+     * after the fact would lose which viewing was the rewatch.
+     */
+    private val _pendingDelete = MutableStateFlow<WatchEventResponse?>(null)
+    val pendingDelete: StateFlow<WatchEventResponse?> = _pendingDelete.asStateFlow()
+
+    /** A delete the server refused, for a one-off snackbar. */
+    private val _deleteFailure = MutableStateFlow<ApiResult.Failure?>(null)
+    val deleteFailure: StateFlow<ApiResult.Failure?> = _deleteFailure.asStateFlow()
+
+    /**
+     * Hides one entry and offers to bring it back.
+     *
+     * A second delete while the first is still undoable commits the first:
+     * only one snackbar shows at a time, and an entry whose undo was never
+     * offered must not sit hidden for ever.
      */
     fun delete(event: WatchEventResponse) {
+        commitPendingDelete()
         val before = (_events.value as? UiState.Content)?.value ?: return
         _events.value = UiState.Content(before.filterNot { it.id == event.id })
+        _pendingDelete.value = event
+    }
 
+    /** Brings the hidden entry back; nothing was sent, so nothing to reverse. */
+    fun undoDelete() {
+        _pendingDelete.value ?: return
+        _pendingDelete.value = null
+        refresh()
+    }
+
+    /**
+     * Sends the delete the snackbar was holding back.
+     *
+     * NonCancellable because this is also called as the screen goes away, and
+     * a delete the user saw happen must not be dropped halfway because the
+     * screen's scope ended. Deleting the last entry for an episode also makes
+     * that episode unwatched again -- handled server-side, so a refresh is
+     * what surfaces it rather than anything guessed here.
+     */
+    fun commitPendingDelete() {
+        val event = _pendingDelete.value ?: return
+        _pendingDelete.value = null
         viewModelScope.launch {
-            when (repository.deleteWatchEvent(event.id)) {
+            val result = withContext(NonCancellable) { repository.deleteWatchEvent(event.id) }
+            when (result) {
                 is ApiResult.Success -> refresh()
-                is ApiResult.Failure -> _events.value = UiState.Content(before)
+                is ApiResult.Failure -> {
+                    _deleteFailure.value = result
+                    refresh()
+                }
             }
         }
+    }
+
+    fun dismissDeleteFailure() {
+        _deleteFailure.value = null
     }
 
     private fun loadServices() {

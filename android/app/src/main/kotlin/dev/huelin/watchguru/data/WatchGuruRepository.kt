@@ -90,6 +90,21 @@ class WatchGuruRepository(
     suspend fun search(query: String, page: Int = 1): ApiResult<SearchResponse> =
         call { titles.searchTitles(query = query, page = page, language = null) }
 
+    /**
+     * Turns a search result into a title this backend knows, and returns it.
+     *
+     * Search and trending answer with the provider's id only, and title detail
+     * takes the backend's own. Importing is idempotent server-side -- a title
+     * already in the catalogue comes straight back -- so this is safe to call
+     * every time a result is opened, and its [TitleResponse.id] is the only
+     * id the detail screen may be given.
+     */
+    suspend fun importTitle(
+        titleType: TitleControllerApi.TitleTypeImportTitle,
+        providerId: Long,
+    ): ApiResult<TitleResponse> =
+        call { titles.importTitle(titleType = titleType, providerId = providerId, language = null) }
+
     suspend fun title(titleId: Long, region: String? = null): ApiResult<TitleResponse> =
         call { titles.getTitle(titleId = titleId, region = region) }
 

@@ -347,8 +347,9 @@ private struct HistoryRow: View {
         if let code = event.episodeCode { parts.append(code) }
         if let name = event.episodeName { parts.append(name) }
         // A rewatch is marked as such: this is a record of viewings, not of
-        // first viewings.
-        if event.rewatch { parts.append("rewatch") }
+        // first viewings. Looked up, because a literal joined into this
+        // String stayed English in every language.
+        if event.rewatch { parts.append(String(localized: "Rewatch")) }
         if let service = event.streamingServiceName { parts.append(service) }
         return parts.joined(separator: " · ")
     }

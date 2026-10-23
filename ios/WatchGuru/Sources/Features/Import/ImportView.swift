@@ -203,7 +203,7 @@ private struct PreviewList: View {
                      : "Import \(model.selectedCount)")
                     .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
+            .prominentAction()
             .disabled(model.selectedCount == 0)
             .padding()
         }

@@ -5,6 +5,8 @@ struct LibraryView: View {
 
     @Environment(Session.self) private var session
     @State private var model: LibraryModel?
+    /// The row a swipe asked to remove, held until the user confirms.
+    @State private var pendingRemoval: WatchlistItemResponse?
 
     var body: some View {
         Group {
@@ -31,16 +33,36 @@ struct LibraryView: View {
         Group {
             if let items = model.state.value {
                 List {
+                    // Said in the list as well as on the toolbar icon: a
+                    // filtered library otherwise looks like a library that has
+                    // lost most of its rows.
+                    if let filter = model.filter {
+                        Section {
+                            HStack {
+                                Text(String(localized: "Showing: \(label(for: filter))"))
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                Spacer()
+                                Button("Show all") { model.filter = nil }
+                                    .buttonStyle(.borderless)
+                                    .font(.subheadline)
+                            }
+                        }
+                    }
                     ForEach(items, id: \.id) { item in
                         NavigationLink(value: item.title.id) {
                             LibraryRow(item: item)
                         }
+                        // Not destructive-roled: that removes the row the
+                        // moment the swipe ends, before the dialog has asked
+                        // anything.
                         .swipeActions(edge: .trailing) {
-                            Button(role: .destructive) {
-                                Task { await model.remove(item) }
+                            Button {
+                                pendingRemoval = item
                             } label: {
                                 Label("Remove", systemImage: "trash")
                             }
+                            .tint(.red)
                         }
                     }
                 }
@@ -53,11 +75,22 @@ struct LibraryView: View {
                 case .failed(let failure):
                     FailureView(failure: failure) { Task { await model.load() } }
                 default:
-                    ContentUnavailableView(
-                        "Nothing tracked yet",
+                    if let filter = model.filter {
+                        // The library is not empty, the filter is. Saying
+                        // "nothing tracked yet" here told someone with ten
+                        // titles to go and add one.
+                        ContentUnavailableView {
+                            Label(emptyTitle(for: filter), systemImage: "line.3.horizontal.decrease.circle")
+                        } actions: {
+                            Button("Show all") { model.filter = nil }
+                        }
+                    } else {
+                        ContentUnavailableView(
+                            "Nothing tracked yet",
                         systemImage: "books.vertical",
-                        description: Text("Search for a film or series to get started.")
-                    )
+                            description: Text("Search for a film or series to get started.")
+                        )
+                    }
                 }
             }
         }
@@ -72,12 +105,49 @@ struct LibraryView: View {
                         }
                     }
                 } label: {
-                    Label("Filter", systemImage: "line.3.horizontal.decrease.circle")
+                    // Filled while a filter is on, the system's own way of
+                    // saying a filter icon is doing something.
+                    Label(
+                        "Filter",
+                        systemImage: model.filter == nil
+                            ? "line.3.horizontal.decrease.circle"
+                            : "line.3.horizontal.decrease.circle.fill"
+                    )
                 }
             }
         }
         .navigationDestination(for: Int64.self) { titleId in
             TitleDetailView(titleId: titleId)
+        }
+        // A swipe is easy to make by accident, and a removal takes the rating
+        // and status with it, so it asks first.
+        .confirmationDialog(
+            pendingRemoval.map { String(localized: "Remove \($0.title.primaryTitle) from your library?") } ?? "",
+            isPresented: Binding(
+                get: { pendingRemoval != nil },
+                set: { if !$0 { pendingRemoval = nil } }
+            ),
+            titleVisibility: .visible,
+            presenting: pendingRemoval
+        ) { item in
+            Button("Remove from library", role: .destructive) {
+                Task { await model.remove(item) }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { _ in
+            Text("Its status and your rating go with it. Your viewing history is kept.")
+        }
+    }
+
+    /// One sentence per status rather than "Nothing %@": German declines what
+    /// English leaves alone, and "nichts auf Pause" is not "nichts abgebrochen".
+    private func emptyTitle(for status: WatchlistControllerAPI.Status_listWatchlist) -> String {
+        switch status {
+        case .watchlist: String(localized: "Nothing on your watchlist")
+        case .watching: String(localized: "Nothing you're watching")
+        case .completed: String(localized: "Nothing completed")
+        case .onHold: String(localized: "Nothing on hold")
+        case .dropped: String(localized: "Nothing dropped")
         }
     }
 
@@ -95,28 +165,37 @@ struct LibraryView: View {
 private struct LibraryRow: View {
     let item: WatchlistItemResponse
 
+    @Environment(\.dynamicTypeSize) private var typeSize
+
     var body: some View {
-        HStack(spacing: 12) {
+        // At accessibility sizes the poster goes above the text rather than
+        // beside it: beside, it squeezed a title into "Saltwater Ki…".
+        let layout = typeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+            : AnyLayout(HStackLayout(spacing: 12))
+
+        layout {
             PosterView(
                 url: item.title.posterUrl.flatMap(URL.init(string:)),
                 title: item.title.primaryTitle
             )
-            .frame(width: 48)
+            .frame(width: typeSize.isAccessibilitySize ? 96 : 48)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.title.primaryTitle)
                     .font(.headline)
-                    .lineLimit(2)
+                    .lineLimit(typeSize.isAccessibilitySize ? 4 : 2)
 
                 // Icon and label alongside the colour: status is never conveyed
                 // by colour alone.
                 Label {
                     Text(item.status.style.label)
+                        .foregroundStyle(item.status.style.textColor)
                 } icon: {
                     Image(systemName: item.status.style.symbol)
+                        .foregroundStyle(item.status.style.color)
                 }
                 .font(.caption)
-                .foregroundStyle(item.status.style.color)
 
                 // Progress now arrives with the list itself, gathered for the
                 // whole page in one query, so it costs no extra request. Nil
