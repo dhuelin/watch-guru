@@ -85,6 +85,7 @@ struct StatsView: View {
             }
             .padding()
         }
+        .readableWidth()
     }
 }
 

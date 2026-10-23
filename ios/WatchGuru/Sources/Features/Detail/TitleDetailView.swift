@@ -180,6 +180,7 @@ struct TitleDetailView: View {
             guard let old, let new else { return false }
             return new > old
         }
+        .readableWidth()
         .navigationTitle(title.primaryTitle)
     }
 }

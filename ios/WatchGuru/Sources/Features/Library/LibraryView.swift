@@ -7,6 +7,7 @@ struct LibraryView: View {
     @State private var model: LibraryModel?
     /// The row a swipe asked to remove, held until the user confirms.
     @State private var pendingRemoval: WatchlistItemResponse?
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
         Group {
@@ -31,7 +32,9 @@ struct LibraryView: View {
         @Bindable var model = model
 
         Group {
-            if let items = model.state.value {
+            if let items = model.state.value, sizeClass == .regular {
+                grid(items, model: model)
+            } else if let items = model.state.value {
                 List {
                     // Said in the list as well as on the toolbar icon: a
                     // filtered library otherwise looks like a library that has
@@ -141,6 +144,48 @@ struct LibraryView: View {
         }
     }
 
+    /// Regular width: the library as a shelf of posters. Removal moves from a
+    /// swipe, which a grid cell does not have, to the context menu, with the
+    /// same confirmation.
+    private func grid(_ items: [WatchlistItemResponse], model: LibraryModel) -> some View {
+        ScrollView {
+            if let filter = model.filter {
+                HStack {
+                    Text(String(localized: "Showing: \(label(for: filter))"))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Show all") { model.filter = nil }
+                        .font(.subheadline)
+                }
+                .padding(.horizontal)
+            }
+            LazyVGrid(columns: PosterGrid.columns, spacing: PosterGrid.spacing) {
+                ForEach(items, id: \.id) { item in
+                    NavigationLink(value: item.title.id) {
+                        PosterCell(
+                            url: item.title.posterUrl.flatMap(URL.init(string:)),
+                            title: item.title.primaryTitle
+                        ) {
+                            LibraryStatusCaption(item: item)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .contextMenu {
+                        Button(role: .destructive) {
+                            pendingRemoval = item
+                        } label: {
+                            Label("Remove from library", systemImage: "trash")
+                        }
+                    }
+                }
+            }
+            .padding()
+        }
+        .background(Color.screenBackground)
+        .refreshable { await model.load() }
+    }
+
     /// One sentence per status rather than "Nothing %@": German declines what
     /// English leaves alone, and "nichts auf Pause" is not "nichts abgebrochen".
     private func emptyTitle(for status: WatchlistControllerAPI.Status_listWatchlist) -> String {
@@ -188,34 +233,46 @@ private struct LibraryRow: View {
                     .font(.headline)
                     .lineLimit(typeSize.isAccessibilitySize ? 4 : 2)
 
-                // Icon and label alongside the colour: status is never conveyed
-                // by colour alone.
-                Label {
-                    Text(item.status.style.label)
-                        .foregroundStyle(item.status.style.textColor)
-                } icon: {
-                    Image(systemName: item.status.style.symbol)
-                        .foregroundStyle(item.status.style.color)
-                }
-                .font(.caption)
+                LibraryStatusCaption(item: item)
+            }
+        }
+    }
+}
 
-                // Progress now arrives with the list itself, gathered for the
-                // whole page in one query, so it costs no extra request. Nil
-                // for films, which have no episode progress — a bar there would
-                // be meaningless rather than merely empty.
-                if let progress = item.progress {
-                    ProgressView(
-                        value: Double(progress.watchedEpisodes),
-                        total: Double(max(progress.airedEpisodes, 1))
-                    )
-                    .accessibilityLabel(
-                        "\(progress.watchedEpisodes) of \(progress.airedEpisodes) episodes watched"
-                    )
-                    Text("\(progress.watchedEpisodes) / \(progress.airedEpisodes)")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
-                }
+/// The status and episode progress under a title, shared by the row and the
+/// poster grid so both say the same thing the same way.
+private struct LibraryStatusCaption: View {
+    let item: WatchlistItemResponse
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            // Icon and label alongside the colour: status is never conveyed
+            // by colour alone.
+            Label {
+                Text(item.status.style.label)
+                    .foregroundStyle(item.status.style.textColor)
+            } icon: {
+                Image(systemName: item.status.style.symbol)
+                    .foregroundStyle(item.status.style.color)
+            }
+            .font(.caption)
+
+            // Progress now arrives with the list itself, gathered for the
+            // whole page in one query, so it costs no extra request. Nil
+            // for films, which have no episode progress — a bar there would
+            // be meaningless rather than merely empty.
+            if let progress = item.progress {
+                ProgressView(
+                    value: Double(progress.watchedEpisodes),
+                    total: Double(max(progress.airedEpisodes, 1))
+                )
+                .accessibilityLabel(
+                    "\(progress.watchedEpisodes) of \(progress.airedEpisodes) episodes watched"
+                )
+                Text("\(progress.watchedEpisodes) / \(progress.airedEpisodes)")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
             }
         }
     }

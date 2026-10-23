@@ -4,6 +4,7 @@ import WatchGuruAPI
 struct SearchView: View {
 
     @Environment(Session.self) private var session
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var model: SearchModel?
 
     var body: some View {
@@ -29,7 +30,9 @@ struct SearchView: View {
         @Bindable var model = model
 
         Group {
-            if let hits = model.visible.value {
+            if let hits = model.visible.value, sizeClass == .regular {
+                grid(hits, model: model)
+            } else if let hits = model.visible.value {
                 List {
                     if !model.isSearching {
                         // Named, because an unlabelled list of films on a
@@ -68,6 +71,55 @@ struct SearchView: View {
         .navigationDestination(for: ProviderTitle.self) { title in
             ProviderTitleView(title: title)
         }
+    }
+
+    /// Regular width: results and the trending shelf as a grid of posters,
+    /// each with the same add control the rows have, under the poster rather
+    /// than inside the link so a tap on it adds instead of opening.
+    private func grid(_ hits: [SearchHit], model: SearchModel) -> some View {
+        ScrollView {
+            if !model.isSearching {
+                Text("Trending this week")
+                    .font(.title3.bold())
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal)
+                    .accessibilityAddTraits(.isHeader)
+            }
+            LazyVGrid(columns: PosterGrid.columns, spacing: PosterGrid.spacing) {
+                ForEach(hits, id: \.providerId) { hit in
+                    let alreadyAdded = hit.library != nil || model.added.contains(hit.providerId)
+                    VStack(alignment: .leading, spacing: 4) {
+                        NavigationLink(value: ProviderTitle(hit)) {
+                            PosterCell(url: hit.posterUrl.flatMap(URL.init(string:)), title: hit.title) {
+                                Text(hit.subtitle)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+
+                        if alreadyAdded {
+                            Label("In your library", systemImage: "checkmark.circle.fill")
+                                .font(.caption)
+                                .foregroundStyle(.tint)
+                        } else {
+                            Button {
+                                Task { await model.addToLibrary(hit) }
+                            } label: {
+                                Label("Add", systemImage: "plus.circle")
+                                    .font(.caption.weight(.semibold))
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                            .disabled(model.adding.contains(hit.providerId))
+                            .accessibilityLabel("Add \(hit.title) to your library")
+                        }
+                    }
+                }
+            }
+            .padding()
+        }
+        .background(Color.screenBackground)
     }
 
     /// One row builder for both lists, so a result and a trending row are the
@@ -120,7 +172,7 @@ private struct SearchResultRow: View {
                 Text(hit.title)
                     .font(.headline)
                     .lineLimit(2)
-                Text(subtitle)
+                Text(hit.subtitle)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 // Words as well as the check, which on its own reads as
@@ -159,25 +211,28 @@ private struct SearchResultRow: View {
             }
         }
     }
+}
 
-    private var subtitle: String {
+private extension SearchHit {
+    /// Type, year and TMDB rating, the line under a result's name.
+    var subtitle: String {
         // Looked up, not a literal: this is joined into a String and handed
         // to Text in a variable, which does not localise. "TV series" rather
         // than "Series" so the key cannot collide with the history filter's
         // plural category — one title is a Serie, the category is Serien.
         var parts: [String] = [
-            hit.titleType == .movie
+            titleType == .movie
                 ? String(localized: "Film")
                 : String(localized: "TV series")
         ]
-        if let date = hit.releaseDate {
+        if let date = releaseDate {
             parts.append(date.formatted(.dateTime.year()))
         }
         // A null rating is omitted rather than shown as 0.0: most titles
         // genuinely have no rating yet.
         // Named as TMDB's, as on the detail screen: a bare number beside a
         // title could be anyone's opinion, including the user's own.
-        if let rating = hit.providerRating {
+        if let rating = providerRating {
             let figure = rating.formatted(.number.precision(.fractionLength(1)))
             parts.append(String(localized: "TMDB \(figure)"))
         }

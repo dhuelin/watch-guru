@@ -9,9 +9,41 @@ struct HomeView: View {
 
     @Environment(Session.self) private var session
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var model: HomeModel?
+    /// The series shown beside the list at regular width.
+    @State private var selected: Int64?
 
+    /// Its own navigation container, unlike the other tabs: at regular width
+    /// Up Next is a list with the chosen series beside it, the way Mail shows
+    /// a message beside the inbox, because marking the next episode and
+    /// seeing the season are one task. Compact width pushes, as before.
     var body: some View {
+        if sizeClass == .regular {
+            NavigationSplitView {
+                main
+            } detail: {
+                NavigationStack {
+                    if let selected {
+                        TitleDetailView(titleId: selected)
+                            // A new screen per series, not one screen whose
+                            // model is still the previous series'.
+                            .id(selected)
+                    } else {
+                        ContentUnavailableView(
+                            "Choose a series",
+                            systemImage: "play.tv",
+                            description: Text("Its episodes and where to watch it show up here.")
+                        )
+                    }
+                }
+            }
+        } else {
+            NavigationStack { main }
+        }
+    }
+
+    private var main: some View {
         Group {
             if let model {
                 content(model)
@@ -42,38 +74,23 @@ struct HomeView: View {
     @ViewBuilder
     private func content(_ model: HomeModel) -> some View {
         if let entries = model.state.value {
-            List {
-                ForEach(entries, id: \.titleId) { entry in
-                    CardRow {
-                        NavigationLink(value: entry.titleId) {
-                            UpNextRow(
-                                entry: entry,
-                                busy: model.marking.contains(entry.titleId)
-                            ) {
-                                Task { await model.markWatched(entry) }
-                            }
-                        }
-                        // The same call as the row's button, through the offline
-                        // queue; the button stays, since a swipe is never found by
-                        // someone who was not shown it. From the trailing edge, as
-                        // on the title screen's episodes, where the leading one
-                        // belongs to going back: one direction to learn for marking.
-                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            if !model.marking.contains(entry.titleId) {
-                                Button {
-                                    Task { await model.markWatched(entry) }
-                                } label: {
-                                    Label("Mark watched", systemImage: "checkmark.circle")
-                                }
-                                .tint(.accentColor)
-                            }
-                        }
-                    }
+            if sizeClass == .regular {
+                List {
+                    rows(entries, model: model)
                 }
+                .cardList()
+                .refreshable { await model.load() }
+                // Something beside the list from the start, rather than an
+                // empty half of the screen.
+                .onAppear { if selected == nil { selected = entries.first?.titleId } }
+            } else {
+                List {
+                    rows(entries, model: model)
+                }
+                .cardList()
+                .refreshable { await model.load() }
+                .navigationDestination(for: Int64.self) { TitleDetailView(titleId: $0) }
             }
-            .cardList()
-            .refreshable { await model.load() }
-            .navigationDestination(for: Int64.self) { TitleDetailView(titleId: $0) }
         } else {
             switch model.state {
             case .loading:
@@ -86,6 +103,58 @@ struct HomeView: View {
                     systemImage: "play.tv",
                     description: Text("Start a series and it will show up here.")
                 )
+            }
+        }
+    }
+
+    private func rows(_ entries: [UpNextResponse], model: HomeModel) -> some View {
+        ForEach(entries, id: \.titleId) { entry in
+            // The series shown beside the list is marked on its card, since a
+            // card's own background replaces the list's selection highlight.
+            CardRow(highlighted: sizeClass == .regular && entry.titleId == selected) {
+                Group {
+                    if sizeClass == .regular {
+                        // A tap that chooses rather than List selection, whose
+                        // styling turns the row's text white on a card that is
+                        // not the accent colour. The Mark watched button inside
+                        // still takes its own taps.
+                        UpNextRow(
+                            entry: entry,
+                            busy: model.marking.contains(entry.titleId)
+                        ) {
+                            Task { await model.markWatched(entry) }
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture { selected = entry.titleId }
+                        .accessibilityAddTraits(
+                            entry.titleId == selected ? [.isButton, .isSelected] : .isButton
+                        )
+                    } else {
+                        NavigationLink(value: entry.titleId) {
+                            UpNextRow(
+                                entry: entry,
+                                busy: model.marking.contains(entry.titleId)
+                            ) {
+                                Task { await model.markWatched(entry) }
+                            }
+                        }
+                    }
+                }
+                // The same call as the row's button, through the offline
+                // queue; the button stays, since a swipe is never found by
+                // someone who was not shown it. From the trailing edge, as
+                // on the title screen's episodes, where the leading one
+                // belongs to going back: one direction to learn for marking.
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    if !model.marking.contains(entry.titleId) {
+                        Button {
+                            Task { await model.markWatched(entry) }
+                        } label: {
+                            Label("Mark watched", systemImage: "checkmark.circle")
+                        }
+                        .tint(.accentColor)
+                    }
+                }
             }
         }
     }

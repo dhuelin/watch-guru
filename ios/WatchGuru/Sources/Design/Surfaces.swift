@@ -38,12 +38,46 @@ extension View {
 /// One row of a `cardList()`: its own section, which is what draws it as a
 /// separate card.
 struct CardRow<Content: View>: View {
+    /// Drawn in the accent's tint instead of the card colour: the selected
+    /// row of a list with its detail beside it. The card's own background
+    /// covers the list's selection highlight, so the card has to show it.
+    var highlighted = false
     @ViewBuilder let content: Content
 
     var body: some View {
         Section {
             content
         }
-        .listRowBackground(Color.cardBackground)
+        .listRowBackground(
+            Color.cardBackground
+                .overlay(highlighted ? Color.accentColor.opacity(0.18) : .clear)
+        )
+    }
+}
+
+extension View {
+
+    /// Keeps a scrolling screen's content to a readable column on a wide
+    /// screen, centred, with the background still running edge to edge.
+    ///
+    /// On an iPad a title screen or the statistics pushed full width put a
+    /// progress bar 1,000 points long under a line of text at the other end.
+    /// A phone is narrower than the limit, so nothing changes there.
+    func readableWidth(_ maxWidth: CGFloat = 760) -> some View {
+        modifier(ReadableWidth(maxWidth: maxWidth))
+    }
+}
+
+private struct ReadableWidth: ViewModifier {
+    let maxWidth: CGFloat
+
+    func body(content: Content) -> some View {
+        GeometryReader { proxy in
+            content.contentMargins(
+                .horizontal,
+                max(0, (proxy.size.width - maxWidth) / 2),
+                for: .scrollContent
+            )
+        }
     }
 }

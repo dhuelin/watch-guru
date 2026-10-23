@@ -22,7 +22,7 @@ struct UpNextWidgetView: View {
         } else if let feed = entry.feed, !feed.entries.isEmpty {
             switch family {
             case .accessoryRectangular: LockScreen(episode: feed.entries[0])
-            case .systemLarge: Stack(feed: feed)
+            case .systemLarge, .systemExtraLarge: Stack(feed: feed)
             case .systemMedium: Single(episode: feed.entries[0], markable: true, feed: feed)
             default: Single(episode: feed.entries[0], markable: false, feed: feed)
             }

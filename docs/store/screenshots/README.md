@@ -9,6 +9,7 @@ cleaned with `simctl status_bar` and Android's SystemUI demo mode.
 | Folder | What | Use for |
 |---|---|---|
 | `raw/iphone-6.9/` | 6 captures, 1320×2868 | App Store, iPhone 6.9" |
+| `raw/ipad-13/` | 5 captures, 2064×2752 | App Store, iPad 13" |
 | `raw/android-phone/` | 6 captures, 1080×1920 | Play, phone |
 | `framed/<same>/` | The same, captioned on the brand gradient, same sizes | Either store; these are the ones to upload |
 
@@ -45,7 +46,9 @@ None of that tooling is in the repository. If screenshots are retaken more
 than once or twice, the stand-in TMDB and the seed script are worth adding
 under `tools/`.
 
-Not taken: iPad screenshots, because v1 is iPhone-only (iPad support is
-[#65](https://github.com/dhuelin/watch-guru/issues/65)). Nor German ones: both
-stores fall back to the default language's set, so the English ones serve the
+The iPad set was taken on 24 October 2026 on the iPad Pro 13-inch (M5)
+simulator, in portrait, after the redesign and the iPad layout, so it shows
+the newer look; the iPhone and Android sets predate the redesign and are worth
+retaking. Not taken: German screenshots. Both stores fall back to the default
+language's set, so the English ones serve the
 German listing until a German set is made.
