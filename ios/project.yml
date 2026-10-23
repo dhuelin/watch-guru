@@ -68,6 +68,17 @@ targets:
           NSExceptionDomains:
             localhost:
               NSExceptionAllowsInsecureHTTPLoads: true
+        # Without these two, XcodeGen writes 1.0 and 1 into the plist and the
+        # MARKETING_VERSION / CURRENT_PROJECT_VERSION settings below change
+        # nothing. Every build would be 1.0 (1), and App Store Connect refuses
+        # a second upload with a build number it has already seen, so a
+        # release pipeline has to be able to set CURRENT_PROJECT_VERSION.
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        # HTTPS through URLSession and nothing else, which is exempt. Saying so
+        # here answers App Store Connect's export compliance question once,
+        # rather than on every build before it can go to TestFlight.
+        ITSAppUsesNonExemptEncryption: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.huelin.watchguru
@@ -115,6 +126,9 @@ targets:
       path: WatchGuruWidgets/Info.plist
       properties:
         CFBundleDisplayName: Watch Guru
+        # Must track the app's: see the comment on the app target.
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:

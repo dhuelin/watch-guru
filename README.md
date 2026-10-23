@@ -39,7 +39,10 @@ issues tracking each piece.
 For shipping: [`docs/STORE-LISTING.md`](docs/STORE-LISTING.md) holds the Play
 listing copy in both languages, the Data safety answers derived from what the
 backend actually stores, and the list of things that must be set before a
-first upload. [`docs/PRIVACY.md`](docs/PRIVACY.md) is the privacy policy Play
+first upload. [`docs/APP-STORE-LISTING.md`](docs/APP-STORE-LISTING.md) is the
+same for App Store Connect, and the screenshots for both stores are in
+[`docs/store/screenshots/`](docs/store/screenshots/README.md).
+[`docs/PRIVACY.md`](docs/PRIVACY.md) is the privacy policy Play
 requires at a public URL; it has two placeholders to fill in before it is
 published.
 
@@ -60,8 +63,9 @@ system tints it to a flat silhouette anyway.
 
 <img src="docs/brand/promo.jpg" alt="Concept render: the mascot beside a phone showing a grid of posters" width="420" />
 
-That image is a **concept render, not a screenshot**. No build of either app has
-been run on a device, the layout in it is not the layout either app has, and its
+That image is a **concept render, not a screenshot** — the real ones are in
+[`docs/store/screenshots/`](docs/store/screenshots/README.md). The layout in it
+is not the layout either app has, and its
 posters are generated likenesses rather than licensed artwork — so it belongs on
 this page and not in a store listing. The wordmark sets the name as
 `watch-guru`; the apps and this document call it Watch Guru.
