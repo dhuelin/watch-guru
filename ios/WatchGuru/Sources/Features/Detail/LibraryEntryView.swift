@@ -16,7 +16,7 @@ struct LibraryEntryView: View {
     let isMarking: Bool
     let add: () -> Void
     let setStatus: (Int64, UpdateWatchlistItem.Status) -> Void
-    let setRating: (Int64, Int) -> Void
+    let setRating: (Int64, Int?) -> Void
     let remove: (Int64) -> Void
 
     @State private var confirmingRemoval = false
@@ -74,13 +74,9 @@ struct LibraryEntryView: View {
     /// docs/DESIGN.md says it must never be confused with. A menu also sends
     /// one request per decision without any drag state to get stuck.
     ///
-    /// There is no "Clear rating". The API cannot express one: the update is a
-    /// partial PATCH that treats a missing rating and a null one alike as
-    /// "leave it alone", and the generated client omits a nil field anyway.
-    /// Sending 0 instead would record a rating of zero, which the design keeps
-    /// distinct from "not rated". Until the backend grows a way to clear it, a
-    /// rating can be changed but not removed, and the control does not offer
-    /// what it cannot do.
+    /// "Not rated" is always on the menu, so a rating can be taken back as
+    /// easily as it was given. Choosing it clears the rating rather than
+    /// sending 0, which the design keeps distinct from "not rated".
     @ViewBuilder
     private func rating(_ entry: LibraryEntry) -> some View {
         let current = entry.rating.map { Int($0.rounded()) }
@@ -95,14 +91,10 @@ struct LibraryEntryView: View {
             Picker("Your rating", selection: Binding(
                 get: { current },
                 set: { picked in
-                    if let picked, picked != current { setRating(entry.itemId, picked) }
+                    if picked != current { setRating(entry.itemId, picked) }
                 }
             )) {
-                // Only offered while it is true, so it can be shown but not
-                // chosen.
-                if current == nil {
-                    Text("Not rated").tag(Int?.none)
-                }
+                Text("Not rated").tag(Int?.none)
                 ForEach(Array((1...10).reversed()), id: \.self) { score in
                     Text("\(score)/10").tag(Int?.some(score))
                 }

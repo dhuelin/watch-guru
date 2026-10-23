@@ -40,7 +40,9 @@ enum PendingMutation: Codable, Equatable, Sendable {
     ///   a rating queued offline is otherwise dropped on replay — the mutation
     ///   would be sent with only its status and quietly forget what the user
     ///   actually chose.
-    case updateLibraryItem(id: Int64, itemId: Int64, status: String?, rating: Double?)
+    /// - Parameter clearRating: true when the user took their rating back.
+    ///   Optional so that anything queued by an older build still decodes.
+    case updateLibraryItem(id: Int64, itemId: Int64, status: String?, rating: Double?, clearRating: Bool?)
     case removeFromLibrary(id: Int64, itemId: Int64)
 
     /// Monotonic, assigned on enqueue.
@@ -55,7 +57,7 @@ enum PendingMutation: Codable, Equatable, Sendable {
              .unmarkEpisode(let id, _),
              .markWatchedUpTo(let id, _),
              .addToLibrary(let id, _, _, _),
-             .updateLibraryItem(let id, _, _, _),
+             .updateLibraryItem(let id, _, _, _, _),
              .removeFromLibrary(let id, _):
             return id
         }
@@ -71,7 +73,7 @@ enum PendingMutation: Codable, Equatable, Sendable {
         // sharing their target would drop marks it does not include.
         case .markWatchedUpTo(_, let episodeId): "up-to:\(episodeId)"
         case .addToLibrary(_, let providerId, let titleType, _): "library:\(titleType):\(providerId)"
-        case .updateLibraryItem(_, let itemId, _, _): "item:\(itemId)"
+        case .updateLibraryItem(_, let itemId, _, _, _): "item:\(itemId)"
         case .removeFromLibrary(_, let itemId): "item:\(itemId)"
         }
     }

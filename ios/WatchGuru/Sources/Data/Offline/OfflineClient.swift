@@ -179,7 +179,8 @@ actor OfflineClient {
                 id: id,
                 itemId: itemId,
                 status: update.status?.rawValue,
-                rating: update.rating
+                rating: update.rating,
+                clearRating: update.clearRating
             )
         }
     }
@@ -328,10 +329,11 @@ actor OfflineClient {
                     status: status.flatMap(AddToWatchlist.Status.init(rawValue:)),
                     titleType: type
                 ))
-            case .updateLibraryItem(_, let itemId, let status, let rating):
+            case .updateLibraryItem(_, let itemId, let status, let rating, let clearRating):
                 _ = try await client.updateLibraryItem(
                     itemId: itemId,
                     UpdateWatchlistItem(
+                        clearRating: clearRating,
                         rating: rating,
                         status: status.flatMap(UpdateWatchlistItem.Status.init(rawValue:))
                     )

@@ -106,12 +106,12 @@ struct PendingMutationTests {
         // the server as an update that set only the status -- silently losing
         // the thing the user had just chosen.
         let data = try encoded([
-            .updateLibraryItem(id: 1, itemId: 7, status: "COMPLETED", rating: 8)
+            .updateLibraryItem(id: 1, itemId: 7, status: "COMPLETED", rating: 8, clearRating: nil)
         ])
 
         let decoded = try JSONDecoder().decode([PendingMutation].self, from: data)
 
-        guard case .updateLibraryItem(_, let itemId, let status, let rating) = decoded[0] else {
+        guard case .updateLibraryItem(_, let itemId, let status, let rating, _) = decoded[0] else {
             Issue.record("expected a library update, got \(decoded[0])")
             return
         }
@@ -123,17 +123,52 @@ struct PendingMutationTests {
     @Test("a library update queued before ratings existed still decodes")
     func olderLibraryUpdatesStillDecode() throws {
         let current = try encoded([
-            .updateLibraryItem(id: 1, itemId: 7, status: "COMPLETED", rating: 8)
+            .updateLibraryItem(id: 1, itemId: 7, status: "COMPLETED", rating: 8, clearRating: nil)
         ])
 
         let decoded = try JSONDecoder().decode(
             [PendingMutation].self, from: removing("rating", from: current))
 
-        guard case .updateLibraryItem(_, _, let status, let rating) = decoded[0] else {
+        guard case .updateLibraryItem(_, _, let status, let rating, _) = decoded[0] else {
             Issue.record("expected a library update, got \(decoded[0])")
             return
         }
         #expect(status == "COMPLETED")
         #expect(rating == nil)
+    }
+
+    @Test("clearing a rating survives the queue")
+    func clearedRatingsAreQueued() throws {
+        // Without the flag a rating cleared offline would replay as an empty
+        // update, and the old score would come back when the screen reloads.
+        let data = try encoded([
+            .updateLibraryItem(id: 1, itemId: 7, status: nil, rating: nil, clearRating: true)
+        ])
+
+        let decoded = try JSONDecoder().decode([PendingMutation].self, from: data)
+
+        guard case .updateLibraryItem(_, _, _, let rating, let clearRating) = decoded[0] else {
+            Issue.record("expected a library update, got \(decoded[0])")
+            return
+        }
+        #expect(rating == nil)
+        #expect(clearRating == true)
+    }
+
+    @Test("a library update queued before ratings could be cleared still decodes")
+    func updatesWithoutClearRatingStillDecode() throws {
+        let current = try encoded([
+            .updateLibraryItem(id: 1, itemId: 7, status: "COMPLETED", rating: 8, clearRating: nil)
+        ])
+
+        let decoded = try JSONDecoder().decode(
+            [PendingMutation].self, from: removing("clearRating", from: current))
+
+        guard case .updateLibraryItem(_, _, _, let rating, let clearRating) = decoded[0] else {
+            Issue.record("expected a library update, got \(decoded[0])")
+            return
+        }
+        #expect(rating == 8)
+        #expect(clearRating == nil)
     }
 }
