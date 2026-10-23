@@ -37,7 +37,7 @@ struct LibraryView: View {
                     // filtered library otherwise looks like a library that has
                     // lost most of its rows.
                     if let filter = model.filter {
-                        Section {
+                        CardRow {
                             HStack {
                                 Text(String(localized: "Showing: \(label(for: filter))"))
                                     .font(.subheadline)
@@ -50,23 +50,25 @@ struct LibraryView: View {
                         }
                     }
                     ForEach(items, id: \.id) { item in
-                        NavigationLink(value: item.title.id) {
-                            LibraryRow(item: item)
-                        }
-                        // Not destructive-roled: that removes the row the
-                        // moment the swipe ends, before the dialog has asked
-                        // anything.
-                        .swipeActions(edge: .trailing) {
-                            Button {
-                                pendingRemoval = item
-                            } label: {
-                                Label("Remove", systemImage: "trash")
+                        CardRow {
+                            NavigationLink(value: item.title.id) {
+                                LibraryRow(item: item)
                             }
-                            .tint(.red)
+                            // Not destructive-roled: that removes the row the
+                            // moment the swipe ends, before the dialog has asked
+                            // anything.
+                            .swipeActions(edge: .trailing) {
+                                Button {
+                                    pendingRemoval = item
+                                } label: {
+                                    Label("Remove", systemImage: "trash")
+                                }
+                                .tint(.red)
+                            }
                         }
                     }
                 }
-                .listStyle(.plain)
+                .cardList()
                 .refreshable { await model.load() }
             } else {
                 switch model.state {
@@ -179,7 +181,7 @@ private struct LibraryRow: View {
                 url: item.title.posterUrl.flatMap(URL.init(string:)),
                 title: item.title.primaryTitle
             )
-            .frame(width: typeSize.isAccessibilitySize ? 96 : 48)
+            .frame(width: typeSize.isAccessibilitySize ? 96 : 60)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.title.primaryTitle)

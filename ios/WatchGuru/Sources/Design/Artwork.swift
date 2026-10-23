@@ -52,3 +52,40 @@ struct PosterView: View {
         return letters.isEmpty ? "?" : letters
     }
 }
+
+/// A title's backdrop, fading into the screen behind it.
+///
+/// Decoration under the header rather than content, so VoiceOver skips it,
+/// and with no placeholder: without a backdrop the header is simply the
+/// background, which is how a title with no artwork should look.
+struct BackdropView: View {
+    let url: URL?
+
+    var body: some View {
+        Color.clear
+            .aspectRatio(Artwork.backdropAspectRatio, contentMode: .fit)
+            .overlay {
+                if let url {
+                    AsyncImage(url: url) { image in
+                        image.resizable().scaledToFill()
+                    } placeholder: {
+                        Color.clear
+                    }
+                }
+            }
+            .clipped()
+            // Clear at the top to the screen colour at the bottom, so the
+            // poster and title laid over its lower half stay readable.
+            .overlay {
+                LinearGradient(
+                    stops: [
+                        .init(color: .clear, location: 0.3),
+                        .init(color: .screenBackground, location: 1),
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            }
+            .accessibilityHidden(true)
+    }
+}

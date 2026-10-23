@@ -60,8 +60,13 @@ struct TitleDetailView: View {
         // to mark watched is the fastest way through a season. Every block
         // above the episodes is one borderless row.
         List {
-            Group {
-                HStack(alignment: .top, spacing: 16) {
+            // The backdrop full width behind the header, the poster and title
+            // over its faded lower edge: the title's own artwork is the
+            // strongest thing the screen has, and it was a thumbnail beside a
+            // column of text.
+            VStack(alignment: .leading, spacing: 0) {
+                BackdropView(url: title.backdropUrl.flatMap(URL.init(string:)))
+                HStack(alignment: .bottom, spacing: 16) {
                     PosterView(
                         url: title.posterUrl.flatMap(URL.init(string:)),
                         title: title.primaryTitle
@@ -92,7 +97,16 @@ struct TitleDetailView: View {
                         }
                     }
                 }
+                .padding(.horizontal, 16)
+                // Up over the backdrop's faded half; the poster is taller
+                // than what is left of it.
+                .padding(.top, -110)
+            }
+            .listRowInsets(EdgeInsets())
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
 
+            Group {
                 // Before the tracking actions, because whether this is in the
                 // library at all is the first thing somebody arriving from the
                 // trending shelf needs to know.
@@ -193,8 +207,10 @@ struct TitleDetailView: View {
             }
             .listRowSeparator(.hidden)
             .listRowInsets(EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16))
+            .listRowBackground(Color.clear)
         }
         .listStyle(.plain)
+        .screenBackground()
         .environment(\.defaultMinListRowHeight, 0)
         .navigationTitle(title.primaryTitle)
     }

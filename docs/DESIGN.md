@@ -65,16 +65,48 @@ in light and dark.
 | `warning` | `ON_HOLD`, stale-data notices |
 | `danger` | Destructive actions — remove, delete account |
 | `muted` | `DROPPED`, unaired episodes, secondary metadata |
-| `surface` / `onSurface` | Card and sheet backgrounds and their content |
+| `screen` | The background behind every list: a faint tint of the brand violet |
+| `card` | A row drawn as a card on `screen`: white in light, a step lighter than `screen` in dark |
+| `onSurface` | Text and icons on `screen` and `card` |
 
-**iOS** resolves these to semantic system colours (`Color.accentColor`,
-`.secondary`, `.red`) so dark mode and increased-contrast come free.
-**Android** resolves them to Material 3 tokens (`primary`, `tertiary`,
-`error`, `onSurfaceVariant`), with dynamic colour on Android 12+ — meaning the
-Android app legitimately looks different on different devices. That is correct,
-not a bug.
+The accent is the brand violet from the app icon (`#8B46F7`), at tone 40 in
+light (`#711CD6`) and tone 80 in dark (`#CCB7FF`), and it is the same on every
+device. `screen` and `card` are violet-tinted neutrals of the same hue.
 
-No screen may contain a hardcoded hex value.
+**Where the values live.** Exactly one place per platform, and nowhere else:
+
+- **iOS:** the asset catalog. `AccentColor`, `ScreenBackground` and
+  `CardBackground` are colour sets with a light and a dark value; code reads
+  them through `Color.accentColor`, `Color.screenBackground` and
+  `Color.cardBackground` (`Design/Surfaces.swift`). Everything else stays a
+  semantic system colour (`.primary`, `.secondary`, `.red`), so increased
+  contrast still works.
+- **Android:** `ui/theme/Theme.kt`, as Material 3 roles: `primary`,
+  `tertiary` (success), `error` (danger), `onSurfaceVariant` (muted),
+  `background` (screen) and `ColorScheme.card`, which picks a surface
+  container. Dynamic colour is off: with it on, Android 12+ replaced the brand
+  with the wallpaper's colours and almost nobody saw the violet.
+
+No screen may contain a hex value. A new colour is a new role, added in both
+places with a light and a dark value, and every pair it makes with existing
+roles clears WCAG AA in both themes. The current weakest pair is
+`onSurfaceVariant` on `surfaceVariant` in dark, at 5.5:1.
+
+## Surfaces
+
+What a list looks like, on both platforms: **cards on the tinted screen**, not
+flat rows on white. Up Next, Library and Search draw each item as a rounded
+`card` with a gap between them; a flat row on a white page read as a page of
+text, and looked generic next to every other tracker.
+
+| | iOS | Android |
+|---|---|---|
+| A list of titles | `.cardList()`, each item a `CardRow` (its own inset-grouped section) | `LazyColumn` of `RowCard`s with `RowCardList` padding |
+| Title screen header | `BackdropView` full width, poster and title over its faded lower edge | `Backdrop`, the same |
+| Other screens (forms, settings) | System grouped style, unchanged | Material defaults on `background` |
+
+The backdrop fades into `screen`, so a title without one simply has no
+header image rather than a placeholder.
 
 ## Ratings
 
@@ -195,6 +227,10 @@ user's text-size setting at every size, including the accessibility sizes.
 | `metadata` | Year, runtime, S01E02 | `.caption` | `labelMedium` |
 | `numeric` | Ratings, counts | Monospaced digits | Monospaced digits |
 
+Titles are heavier than the platform defaults: on Android, headlines are Bold
+and `titleLarge`/`titleMedium` SemiBold (`ui/theme/Type.kt`); iOS's large
+titles and `.headline` already are.
+
 Monospaced digits for anything that updates in place — a progress counter that
 shifts sideways as it counts from 9 to 10 looks broken.
 
@@ -280,7 +316,7 @@ These should differ, and a reviewer should not file bugs about them:
 | Confirmation | `.confirmationDialog` | Snackbar with undo |
 | Sharing | Share sheet | Android share sheet |
 | Widgets | WidgetKit, Lock Screen, StandBy | Glance, resizable, dynamic colour |
-| Theming | Semantic system colours | Material 3 dynamic colour |
+| Theming | Semantic system colours plus the brand roles in the asset catalog | Material 3 roles from the brand palette; dynamic colour only in the home-screen widget |
 
 Someone holding both phones should recognise the same product and, if they
 know the platforms, see two apps that each belong where they are.
