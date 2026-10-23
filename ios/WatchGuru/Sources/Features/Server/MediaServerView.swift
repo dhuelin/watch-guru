@@ -220,7 +220,7 @@ private struct WebhookURL: View {
                 .lineLimit(3)
             HStack {
                 Button("Copy") { UIPasteboard.general.string = url }
-                    .buttonStyle(.borderedProminent)
+                    .prominentAction()
                 Button("Done", action: onDone)
             }
         }

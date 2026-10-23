@@ -12,6 +12,9 @@ final class SearchModel {
 
     private(set) var state: ViewState<[SearchHit]> = .empty
     private(set) var added: Set<Int64> = []
+    /// Provider ids with an add in flight, so a second tap cannot send a second
+    /// request before the first has answered.
+    private(set) var adding: Set<Int64> = []
 
     /// What people are watching this week, shown while the box is empty.
     ///
@@ -110,6 +113,10 @@ final class SearchModel {
     /// The backend imports the title from the provider as part of this call,
     /// so there is nothing to do first.
     func addToLibrary(_ hit: SearchHit) async {
+        guard !adding.contains(hit.providerId), !added.contains(hit.providerId) else { return }
+        adding.insert(hit.providerId)
+        defer { adding.remove(hit.providerId) }
+
         let request = AddToWatchlist(
             providerId: hit.providerId,
             titleType: AddToWatchlist.TitleType(rawValue: hit.titleType.rawValue) ?? .movie

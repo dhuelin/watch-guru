@@ -19,9 +19,7 @@ struct LibraryEntryView: View {
     let setRating: (Int64, Int) -> Void
     let remove: (Int64) -> Void
 
-    /// Held while dragging and sent once at the end: sending on every change
-    /// would be nine requests on the way from 1 to 10.
-    @State private var draggingRating: Double?
+    @State private var confirmingRemoval = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -38,48 +36,79 @@ struct LibraryEntryView: View {
 
                 rating(entry)
 
-                Button("Remove from library", role: .destructive) { remove(entry.itemId) }
+                // Last in the section rather than between the two controls
+                // people use most, and behind a question: a destructive link
+                // squeezed between the rating and the progress bar was one
+                // mis-tap from losing both.
+                Button("Remove from library", role: .destructive) { confirmingRemoval = true }
                     .buttonStyle(.borderless)
+                    .font(.subheadline)
+                    .padding(.top, 8)
                     .disabled(isMarking)
+                    .confirmationDialog(
+                        String(localized: "Remove \(title.primaryTitle) from your library?"),
+                        isPresented: $confirmingRemoval,
+                        titleVisibility: .visible
+                    ) {
+                        Button("Remove from library", role: .destructive) { remove(entry.itemId) }
+                        Button("Cancel", role: .cancel) {}
+                    } message: {
+                        Text("Its status and your rating go with it. Your viewing history is kept.")
+                    }
             } else {
                 Text("You are not tracking this yet.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
                 Button("Add to library", action: add)
-                    .buttonStyle(.borderedProminent)
+                    .prominentAction()
                     .disabled(isMarking)
             }
         }
     }
 
+    /// The user's own score, as a labelled menu showing its value.
+    ///
+    /// A menu of ten values rather than the slider it replaced. The slider was
+    /// a violet track a few points above the episode progress bar — another
+    /// violet track — so the user's opinion looked like a measurement, which
+    /// docs/DESIGN.md says it must never be confused with. A menu also sends
+    /// one request per decision without any drag state to get stuck.
+    ///
+    /// There is no "Clear rating". The API cannot express one: the update is a
+    /// partial PATCH that treats a missing rating and a null one alike as
+    /// "leave it alone", and the generated client omits a nil field anyway.
+    /// Sending 0 instead would record a rating of zero, which the design keeps
+    /// distinct from "not rated". Until the backend grows a way to clear it, a
+    /// rating can be changed but not removed, and the control does not offer
+    /// what it cannot do.
     @ViewBuilder
     private func rating(_ entry: LibraryEntry) -> some View {
-        let current = draggingRating ?? entry.rating ?? 0
-        let shown = Int(current.rounded())
+        let current = entry.rating.map { Int($0.rounded()) }
 
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Text("Your rating").font(.subheadline)
-                Text(shown == 0 ? "Not rated" : "\(shown) / 10")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-
-            // Ten stops rather than five stars: 0 to 10 is what the column
-            // stores and what the two ratings above this section already use.
-            Slider(
-                value: Binding(
-                    get: { current },
-                    set: { draggingRating = $0 }
-                ),
-                in: 0...10,
-                step: 1,
-                onEditingChanged: { editing in
-                    guard !editing, shown > 0 else { return }
-                    setRating(entry.itemId, shown)
-                    draggingRating = nil
+        // Label and value side by side: outside a Form a menu picker draws only
+        // its current value, and "7/10" with nothing beside it says nothing
+        // about whose seven it is.
+        HStack {
+            Label("Your rating", systemImage: "star")
+                .font(.subheadline)
+            Spacer()
+            Picker("Your rating", selection: Binding(
+                get: { current },
+                set: { picked in
+                    if let picked, picked != current { setRating(entry.itemId, picked) }
                 }
-            )
+            )) {
+                // Only offered while it is true, so it can be shown but not
+                // chosen.
+                if current == nil {
+                    Text("Not rated").tag(Int?.none)
+                }
+                ForEach(Array((1...10).reversed()), id: \.self) { score in
+                    Text("\(score)/10").tag(Int?.some(score))
+                }
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
             .disabled(isMarking)
             .accessibilityLabel("Your rating out of ten")
         }

@@ -266,3 +266,46 @@
 "No services yet" = "Noch keine Dienste";
 "No streaming services are known for your region yet." = "Für deine Region sind noch keine Streamingdienste bekannt.";
 "Tell us what you subscribe to and those services are listed first when you look at a title. Nothing is hidden either way." = "Sag uns, was du abonniert hast, dann stehen diese Dienste bei einem Titel oben. Versteckt wird so oder so nichts.";
+
+/* MARK: From the UX review
+
+   Grouped by screen like the rest. Several are looked up with
+   String(localized:) because they reach a view as a String: the failure
+   headings, the filtered-library empty states and the rewatch label. The %@
+   and %lld entries are interpolations, listed by hand for the same reason as
+   the ones above. */
+/* Search */
+"Add %@ to your library" = "%@ zur Bibliothek hinzufügen";
+"TMDB %@" = "TMDB %@";
+/* Library */
+"Show all" = "Alle anzeigen";
+"Showing: %@" = "Angezeigt: %@";
+"Nothing on your watchlist" = "Nichts auf deiner Merkliste";
+"Nothing you're watching" = "Nichts, was du gerade schaust";
+"Nothing completed" = "Nichts abgeschlossen";
+"Nothing on hold" = "Nichts pausiert";
+"Nothing dropped" = "Nichts abgebrochen";
+"Remove %@ from your library?" = "%@ aus der Bibliothek entfernen?";
+"Its status and your rating go with it. Your viewing history is kept." = "Status und Bewertung werden mit entfernt. Dein Verlauf bleibt erhalten.";
+/* Detail */
+"Not rated" = "Nicht bewertet";
+"%lld/10" = "%lld/10";
+"Added to your history for today." = "Für heute in deinem Verlauf eingetragen.";
+"Saved for today. It will be sent when you are back online." = "Für heute gespeichert. Wird gesendet, sobald du wieder online bist.";
+"Offers in %@." = "Angebote in dieser Region: %@.";
+/* Profile */
+"Your viewing" = "Was du gesehen hast";
+"Connections" = "Verbindungen";
+"Data" = "Daten";
+/* History */
+"Rewatch" = "Erneut gesehen";
+/* Stats */
+"Time watched" = "Gesehene Zeit";
+"Hours" = "Stunden";
+/* Failures */
+"Offline" = "Offline";
+"Catalogue unavailable" = "Katalog nicht erreichbar";
+"Not available" = "Nicht verfügbar";
+"Couldn't load this" = "Konnte nicht geladen werden";
+"This may have been removed, or it isn't in the catalogue yet." = "Das wurde vielleicht entfernt oder ist noch nicht im Katalog.";
+"Retry" = "Erneut versuchen";

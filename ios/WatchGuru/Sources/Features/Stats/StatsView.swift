@@ -72,9 +72,10 @@ struct StatsView: View {
 
                     // One month is not a shape, and a single bar is a chart
                     // pretending to be one.
-                    if stats.byMonth.count > 1 {
+                    let months = MonthlyBreakdown.filled(stats.byMonth)
+                    if months.count > 1 {
                         SectionHeading("By month")
-                        MonthlyChart(months: stats.byMonth)
+                        MonthlyChart(months: months)
                     }
 
                     Breakdown(heading: "Most watched", buckets: stats.topTitles)
@@ -97,6 +98,11 @@ private struct HeroTime: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
+            // Named, because "30 h" on its own could be anything: a streak, a
+            // goal, a single title.
+            Text("Time watched")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
             Text(stats.totalMinutes >= 60
                  ? "\(stats.totalMinutes / 60) h"
                  : "\(stats.totalMinutes) min")
@@ -147,7 +153,7 @@ private struct StatTile: View {
     }
 }
 
-/// Minutes watched per calendar month.
+/// Hours watched per calendar month.
 ///
 /// One hue for every bar, deliberately: colouring bars darker-where-bigger
 /// double-encodes what the bar length already says, and months are a sequence
@@ -168,7 +174,7 @@ private struct MonthlyChart: View {
             Chart(months, id: \.self) { bucket in
                 BarMark(
                     x: .value("Month", MonthlyBreakdown.label(bucket)),
-                    y: .value("Minutes", bucket.minutes)
+                    y: .value("Hours", MonthlyBreakdown.hours(bucket))
                 )
                 .cornerRadius(4)
                 .foregroundStyle(Color.accentColor)
@@ -181,6 +187,8 @@ private struct MonthlyChart: View {
                     AxisValueLabel()
                 }
             }
+            // The unit, said once on the axis rather than after every tick.
+            .chartYAxisLabel("Hours")
             .frame(height: 160)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(MonthlyBreakdown.spokenSummary(months))

@@ -22,15 +22,32 @@ enum APIFailure: Error, Equatable, Sendable {
 
 extension APIFailure {
 
-    /// The one line the user reads. Copy is shared with Android verbatim; see
-    /// `docs/DESIGN.md`.
+    /// The heading over ``message`` on a full-screen failure.
+    ///
+    /// Never the message again. The generic case used to say "Something went
+    /// wrong" as the heading and "Something went wrong." beneath it, which
+    /// spends two lines on one thought and leaves the reader with neither what
+    /// failed nor what to do.
+    var title: String {
+        switch self {
+        case .offline: String(localized: "Offline")
+        case .upstream: String(localized: "Catalogue unavailable")
+        case .notFound: String(localized: "Not available")
+        case .unauthorised, .unexpected: String(localized: "Couldn't load this")
+        }
+    }
+
+    /// The one line the user reads. The offline and provider-down sentences are
+    /// in the copy table in `docs/DESIGN.md` and shared with Android verbatim.
     var message: String {
         switch self {
         case .offline:
             String(localized: "Offline — changes will sync when you reconnect.")
         case .upstream:
             String(localized: "Couldn't reach the catalogue. Your library is still up to date.")
-        case .unauthorised, .notFound, .unexpected:
+        case .notFound:
+            String(localized: "This may have been removed, or it isn't in the catalogue yet.")
+        case .unauthorised, .unexpected:
             String(localized: "Something went wrong.")
         }
     }
@@ -38,8 +55,9 @@ extension APIFailure {
     var symbol: String {
         switch self {
         case .offline, .upstream: "icloud.slash"
-        case .notFound: "magnifyingglass"
-        case .unauthorised, .unexpected: "exclamationmark.triangle"
+        // A warning, not a magnifying glass: the glass is this app's symbol
+        // for search, and on a failure it read as "no results".
+        case .notFound, .unauthorised, .unexpected: "exclamationmark.triangle"
         }
     }
 }

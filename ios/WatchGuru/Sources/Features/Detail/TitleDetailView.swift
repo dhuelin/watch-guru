@@ -27,6 +27,14 @@ struct TitleDetailView: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .task {
+            // The country the offers below are for, so the section can name
+            // it. Read once per session rather than per title, and only if
+            // Profile has not already put it there.
+            if session.region == nil {
+                session.region = try? await session.client.profile().region
+            }
+        }
+        .task {
             if model == nil {
                 let created = TitleDetailModel(client: session.client, offline: session.offline, titleId: titleId)
                 model = created
@@ -139,6 +147,7 @@ struct TitleDetailView: View {
                 WhereToWatchView(
                     offers: title.availability,
                     checkedAt: title.availabilityCheckedAt,
+                    region: session.region,
                     mine: session.myServices.selected
                 )
 
@@ -205,10 +214,12 @@ private struct EpisodeProgressView: View {
                 }
 
                 Button(action: markNext) {
-                    Label("Mark watched", systemImage: "play.circle.fill")
+                    // A check, not a play symbol: this records the episode, it
+                    // does not play it, and play is the WATCHING status's.
+                    Label("Mark watched", systemImage: "checkmark.circle")
                         .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
+                .prominentAction()
                 .controlSize(.large)
                 .disabled(isMarking)
                 // Names the episode, so VoiceOver says which one is about to be

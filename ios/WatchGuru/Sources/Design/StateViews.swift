@@ -39,10 +39,10 @@ struct FailureView: View {
 
     var body: some View {
         FullScreenMessage(
-            title: failure == .offline ? "Offline" : "Something went wrong",
+            title: failure.title,
             symbol: failure.symbol,
             message: failure.message,
-            actionTitle: retry == nil ? nil : "Retry",
+            actionTitle: retry == nil ? nil : String(localized: "Retry"),
             action: retry
         )
     }

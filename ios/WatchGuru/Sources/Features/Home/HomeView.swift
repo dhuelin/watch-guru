@@ -8,6 +8,7 @@ import WatchGuruAPI
 struct HomeView: View {
 
     @Environment(Session.self) private var session
+    @Environment(\.scenePhase) private var scenePhase
     @State private var model: HomeModel?
 
     var body: some View {
@@ -25,6 +26,16 @@ struct HomeView: View {
                 model = created
                 await created.load()
             }
+        }
+        // Up Next goes stale while the app is in the background: an episode
+        // marked on another device, or from the widget, is still offered here,
+        // and marking it again records a rewatch nobody meant. Coming back to
+        // the foreground is when that row is most likely to be wrong and about
+        // to be tapped. onChange rather than .task(id:), so the first
+        // appearance is not loaded twice.
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .active, let model else { return }
+            Task { await model.load() }
         }
     }
 
@@ -66,18 +77,28 @@ private struct UpNextRow: View {
     let busy: Bool
     let markWatched: () -> Void
 
+    @Environment(\.dynamicTypeSize) private var typeSize
+
     var body: some View {
-        HStack(spacing: 12) {
+        // At accessibility sizes the poster goes above the text rather than
+        // beside it, and the lines may wrap: beside it, a title was cut to
+        // "The Clockm…" with half the row taken by artwork.
+        let large = typeSize.isAccessibilitySize
+        let layout = large
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+            : AnyLayout(HStackLayout(spacing: 12))
+
+        layout {
             PosterView(url: entry.posterUrl.flatMap(URL.init(string:)), title: entry.primaryTitle)
-                .frame(width: 56)
+                .frame(width: large ? 96 : 56)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(entry.primaryTitle).font(.headline).lineLimit(1)
+                Text(entry.primaryTitle).font(.headline).lineLimit(large ? 3 : 1)
 
                 Text(episodeLabel)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                    .lineLimit(1)
+                    .lineLimit(large ? 3 : 1)
 
                 if entry.airedEpisodes > 0 {
                     ProgressView(
@@ -90,7 +111,9 @@ private struct UpNextRow: View {
                 }
 
                 Button(action: markWatched) {
-                    Label("Mark watched", systemImage: "play.circle.fill")
+                    // A check, as on the title screen: this records the
+                    // episode, and play is the WATCHING status's symbol.
+                    Label("Mark watched", systemImage: "checkmark.circle")
                 }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
