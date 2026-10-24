@@ -12,6 +12,8 @@ final class HomeModel {
 
     private let client: WatchGuruClient
     private let offline: OfflineClient
+    /// Called after a mark the server accepted, so other screens can catch up.
+    var onWatched: (() -> Void)?
 
     init(client: WatchGuruClient, offline: OfflineClient) {
         self.client = client
@@ -45,6 +47,7 @@ final class HomeModel {
         defer { marking.remove(entry.titleId) }
 
         if await offline.markEpisodeWatched(episodeId: entry.nextEpisodeId, titleId: entry.titleId) == .sent {
+            onWatched?()
             await load()
         }
     }

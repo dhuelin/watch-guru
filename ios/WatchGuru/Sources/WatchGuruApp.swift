@@ -68,6 +68,16 @@ final class Session {
     /// screen needs is "reload", not a value it might mistake for the truth.
     var profileRevision = 0
 
+    /// Bumped whenever an episode or film is marked, from any screen.
+    ///
+    /// Up Next and a title screen each hold their own copy of "the next
+    /// episode". On an iPad both are on screen at once, and on a phone going
+    /// back to Up Next after marking on a title screen showed it too: one pane
+    /// still offering an episode the other had just recorded, so a second tap
+    /// recorded it twice. Screens reload when this moves, skipping a change
+    /// they made themselves.
+    var watchRevision = 0
+
     /// The profile's country code, once something has read it.
     ///
     /// Where-to-watch offers are for this country, and the section showing them

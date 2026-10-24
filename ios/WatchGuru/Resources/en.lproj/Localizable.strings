@@ -99,7 +99,8 @@
 
 /* MARK: Home */
 "Choose a series" = "Choose a series";
-"Its episodes and where to watch it show up here." = "Its episodes and where to watch it show up here.";
+"Pick a series to see its episodes and where to watch it." = "Pick a series to see its episodes and where to watch it.";
+"Shows its episodes beside the list" = "Shows its episodes beside the list";
 "Nothing on the go" = "Nothing on the go";
 "Start a series and it will show up here." = "Start a series and it will show up here.";
 "Up Next" = "Up Next";

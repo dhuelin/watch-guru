@@ -7,6 +7,9 @@ struct TitleDetailView: View {
 
     @Environment(Session.self) private var session
     @State private var model: TitleDetailModel?
+    /// The last `watchRevision` this screen has caught up with, including the
+    /// ones it caused itself, which need no reload.
+    @State private var seenWatchRevision = 0
 
     var body: some View {
         Group {
@@ -37,6 +40,11 @@ struct TitleDetailView: View {
         .task {
             if model == nil {
                 let created = TitleDetailModel(client: session.client, offline: session.offline, titleId: titleId)
+                seenWatchRevision = session.watchRevision
+                created.onWatched = { [session] in
+                    session.watchRevision += 1
+                    seenWatchRevision = session.watchRevision
+                }
                 model = created
                 await created.load()
             }
@@ -51,6 +59,13 @@ struct TitleDetailView: View {
         .task(id: session.profileRevision) {
             guard session.profileRevision > 0, let model else { return }
             await model.load()
+        }
+        // A mark made on another screen -- the Up Next card beside this one on
+        // an iPad -- so this screen stops offering an episode already recorded.
+        .task(id: session.watchRevision) {
+            guard session.watchRevision > seenWatchRevision, let model else { return }
+            seenWatchRevision = session.watchRevision
+            await model.refreshWatched()
         }
     }
 

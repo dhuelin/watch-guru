@@ -102,6 +102,12 @@ struct SearchView: View {
                             Label("In your library", systemImage: "checkmark.circle.fill")
                                 .font(.caption)
                                 .foregroundStyle(.tint)
+                        } else if model.adding.contains(hit.providerId) {
+                            // Said while it happens, so a second tap is not
+                            // made on a button that seems to have done nothing.
+                            ProgressView()
+                                .controlSize(.small)
+                                .frame(minHeight: 28)
                         } else {
                             Button {
                                 Task { await model.addToLibrary(hit) }
@@ -111,7 +117,6 @@ struct SearchView: View {
                             }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
-                            .disabled(model.adding.contains(hit.providerId))
                             .accessibilityLabel("Add \(hit.title) to your library")
                         }
                     }

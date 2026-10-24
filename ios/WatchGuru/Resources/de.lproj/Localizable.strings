@@ -95,7 +95,8 @@
 
 /* MARK: Home */
 "Choose a series" = "Wähle eine Serie";
-"Its episodes and where to watch it show up here." = "Ihre Folgen und wo du sie schauen kannst, erscheinen hier.";
+"Pick a series to see its episodes and where to watch it." = "Wähle eine Serie, um ihre Folgen zu sehen und wo du sie schauen kannst.";
+"Shows its episodes beside the list" = "Zeigt ihre Folgen neben der Liste";
 "Nothing on the go" = "Nichts angefangen";
 "Start a series and it will show up here." = "Starte eine Serie, dann erscheint sie hier.";
 "Up Next" = "Als Nächstes";

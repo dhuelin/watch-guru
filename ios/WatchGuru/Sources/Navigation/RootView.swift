@@ -2,9 +2,10 @@ import SwiftUI
 
 /// The four tabs.
 ///
-/// A `TabView` with a `NavigationStack` per tab, which is what gives each tab
-/// its own back stack — the behaviour iOS users expect, and the reason this is
-/// not one stack shared across tabs.
+/// A `TabView` with a navigation container per tab, which is what gives each
+/// tab its own back stack — the behaviour iOS users expect, and the reason
+/// this is not one stack shared across tabs. Home brings its own (a split view
+/// at regular width); the others are wrapped in a `NavigationStack` here.
 struct RootView: View {
 
     @Environment(Session.self) private var session

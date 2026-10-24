@@ -11,8 +11,14 @@ struct HomeView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var model: HomeModel?
-    /// The series shown beside the list at regular width.
-    @State private var selected: Int64?
+    /// The series the user chose, the same state at both widths: shown beside
+    /// the list at regular width, pushed at compact width. Shared so that
+    /// resizing a window across the boundary keeps where the user was instead
+    /// of dropping it.
+    @State private var chosen: Int64?
+    /// The last `watchRevision` this screen has caught up with, including the
+    /// ones it caused itself, which need no reload.
+    @State private var seenWatchRevision = 0
 
     /// Its own navigation container, unlike the other tabs: at regular width
     /// Up Next is a list with the chosen series beside it, the way Mail shows
@@ -24,23 +30,38 @@ struct HomeView: View {
                 main
             } detail: {
                 NavigationStack {
-                    if let selected {
-                        TitleDetailView(titleId: selected)
+                    if let shown {
+                        TitleDetailView(titleId: shown)
                             // A new screen per series, not one screen whose
                             // model is still the previous series'.
-                            .id(selected)
+                            .id(shown)
                     } else {
                         ContentUnavailableView(
                             "Choose a series",
                             systemImage: "play.tv",
-                            description: Text("Its episodes and where to watch it show up here.")
+                            description: Text("Pick a series to see its episodes and where to watch it.")
                         )
                     }
                 }
             }
         } else {
-            NavigationStack { main }
+            NavigationStack(path: Binding(
+                get: { chosen.map { [$0] } ?? [] },
+                set: { chosen = $0.last }
+            )) {
+                main
+            }
         }
+    }
+
+    /// What the detail column shows: the chosen series while it is still on
+    /// the list, otherwise the first one. A series that was finished, and so
+    /// left Up Next, does not linger beside a list it is no longer on, and the
+    /// column is never empty while the list is not.
+    private var shown: Int64? {
+        let entries = model?.state.value ?? []
+        if let chosen, entries.contains(where: { $0.titleId == chosen }) { return chosen }
+        return entries.first?.titleId
     }
 
     private var main: some View {
@@ -55,9 +76,22 @@ struct HomeView: View {
         .task {
             if model == nil {
                 let created = HomeModel(client: session.client, offline: session.offline)
+                seenWatchRevision = session.watchRevision
+                created.onWatched = { [session] in
+                    session.watchRevision += 1
+                    seenWatchRevision = session.watchRevision
+                }
                 model = created
                 await created.load()
             }
+        }
+        // A mark made on a title screen, beside this list on an iPad or behind
+        // it on a phone, so the card stops offering an episode already
+        // recorded.
+        .task(id: session.watchRevision) {
+            guard session.watchRevision > seenWatchRevision, let model else { return }
+            seenWatchRevision = session.watchRevision
+            await model.load()
         }
         // Up Next goes stale while the app is in the background: an episode
         // marked on another device, or from the widget, is still offered here,
@@ -80,9 +114,6 @@ struct HomeView: View {
                 }
                 .cardList()
                 .refreshable { await model.load() }
-                // Something beside the list from the start, rather than an
-                // empty half of the screen.
-                .onAppear { if selected == nil { selected = entries.first?.titleId } }
             } else {
                 List {
                     rows(entries, model: model)
@@ -111,24 +142,17 @@ struct HomeView: View {
         ForEach(entries, id: \.titleId) { entry in
             // The series shown beside the list is marked on its card, since a
             // card's own background replaces the list's selection highlight.
-            CardRow(highlighted: sizeClass == .regular && entry.titleId == selected) {
+            CardRow(highlighted: sizeClass == .regular && entry.titleId == shown) {
                 Group {
                     if sizeClass == .regular {
-                        // A tap that chooses rather than List selection, whose
-                        // styling turns the row's text white on a card that is
-                        // not the accent colour. The Mark watched button inside
-                        // still takes its own taps.
                         UpNextRow(
                             entry: entry,
-                            busy: model.marking.contains(entry.titleId)
+                            busy: model.marking.contains(entry.titleId),
+                            isSelected: entry.titleId == shown,
+                            select: { chosen = entry.titleId }
                         ) {
                             Task { await model.markWatched(entry) }
                         }
-                        .contentShape(Rectangle())
-                        .onTapGesture { selected = entry.titleId }
-                        .accessibilityAddTraits(
-                            entry.titleId == selected ? [.isButton, .isSelected] : .isButton
-                        )
                     } else {
                         NavigationLink(value: entry.titleId) {
                             UpNextRow(
@@ -163,6 +187,13 @@ struct HomeView: View {
 private struct UpNextRow: View {
     let entry: UpNextResponse
     let busy: Bool
+    /// Whether this is the series shown beside the list.
+    var isSelected = false
+    /// At regular width, chooses this series for the detail column. A real
+    /// button around the poster and the text rather than a tap gesture on the
+    /// row: it takes keyboard focus and the pointer's highlight, and VoiceOver
+    /// reads it as one control, while Mark watched stays a button of its own.
+    var select: (() -> Void)?
     let markWatched: () -> Void
 
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -177,25 +208,36 @@ private struct UpNextRow: View {
             : AnyLayout(HStackLayout(spacing: 12))
 
         layout {
-            PosterView(url: entry.posterUrl.flatMap(URL.init(string:)), title: entry.primaryTitle)
-                .frame(width: large ? 96 : 72)
+            selectable {
+                PosterView(url: entry.posterUrl.flatMap(URL.init(string:)), title: entry.primaryTitle)
+                    .frame(width: large ? 96 : 72)
+            }
+            // The text's button says the same thing, so the poster's is one
+            // focus stop and one VoiceOver element too many.
+            .accessibilityHidden(select != nil)
+            .focusable(select == nil)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(entry.primaryTitle).font(.headline).lineLimit(large ? 3 : 1)
+                selectable {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(entry.primaryTitle).font(.headline).lineLimit(large ? 3 : 1)
 
-                Text(episodeLabel)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(large ? 3 : 1)
+                        Text(episodeLabel)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(large ? 3 : 1)
 
-                if entry.airedEpisodes > 0 {
-                    ProgressView(
-                        value: Double(entry.watchedEpisodes),
-                        total: Double(entry.airedEpisodes)
-                    )
-                    .accessibilityLabel(
-                        "\(entry.watchedEpisodes) of \(entry.airedEpisodes) episodes watched"
-                    )
+                        if entry.airedEpisodes > 0 {
+                            ProgressView(
+                                value: Double(entry.watchedEpisodes),
+                                total: Double(entry.airedEpisodes)
+                            )
+                            .accessibilityLabel(
+                                "\(entry.watchedEpisodes) of \(entry.airedEpisodes) episodes watched"
+                            )
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
                 Button(action: markWatched) {
@@ -213,6 +255,22 @@ private struct UpNextRow: View {
             }
         }
         .padding(.vertical, 4)
+    }
+
+    /// The content as the select button's label at regular width, or as it
+    /// is at compact width, where the whole row is already a link.
+    @ViewBuilder
+    private func selectable<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        if let select {
+            Button(action: select) {
+                content().contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
+            .accessibilityHint(Text("Shows its episodes beside the list"))
+        } else {
+            content()
+        }
     }
 
     private var episodeLabel: String {
