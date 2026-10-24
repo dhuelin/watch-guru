@@ -2,9 +2,10 @@ import SwiftUI
 
 /// The four tabs.
 ///
-/// A `TabView` with a `NavigationStack` per tab, which is what gives each tab
-/// its own back stack — the behaviour iOS users expect, and the reason this is
-/// not one stack shared across tabs.
+/// A `TabView` with a navigation container per tab, which is what gives each
+/// tab its own back stack — the behaviour iOS users expect, and the reason
+/// this is not one stack shared across tabs. Home brings its own (a split view
+/// at regular width); the others are wrapped in a `NavigationStack` here.
 struct RootView: View {
 
     @Environment(Session.self) private var session
@@ -31,19 +32,44 @@ struct RootView: View {
         }
     }
 
-    // `.tabItem`, not the `Tab` builder: that is iOS 18, and the deployment
-    // target is 17. Everything else the app relies on -- @Observable,
-    // ContentUnavailableView -- genuinely is iOS 17, so the floor stays.
+    // The `Tab` builder and a sidebar on iOS 18, where an iPad shows the four
+    // sections down the side instead of along the bottom; `.tabItem` below
+    // that, since the deployment target is 17. Everything else the app relies
+    // on -- @Observable, ContentUnavailableView -- genuinely is iOS 17, so the
+    // floor stays.
+    @ViewBuilder
     private var tabs: some View {
-        TabView {
-            NavigationStack { HomeView() }
-                .tabItem { Label("Home", systemImage: "house") }
-            NavigationStack { SearchView() }
-                .tabItem { Label("Search", systemImage: "magnifyingglass") }
-            NavigationStack { LibraryView() }
-                .tabItem { Label("Library", systemImage: "books.vertical") }
-            NavigationStack { ProfileView() }
-                .tabItem { Label("Profile", systemImage: "person") }
+        if #available(iOS 18, *) {
+            TabView {
+                // HomeView brings its own container: a split view at regular
+                // width.
+                Tab("Home", systemImage: "house") {
+                    HomeView()
+                }
+                Tab("Search", systemImage: "magnifyingglass") {
+                    NavigationStack { SearchView() }
+                }
+                Tab("Library", systemImage: "books.vertical") {
+                    NavigationStack { LibraryView() }
+                }
+                Tab("Profile", systemImage: "person") {
+                    NavigationStack { ProfileView() }
+                }
+            }
+            // A tab bar on iPhone and in compact width, a sidebar on iPad at
+            // regular width, switchable by the user.
+            .tabViewStyle(.sidebarAdaptable)
+        } else {
+            TabView {
+                HomeView()
+                    .tabItem { Label("Home", systemImage: "house") }
+                NavigationStack { SearchView() }
+                    .tabItem { Label("Search", systemImage: "magnifyingglass") }
+                NavigationStack { LibraryView() }
+                    .tabItem { Label("Library", systemImage: "books.vertical") }
+                NavigationStack { ProfileView() }
+                    .tabItem { Label("Profile", systemImage: "person") }
+            }
         }
     }
 }

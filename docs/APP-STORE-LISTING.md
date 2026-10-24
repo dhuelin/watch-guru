@@ -26,15 +26,15 @@ the raw ones are valid too.
 | Slot | Files | Size |
 |---|---|---|
 | iPhone 6.9" display | `framed/iphone-6.9/*.png` (6) | 1320×2868 |
+| iPad 13" display | `framed/ipad-13/*.png` (5) | 2064×2752 |
 
-App Store Connect scales the 6.9" set down for every smaller iPhone, so it is
-the only slot required.
+App Store Connect scales the 6.9" set down for every smaller iPhone and the
+13" set for every smaller iPad, so these are the only two slots required.
 
-v1 is iPhone-only (`TARGETED_DEVICE_FAMILY = 1`), so no iPad screenshots are
-needed; iPads run the app in the iPhone frame. The app had no iPad layout, only
-the phone one stretched to 13 inches. Real iPad support is
-[#65](https://github.com/dhuelin/watch-guru/issues/65), and once shipped it
-cannot be taken back, so it waits for a layout worth shipping.
+The app runs on iPad too (`TARGETED_DEVICE_FAMILY = "1,2"`), with its own
+layout at regular width: a sidebar, poster grids for Library and Search, and Up
+Next beside the chosen series. App Store Connect requires an iPad 13" set for
+that, and scales it down for smaller iPads.
 
 ## Listing — English
 

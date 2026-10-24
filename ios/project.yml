@@ -58,6 +58,13 @@ targets:
           - UIInterfaceOrientationPortrait
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
+        # Every orientation on iPad, upside-down included: an iPad app that
+        # leaves one out cannot take part in Split View or Slide Over.
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
         # Scoped to loopback and nothing else, so the simulator can reach a
         # backend running on the developer's machine. It ships in release too,
         # which the previous comment claimed it would not -- but an exception
@@ -89,10 +96,10 @@ targets:
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "6.0"
-        # iPhone only for v1. XcodeGen's default is "1,2", which shipped the
-        # phone layout stretched to iPad size; iPads still run the app in the
-        # iPhone frame. Real iPad support is #65.
-        TARGETED_DEVICE_FAMILY: "1"
+        # iPhone and iPad. v1 was iPhone only, because the phone layout
+        # stretched to 13 inches was mostly empty space; regular width now has
+        # its own layout (a sidebar, poster grids, Up Next beside its detail).
+        TARGETED_DEVICE_FAMILY: "1,2"
         # Complete checking, not minimal: the app is written for it, and
         # relaxing it later is far easier than adopting it later.
         SWIFT_STRICT_CONCURRENCY: complete
@@ -144,7 +151,7 @@ targets:
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "6.0"
         # Kept in step with the app's.
-        TARGETED_DEVICE_FAMILY: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
         SWIFT_STRICT_CONCURRENCY: complete
         ENABLE_USER_SCRIPT_SANDBOXING: YES
         # An extension has no main() of its own to run.

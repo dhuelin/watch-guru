@@ -12,6 +12,7 @@ listings do and what reads at the size the stores show a thumbnail.
 | Set           | Canvas      | Store slot                          |
 |---------------|-------------|-------------------------------------|
 | iphone-6.9    | 1320 x 2868 | App Store, iPhone 6.9" display      |
+| ipad-13       | 2064 x 2752 | App Store, iPad 13" display         |
 | android-phone | 1080 x 1920 | Play, phone screenshots (9:16)      |
 
 How the raw captures were made, and why the titles in them are invented, is in
@@ -29,6 +30,7 @@ OUT = ROOT / "docs/store/screenshots/framed"
 
 CANVAS = {
     "iphone-6.9": (1320, 2868),
+    "ipad-13": (2064, 2752),
     "android-phone": (1080, 1920),
 }
 

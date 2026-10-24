@@ -98,6 +98,9 @@ struct UpNextWidget: Widget {
             .systemSmall,
             .systemMedium,
             .systemLarge,
+            // iPad only: the large layout with more room, rather than a
+            // fourth design for one device.
+            .systemExtraLarge,
             // Lock screen, and the same view StandBy uses on a charging phone.
             .accessoryRectangular,
         ])

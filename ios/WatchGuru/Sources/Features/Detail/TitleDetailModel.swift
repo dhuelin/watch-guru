@@ -32,6 +32,8 @@ final class TitleDetailModel {
     private let client: WatchGuruClient
     private let offline: OfflineClient
     private let titleId: Int64
+    /// Called after a mark the server accepted, so other screens can catch up.
+    var onWatched: (() -> Void)?
 
     init(client: WatchGuruClient, offline: OfflineClient, titleId: Int64) {
         self.client = client
@@ -118,6 +120,7 @@ final class TitleDetailModel {
         }
 
         if succeeded {
+            onWatched?()
             await refreshProgress()
             await refreshSeasons()
         }
@@ -134,6 +137,7 @@ final class TitleDetailModel {
         defer { isMarking = false }
 
         if await offline.markWatchedUpTo(episodeId: episode.id) == .sent {
+            onWatched?()
             await refreshProgress()
             await refreshSeasons()
         }
@@ -157,7 +161,9 @@ final class TitleDetailModel {
 
         let watchedAt = Self.atTimeOfDay(on: day)
         switch await offline.logFilmWatched(titleId: titleId, watchedAt: watchedAt) {
-        case .sent: filmLog = .logged(day)
+        case .sent:
+            filmLog = .logged(day)
+            onWatched?()
         case .queued: filmLog = .queued(day)
         case .failed(let failure): filmLog = .failed(failure)
         }
@@ -269,8 +275,19 @@ final class TitleDetailModel {
         defer { isMarking = false }
 
         if await offline.markEpisodeWatched(episodeId: next, titleId: titleId) == .sent {
+            onWatched?()
+            // The episode list as well: its row and its season's "5 of 6"
+            // went stale otherwise, beside a progress bar that had moved on.
             await refreshProgress()
+            await refreshSeasons()
         }
+    }
+
+    /// Re-reads progress and episodes after a mark made somewhere else, such
+    /// as the Up Next card beside this screen on an iPad.
+    func refreshWatched() async {
+        await refreshProgress()
+        await refreshSeasons()
     }
 
     private func refreshProgress() async {
