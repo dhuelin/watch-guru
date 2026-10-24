@@ -5,7 +5,9 @@ import SwiftUI
 /// Named colours in the asset catalog, each with a light and a dark value, so
 /// screens use a role and dark mode comes with it. They are the same tones as
 /// Android's `background` and card roles: a violet-tinted screen with cards one
-/// step lighter on it.
+/// step lighter on it. Each also has an Increase Contrast variant, where the
+/// screen goes a step darker (black in dark mode) so the cards stand apart
+/// from it more than the gentle default does.
 extension Color {
     static let screenBackground = Color("ScreenBackground")
     static let cardBackground = Color("CardBackground")

@@ -112,11 +112,7 @@ struct ProfileView: View {
                         // The one preference here kept on the phone rather
                         // than the account, which is why it is a control
                         // among read-only lines.
-                        Picker("Appearance", selection: $appearance) {
-                            ForEach(Appearance.allCases) { option in
-                                Text(option.label).tag(option)
-                            }
-                        }
+                        appearancePicker
                     } header: {
                         Text("Preferences")
                     }
@@ -135,7 +131,23 @@ struct ProfileView: View {
                     }
                 }
             case .failed(let failure):
-                FailureView(failure: failure) { Task { await load() } }
+                // Appearance stays reachable when the profile cannot load: it
+                // is kept on the phone, and being offline is no reason to be
+                // stuck with a theme.
+                //
+                // One list, so it scrolls like the loaded screen does and
+                // nothing is cut off at large text sizes: the failure and its
+                // Retry as a row of their own, then the picker.
+                List {
+                    Section {
+                        FailureView(failure: failure) { Task { await load() } }
+                            .frame(minHeight: 320)
+                            .listRowBackground(Color.clear)
+                    }
+                    Section("Preferences") {
+                        appearancePicker
+                    }
+                }
             case .loading:
                 ProgressView()
             case .empty:
@@ -175,6 +187,14 @@ struct ProfileView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(session.signIn.accountError ?? "")
+        }
+    }
+
+    private var appearancePicker: some View {
+        Picker("Appearance", selection: $appearance) {
+            ForEach(Appearance.allCases) { option in
+                Text(option.label).tag(option)
+            }
         }
     }
 

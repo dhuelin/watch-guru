@@ -78,14 +78,17 @@ device. `screen` and `card` are violet-tinted neutrals of the same hue.
 - **iOS:** the asset catalog. `AccentColor`, `ScreenBackground` and
   `CardBackground` are colour sets with a light and a dark value; code reads
   them through `Color.accentColor`, `Color.screenBackground` and
-  `Color.cardBackground` (`Design/Surfaces.swift`). Everything else stays a
+  `Color.cardBackground` (`Design/Surfaces.swift`). The screen and card sets
+  have Increase Contrast variants that separate cards more. Everything else stays a
   semantic system colour (`.primary`, `.secondary`, `.red`), so increased
   contrast still works.
 - **Android:** `ui/theme/Theme.kt`, as Material 3 roles: `primary`,
   `tertiary` (success), `error` (danger), `onSurfaceVariant` (muted),
   `background` (screen) and `ColorScheme.card`, which picks a surface
-  container. Dynamic colour is off: with it on, Android 12+ replaced the brand
-  with the wallpaper's colours and almost nobody saw the violet.
+  container. Dynamic colour is off by default: with it on, Android 12+
+  replaced the brand with the wallpaper's colours and almost nobody saw the
+  violet. Profile offers it as "Use wallpaper colours", and the widget follows
+  the same choice.
 
 No screen may contain a hex value. A new colour is a new role, added in both
 places with a light and a dark value, and every pair it makes with existing
@@ -317,7 +320,7 @@ These should differ, and a reviewer should not file bugs about them:
 | Confirmation | `.confirmationDialog` | Snackbar with undo |
 | Sharing | Share sheet | Android share sheet |
 | Widgets | WidgetKit, Lock Screen, StandBy | Glance, resizable, dynamic colour |
-| Theming | Semantic system colours plus the brand roles in the asset catalog | Material 3 roles from the brand palette; dynamic colour only in the home-screen widget |
+| Theming | Semantic system colours plus the brand roles in the asset catalog, each with an Increase Contrast variant | Material 3 roles from the brand palette; wallpaper colours if chosen in Profile |
 
 Someone holding both phones should recognise the same product and, if they
 know the platforms, see two apps that each belong where they are.

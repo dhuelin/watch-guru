@@ -1,7 +1,17 @@
 package dev.huelin.watchguru.ui.profile
 
-import androidx.compose.foundation.clickable
+import android.os.Build
 import androidx.annotation.StringRes
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.Logout
@@ -14,40 +24,25 @@ import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Subscriptions
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.UploadFile
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import dev.huelin.watchguru.api.models.UserResponse
-import dev.huelin.watchguru.data.AccountIdentity
-import dev.huelin.watchguru.data.Appearance
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,11 +50,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.huelin.watchguru.R
+import dev.huelin.watchguru.api.models.UserResponse
+import dev.huelin.watchguru.data.AccountIdentity
+import dev.huelin.watchguru.data.Appearance
 import dev.huelin.watchguru.data.Regions
 import dev.huelin.watchguru.ui.components.ErrorView
 import dev.huelin.watchguru.ui.components.UiState
@@ -98,6 +103,7 @@ fun ProfileScreen(
     val regionError by viewModel.regionError.collectAsStateWithLifecycle()
     val savingRegion by viewModel.savingRegion.collectAsStateWithLifecycle()
     val appearance by viewModel.appearance.collectAsStateWithLifecycle()
+    val wallpaperColours by viewModel.wallpaperColours.collectAsStateWithLifecycle()
     var confirmingDelete by rememberSaveable { mutableStateOf(false) }
     var choosingRegion by rememberSaveable { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -245,14 +251,11 @@ fun ProfileScreen(
                     onClick = onOpenNotifications,
                 )
 
-                // Three segments rather than a row that opens a dialog: there
-                // are only three answers, and the current one should show
-                // without a tap.
-                GroupHeader(stringResource(R.string.profile_group_appearance))
-                AppearanceChoice(
-                    selected = appearance,
-                    onSelect = viewModel::setAppearance,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                AppearanceSection(
+                    appearance = appearance,
+                    onAppearance = viewModel::setAppearance,
+                    wallpaperColours = wallpaperColours,
+                    onWallpaperColours = viewModel::setWallpaperColours,
                 )
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
@@ -290,11 +293,29 @@ fun ProfileScreen(
                 )
             }
 
-            is UiState.Error -> ErrorView(
-                failure = state.failure,
-                onRetry = viewModel::load,
-                modifier = Modifier.padding(padding),
-            )
+            // Appearance stays reachable when the profile cannot load: it is
+            // kept on the phone, and being offline is no reason to be stuck
+            // with a theme.
+            is UiState.Error -> Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    // Scrolls, so a large font in landscape cannot squeeze the
+                    // message and its Retry out of view.
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                ErrorView(
+                    failure = state.failure,
+                    onRetry = viewModel::load,
+                    modifier = Modifier.heightIn(min = 320.dp),
+                )
+                AppearanceSection(
+                    appearance = appearance,
+                    onAppearance = viewModel::setAppearance,
+                    wallpaperColours = wallpaperColours,
+                    onWallpaperColours = viewModel::setWallpaperColours,
+                )
+            }
 
             else -> Unit
         }
@@ -363,6 +384,44 @@ private fun GroupHeader(text: String) {
             .padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 4.dp)
             .semantics { heading() },
     )
+}
+
+/**
+ * Light, dark or the phone's setting, and on Android 12+ whether to take the
+ * wallpaper's colours.
+ *
+ * Three segments rather than a row that opens a dialog: there are only three
+ * answers, and the current one should show without a tap.
+ */
+@Composable
+private fun AppearanceSection(
+    appearance: Appearance,
+    onAppearance: (Appearance) -> Unit,
+    wallpaperColours: Boolean,
+    onWallpaperColours: (Boolean) -> Unit,
+) {
+    GroupHeader(stringResource(R.string.profile_group_appearance))
+    AppearanceChoice(
+        selected = appearance,
+        onSelect = onAppearance,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+    )
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        ListItem(
+            headlineContent = { Text(stringResource(R.string.appearance_wallpaper_colours)) },
+            supportingContent = { Text(stringResource(R.string.appearance_wallpaper_colours_detail)) },
+            trailingContent = {
+                // The row toggles, so the switch itself takes no clicks:
+                // two targets for one setting would read it twice to TalkBack.
+                Switch(checked = wallpaperColours, onCheckedChange = null)
+            },
+            modifier = Modifier.toggleable(
+                value = wallpaperColours,
+                role = Role.Switch,
+                onValueChange = onWallpaperColours,
+            ),
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

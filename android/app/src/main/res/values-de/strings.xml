@@ -305,6 +305,8 @@
     <string name="appearance_system">System</string>
     <string name="appearance_light">Hell</string>
     <string name="appearance_dark">Dunkel</string>
+    <string name="appearance_wallpaper_colours">Hintergrundfarben verwenden</string>
+    <string name="appearance_wallpaper_colours_detail">Die Farben deines Hintergrundbilds statt des Watch-Guru-Violetts, in der App und im Widget</string>
     <string name="profile_history_detail">Alles, was du gesehen hast, Tag für Tag</string>
     <string name="profile_stats_detail">Sehzeit, Tage in Folge und Favoriten</string>
     <string name="profile_region_value">Angebote für %1$s</string>

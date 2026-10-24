@@ -44,15 +44,15 @@ import dev.huelin.watchguru.R
 import dev.huelin.watchguru.api.models.UpNextResponse
 import dev.huelin.watchguru.ui.components.ErrorView
 import dev.huelin.watchguru.ui.components.FullScreenMessage
+import dev.huelin.watchguru.ui.components.Poster
 import dev.huelin.watchguru.ui.components.RowCard
 import dev.huelin.watchguru.ui.components.RowCardList
 import dev.huelin.watchguru.ui.components.SkeletonList
 import dev.huelin.watchguru.ui.components.SwipeToMark
-import dev.huelin.watchguru.ui.components.markAction
-import dev.huelin.watchguru.ui.components.Poster
 import dev.huelin.watchguru.ui.components.UiState
 import dev.huelin.watchguru.ui.components.contentOrNull
 import dev.huelin.watchguru.ui.components.failureMessage
+import dev.huelin.watchguru.ui.components.markAction
 import dev.huelin.watchguru.ui.navigation.TitleId
 
 /**

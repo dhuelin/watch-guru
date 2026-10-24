@@ -9,7 +9,6 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
@@ -99,7 +98,6 @@ internal val DarkScheme = darkColorScheme(
  * a step up from it in dark. One role so every card agrees.
  */
 val ColorScheme.card: Color
-    @Composable @ReadOnlyComposable
     get() = if (background.luminance() > 0.5f) surfaceContainerLowest else surfaceContainerHigh
 
 @Composable

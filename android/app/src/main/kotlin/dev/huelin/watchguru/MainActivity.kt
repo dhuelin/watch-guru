@@ -29,6 +29,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             val appearance by appearanceStore.appearance.collectAsStateWithLifecycle()
+            val wallpaperColours by appearanceStore.wallpaperColours.collectAsStateWithLifecycle()
             val darkTheme = when (appearance) {
                 Appearance.SYSTEM -> isSystemInDarkTheme()
                 Appearance.LIGHT -> false
@@ -52,7 +53,7 @@ class MainActivity : ComponentActivity() {
                 onDispose {}
             }
 
-            WatchGuruTheme(darkTheme = darkTheme) {
+            WatchGuruTheme(darkTheme = darkTheme, dynamicColor = wallpaperColours) {
                 WatchGuruApp()
             }
         }

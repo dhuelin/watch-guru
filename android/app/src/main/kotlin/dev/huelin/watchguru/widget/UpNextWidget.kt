@@ -3,6 +3,8 @@ package dev.huelin.watchguru.widget
 import android.content.Context
 import android.os.Build
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -75,26 +77,29 @@ class UpNextWidget : GlanceAppWidget() {
         // Loaded before provideContent, not inside it: the content lambda is
         // recomposed and must stay free of suspending work.
         val state = loadUpNextWidgetState(context, limit = MaximumRows)
+        val appearance = context.widgetDependencies().appearance()
 
         provideContent {
-            GlanceTheme(colors = widgetColors()) {
+            // Collected rather than read once: while the widget's session is
+            // alive, a redraw recomposes this content without running
+            // provideGlance again, and a value read above would be stale.
+            val wallpaperColours by appearance.wallpaperColours.collectAsState()
+            GlanceTheme(colors = widgetColors(wallpaperColours)) {
                 Content(state)
             }
         }
     }
 
     /**
-     * Material 3, from the wallpaper where the system offers it.
+     * The app's own palette, or the wallpaper's when the user chose that in
+     * Profile and the system offers it (Android 12 and up).
      *
-     * Glance's own default already does this on Android 12 and up. What it
-     * cannot do is fall back to *this* app's palette below that, so the
-     * fallback is the app's own scheme -- otherwise the widget on an Android 11
-     * phone wears Glance's baseline colours and looks like it belongs to
-     * something else.
+     * Always the same as the app: a widget in wallpaper colours beside an
+     * app in violet looked like it belonged to something else.
      */
     @Composable
-    private fun widgetColors() =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+    private fun widgetColors(wallpaperColours: Boolean) =
+        if (wallpaperColours && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             GlanceTheme.colors
         } else {
             ColorProviders(light = LightScheme, dark = DarkScheme)

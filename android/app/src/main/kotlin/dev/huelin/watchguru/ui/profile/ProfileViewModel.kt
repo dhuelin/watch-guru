@@ -31,6 +31,10 @@ class ProfileViewModel @Inject constructor(
 
     fun setAppearance(appearance: Appearance) = appearanceStore.set(appearance)
 
+    val wallpaperColours: StateFlow<Boolean> = appearanceStore.wallpaperColours
+
+    fun setWallpaperColours(on: Boolean) = appearanceStore.setWallpaperColours(on)
+
     private val _profile = MutableStateFlow<UiState<UserResponse>>(UiState.Loading)
     val profile: StateFlow<UiState<UserResponse>> = _profile.asStateFlow()
 

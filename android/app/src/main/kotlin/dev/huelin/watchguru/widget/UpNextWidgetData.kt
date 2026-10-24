@@ -2,6 +2,7 @@ package dev.huelin.watchguru.widget
 
 import android.content.Context
 import dagger.hilt.EntryPoint
+import dev.huelin.watchguru.data.AppearanceStore
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
@@ -57,6 +58,7 @@ data class UpNextWidgetEntry(
 interface WidgetDependencies {
     fun offline(): OfflineRepository
     fun tokens(): TokenStore
+    fun appearance(): AppearanceStore
 }
 
 fun Context.widgetDependencies(): WidgetDependencies =
