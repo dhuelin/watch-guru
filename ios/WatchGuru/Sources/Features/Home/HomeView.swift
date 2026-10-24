@@ -208,14 +208,10 @@ private struct UpNextRow: View {
             : AnyLayout(HStackLayout(spacing: 12))
 
         layout {
-            selectable {
+            selectable(secondary: true) {
                 PosterView(url: entry.posterUrl.flatMap(URL.init(string:)), title: entry.primaryTitle)
                     .frame(width: large ? 96 : 72)
             }
-            // The text's button says the same thing, so the poster's is one
-            // focus stop and one VoiceOver element too many.
-            .accessibilityHidden(select != nil)
-            .focusable(select == nil)
 
             VStack(alignment: .leading, spacing: 4) {
                 selectable {
@@ -259,15 +255,32 @@ private struct UpNextRow: View {
 
     /// The content as the select button's label at regular width, or as it
     /// is at compact width, where the whole row is already a link.
+    ///
+    /// `secondary` is the poster's button, which says the same as the text's:
+    /// hidden from VoiceOver and kept out of keyboard focus, so a card is one
+    /// stop, not two. Only at regular width; at compact width the content is
+    /// left exactly as it was.
     @ViewBuilder
-    private func selectable<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+    private func selectable<Content: View>(
+        secondary: Bool = false,
+        @ViewBuilder _ content: () -> Content
+    ) -> some View {
         if let select {
-            Button(action: select) {
-                content().contentShape(Rectangle())
+            if secondary {
+                Button(action: select) {
+                    content().contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityHidden(true)
+                .focusable(false)
+            } else {
+                Button(action: select) {
+                    content().contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(isSelected ? .isSelected : [])
+                .accessibilityHint(Text("Shows its episodes beside the list"))
             }
-            .buttonStyle(.plain)
-            .accessibilityAddTraits(isSelected ? .isSelected : [])
-            .accessibilityHint(Text("Shows its episodes beside the list"))
         } else {
             content()
         }
