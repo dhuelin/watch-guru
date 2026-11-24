@@ -6,11 +6,13 @@ title: Watch Guru — Privacy Policy
 
 **Last updated: 20 October 2026**
 
-> Published at
-> <https://dhuelin.github.io/watch-guru/PRIVACY.html>, which is the URL given
-> to Google Play, to the Play Data safety form and to the OAuth consent
-> screen. The front matter above is what makes GitHub Pages render this as a
-> page rather than serve the Markdown source.
+<!--
+Published at https://dhuelin.github.io/watch-guru/PRIVACY.html, which is the
+URL given to Google Play, to the Play Data safety form, to App Store Connect
+and to the OAuth consent screen. The front matter above is what makes GitHub
+Pages render this as a page rather than serve the Markdown source. This note
+is a comment so that it stays out of the published policy.
+-->
 
 Watch Guru keeps a record of what you have watched. This policy describes what
 that means for your data: what is collected, why, who else sees it, and how to
