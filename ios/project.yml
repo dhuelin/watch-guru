@@ -86,9 +86,16 @@ targets:
         # here answers App Store Connect's export compliance question once,
         # rather than on every build before it can go to TestFlight.
         ITSAppUsesNonExemptEncryption: false
+        # Where a release build talks to; read by WidgetSharing.defaultBaseURL.
+        # A build setting so a release can point elsewhere without a code
+        # change: xcodebuild ... WATCH_GURU_API_BASE_URL=https://...
+        WatchGuruAPIBaseURL: $(WATCH_GURU_API_BASE_URL)
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.huelin.watchguru
+        # The deployed backend; see docs/DEPLOYMENT.md. Debug builds ignore it
+        # and use localhost.
+        WATCH_GURU_API_BASE_URL: https://watch-guru-api.fly.dev
         # Named rather than implied: Xcode only looks for an "AppIcon" set by
         # default, and a renamed set fails silently with no icon at all.
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -142,9 +149,13 @@ targets:
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
+        # The extension is its own bundle, so it needs its own copy of the key.
+        WatchGuruAPIBaseURL: $(WATCH_GURU_API_BASE_URL)
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.huelin.watchguru.widgets
+        # Must match the app's, or the widget marks episodes on another host.
+        WATCH_GURU_API_BASE_URL: https://watch-guru-api.fly.dev
         # Must match the app's, or the extension is rejected at install time
         # for having a version its container does not.
         MARKETING_VERSION: "0.1.0"
