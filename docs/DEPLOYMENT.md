@@ -235,9 +235,11 @@ key.
 | `ANDROID_KEY_ALIAS` | |
 | `ANDROID_KEY_PASSWORD` | |
 
-The workflow stops at uploading the `.aab` as an artifact. Publishing to Play
-needs a service account and a created listing, and a half-configured publish
-step that fails on every release is worse than an explicit gap.
+Every build keeps the `.aab` as a workflow artifact. On a published release it
+is also attached to the release, and uploaded to the Play track in
+`PLAY_TRACK` (default `internal`) once `PLAY_SERVICE_ACCOUNT_JSON` is set on
+`android-release`; without it the bundle stays an artifact. The first upload
+for a package has to go through the Play Console by hand.
 
 ## What has been verified, and what has not
 
@@ -254,7 +256,7 @@ Verified:
 - `DatabaseUrlEnvironmentPostProcessor` is covered by tests, including the
   escaped-password and `sslmode` cases a real host produces.
 - Both apps have run on an emulator and a simulator against a local backend
-  ([#35](https://github.com/dhuelin/watch-guru/issues/35)).
+  ([#56](https://github.com/dhuelin/watch-guru/pull/56)).
 
 Not verified, and worth knowing before trusting any of it:
 

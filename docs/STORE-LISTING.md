@@ -269,8 +269,8 @@ verifications, in Google's order, each gating the next:
 ### 4. Publish the privacy policy
 
 [`PRIVACY.md`](PRIVACY.md) names the operator as `Huelin.dev`, which must
-match the developer name Google verified, and is published at a public URL. GitHub Pages
-on this repository, or the file's `blob` URL. Both the Play listing and the
+match the developer name Google verified, and is published on GitHub Pages at
+<https://dhuelin.github.io/watch-guru/PRIVACY.html>. Both the Play listing and the
 OAuth consent screen want it, so it has to exist before either.
 
 ### 5. The upload key
