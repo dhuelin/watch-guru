@@ -66,6 +66,13 @@ android {
             val apiBaseUrl = providers.gradleProperty("watchguru.apiBaseUrl").orNull
                 ?: "https://api.watch-guru.example/"
             buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+            // Sign with the upload key when the release workflow provides one.
+            // Without this line the config above is defined but never used, and
+            // the bundle comes out unsigned, which Play refuses. Left unset
+            // locally, where there is no keystore, so the build still runs.
+            if (!System.getenv("WATCHGURU_KEYSTORE_FILE").isNullOrBlank()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
