@@ -43,11 +43,18 @@ enum WidgetSharing {
     ///
     /// The simulator reaches a backend on the developer's machine at
     /// `localhost`; a device does not, which is the usual first surprise.
+    ///
+    /// A release build reads `WatchGuruAPIBaseURL` from its own Info.plist,
+    /// which the `WATCH_GURU_API_BASE_URL` build setting fills in for both the
+    /// app and the widget. The literal below is only the fallback for a plist
+    /// that somehow lacks it.
     static var defaultBaseURL: URL {
         #if DEBUG
         URL(string: "http://localhost:8080")!
         #else
-        URL(string: "https://api.watch-guru.example")!
+        (Bundle.main.object(forInfoDictionaryKey: "WatchGuruAPIBaseURL") as? String)
+            .flatMap { $0.isEmpty ? nil : URL(string: $0) }
+            ?? URL(string: "https://watch-guru-api.fly.dev")!
         #endif
     }
 }
