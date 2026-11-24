@@ -97,14 +97,17 @@ jobs:
           WATCHGURU_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           WATCHGURU_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           WATCHGURU_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          VERSION_NAME: ${{ github.event_name == 'release' && github.event.release.tag_name || '' }}
+          TAG_NAME: ${{ github.event_name == 'release' && github.event.release.tag_name || '' }}
         # versionCode comes from the run number because Play refuses an upload
         # whose versionCode it has seen before, and run numbers only ever go
         # up. versionName comes from the tag on a published release, and falls
-        # back to the Gradle default on a manual dispatch -- which is why it
+        # back to the Gradle default on a push to main or a manual dispatch -- which is why it
         # goes through the environment: an absent tag then expands to nothing
         # at all, rather than to an empty -P flag Gradle reads as a blank name.
+        # A tag is v1.0.0 (the backend image's semver tags need the v), but
+        # the store shows versionName to users, so the v comes off here.
         run: |
+          VERSION_NAME="${TAG_NAME#v}"
           ./gradlew :app:bundleRelease \
             -Pwatchguru.apiBaseUrl="${{ vars.ANDROID_API_BASE_URL }}" \
             -Pwatchguru.googleWebClientId="${{ secrets.GOOGLE_WEB_CLIENT_ID }}" \

@@ -10,7 +10,7 @@ minutes cost several times a Linux minute.
 | `android.yml` | push/PR touching `android/**` | `assembleDebug` and unit tests |
 | `ios.yml` | push/PR touching `ios/**` | XcodeGen, build and test on a simulator |
 | `deploy-backend.yml` | push to `main`, published release | Test → build image → publish to GHCR → deploy |
-| `release-android.yml` | published release | Signed App Bundle |
+| `release-android.yml` | push to `main` touching `android/**`, published release | Signed App Bundle; on a release, attached to it and uploaded to Play when configured |
 
 ## Backend image
 
@@ -100,7 +100,7 @@ stored third-party token permanently unreadable.
 flyctl secrets set --app watch-guru-api \
   WATCH_GURU_AUTH_SESSION_SECRET='...' \
   WATCH_GURU_CREDENTIALS_SECRET='...' \
-  WATCH_GURU_AUTH_AUDIENCES='<google-web-client-id>' \
+  WATCH_GURU_AUTH_AUDIENCES='<google-web-client-id>,dev.huelin.watchguru' \
   TMDB_API_TOKEN='...'
 ```
 
@@ -115,8 +115,14 @@ command, whenever the key arrives:
 flyctl secrets set --app watch-guru-api TMDB_API_TOKEN='eyJ...'
 ```
 
-`WATCH_GURU_AUTH_AUDIENCES` is the one to get right. The **same** Google *web*
-client id has to appear in three places or sign-in fails:
+`WATCH_GURU_AUTH_AUDIENCES` is the one to get right. It lists one entry per
+sign-in provider, comma-separated: the Google *web* client id for Android, and
+the iOS bundle id `dev.huelin.watchguru` for Sign in with Apple, whose tokens
+carry the bundle id as their audience. Leave either out and that platform's
+sign-in is rejected while the other works.
+
+The **same** Google *web* client id has to appear in three places or Google
+sign-in fails:
 
 | Place | How it gets there |
 |---|---|
@@ -229,9 +235,11 @@ key.
 | `ANDROID_KEY_ALIAS` | |
 | `ANDROID_KEY_PASSWORD` | |
 
-The workflow stops at uploading the `.aab` as an artifact. Publishing to Play
-needs a service account and a created listing, and a half-configured publish
-step that fails on every release is worse than an explicit gap.
+Every build keeps the `.aab` as a workflow artifact. On a published release it
+is also attached to the release, and uploaded to the Play track in
+`PLAY_TRACK` (default `internal`) once `PLAY_SERVICE_ACCOUNT_JSON` is set on
+`android-release`; without it the bundle stays an artifact. The first upload
+for a package has to go through the Play Console by hand.
 
 ## What has been verified, and what has not
 
@@ -239,21 +247,24 @@ Verified:
 
 - The backend, Android and iOS workflows run on every pull request and pass.
   Both apps compile and their unit tests run.
+- `deploy-backend.yml` builds and publishes the image to GHCR on every merge
+  to `main` that touches `backend/`; only the Fly roll-out is skipped while
+  `FLY_API_TOKEN` is unset.
+- `release-android.yml` builds a bundle signed with the upload key on every
+  merge to `main` that touches `android/`, which means the keystore, the API
+  URL and the Google web client id are all set on `android-release`.
 - `DatabaseUrlEnvironmentPostProcessor` is covered by tests, including the
   escaped-password and `sslmode` cases a real host produces.
-- `fly.toml` and every workflow parse.
+- Both apps have run on an emulator and a simulator against a local backend
+  ([#56](https://github.com/dhuelin/watch-guru/pull/56)).
 
 Not verified, and worth knowing before trusting any of it:
 
-- **Nothing has ever been deployed.** The `deploy` job has never reached Fly,
-  because no `FLY_API_TOKEN` exists. The flyctl invocation, the digest
+- **Nothing has ever been deployed to Fly.** The flyctl invocation, the digest
   hand-off from the publish job, and the health check's grace period are all
   first-run-untested.
-- **No image has been built.** Docker Hub is unreachable from the environment
-  these changes were written in, so `backend/Dockerfile` has only been checked
-  as far as base-image resolution.
-- **`release-android.yml` has never run.** No release has been published and
-  no keystore exists.
-- **Neither app has run on a device or a simulator.** That is
-  [#35](https://github.com/dhuelin/watch-guru/issues/35), and it is also why
-  there are no store screenshots.
+- **No release has been published**, so the release-only steps (attaching the
+  bundle to the release, the Play upload) have never run.
+- **Neither app has signed in against real Apple or Google accounts** or a
+  deployed backend. The first internal-test and TestFlight builds are where
+  that gets proven.

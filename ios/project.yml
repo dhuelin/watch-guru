@@ -100,7 +100,7 @@ targets:
         # default, and a renamed set fails silently with no icon at all.
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
-        MARKETING_VERSION: "0.1.0"
+        MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "6.0"
         # iPhone and iPad. v1 was iPhone only, because the phone layout
@@ -158,7 +158,7 @@ targets:
         WATCH_GURU_API_BASE_URL: https://watch-guru-api.fly.dev
         # Must match the app's, or the extension is rejected at install time
         # for having a version its container does not.
-        MARKETING_VERSION: "0.1.0"
+        MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "6.0"
         # Kept in step with the app's.

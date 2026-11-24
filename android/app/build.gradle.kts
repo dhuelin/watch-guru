@@ -20,7 +20,7 @@ android {
         // able to set it from outside. The defaults are what a local build
         // gets, which is all a local build needs.
         versionCode = providers.gradleProperty("watchguru.versionCode").orNull?.toInt() ?: 1
-        versionName = providers.gradleProperty("watchguru.versionName").orNull ?: "0.1.0"
+        versionName = providers.gradleProperty("watchguru.versionName").orNull ?: "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // The Google OAuth *web* client id, not the Android one: Credential
