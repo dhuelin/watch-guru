@@ -3,10 +3,18 @@ name: Release Android
 on:
   release:
     types: [published]
+  # Every merge to main gets a signed bundle too, kept as a workflow artifact,
+  # so there is always a build of main ready to try or to promote by hand.
+  # Only a published release goes on to Play and onto the release page.
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - '.github/workflows/release-android.yml'
   workflow_dispatch:
 
 concurrency:
-  group: release-android
+  group: release-android-${{ github.ref }}
   cancel-in-progress: false
 
 defaults:
@@ -23,6 +31,10 @@ jobs:
     name: Build signed App Bundle
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    permissions:
+      # Write only so a published release can carry its own bundle as an
+      # asset; every other step needs no more than read.
+      contents: write
     environment:
       # Holds the signing material. Keeping it on an environment rather than in
       # repository secrets means a release build can require an approval, and
@@ -106,11 +118,25 @@ jobs:
           path: android/app/build/outputs/bundle/release/*.aab
           retention-days: 30
 
+      # A workflow artifact expires and needs a signed-in GitHub account to
+      # download. The copy on the release page does neither.
+      - name: Attach the bundle to the release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          cp app/build/outputs/bundle/release/*.aab "$RUNNER_TEMP/watch-guru-$TAG.aab"
+          gh release upload "$TAG" "$RUNNER_TEMP/watch-guru-$TAG.aab" --clobber --repo "$GITHUB_REPOSITORY"
+
       # Publishing is opt-in on the presence of the service account, because
       # a secret cannot be read in an `if:` directly. Without it this job still
       # does its real work -- a signed bundle you can upload by hand -- rather
       # than failing on every release until Play is set up.
+      # Only a published release (or a manual run) goes to Play: a merge to
+      # main builds a bundle, it does not ship one.
       - name: Is Play publishing configured?
+        if: github.event_name != 'push'
         id: play
         env:
           PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
